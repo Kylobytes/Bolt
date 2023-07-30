@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=bolt
+Exec=bolt
+Icon=com.kylobytes.Bolt
+Terminal=false
+Type=Application
+Categories=GTK;
+StartupNotify=true
