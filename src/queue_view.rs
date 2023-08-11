@@ -1,4 +1,4 @@
-/* window.rs
+/* queue_view.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -16,31 +16,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
-use adw::subclass::prelude::*;
+use gtk::subclass::prelude::*;
 use gtk::{gio, glib};
-
-use crate::queue_view::QueueView;
 
 mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
-    #[template(resource = "/com/kylobytes/Bolt/gtk/window.ui")]
-    pub struct BoltWindow {
-        // Template widgets
-        #[template_child]
-        header_bar: TemplateChild<adw::HeaderBar>,
-        #[template_child]
-        queue_view: TemplateChild<QueueView>
-    }
+    #[template(resource = "/com/kylobytes/Bolt/gtk/queue-view.ui")]
+    pub struct QueueView {}
 
     #[glib::object_subclass]
-    impl ObjectSubclass for BoltWindow {
-        const NAME: &'static str = "BoltWindow";
-        type Type = super::BoltWindow;
-        type ParentType = adw::ApplicationWindow;
+    impl ObjectSubclass for QueueView {
+        const NAME: &'static str = "QueueView";
+        type Type = super::QueueView;
+        type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
@@ -51,23 +44,26 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for BoltWindow {}
-    impl WidgetImpl for BoltWindow {}
-    impl WindowImpl for BoltWindow {}
-    impl ApplicationWindowImpl for BoltWindow {}
-    impl AdwApplicationWindowImpl for BoltWindow {}
+    impl ObjectImpl for QueueView {}
+    impl WidgetImpl for QueueView {}
+    impl BoxImpl for QueueView {}
 }
 
+
 glib::wrapper! {
-    pub struct BoltWindow(ObjectSubclass<imp::BoltWindow>)
-        @extends gtk::Widget, gtk::Window, gtk::ApplicationWindow, adw::ApplicationWindow,
+    pub struct QueueView(ObjectSubclass<imp::QueueView>)
+        @extends gtk::Widget, gtk::Box,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 
-impl BoltWindow {
-    pub fn new<P: glib::IsA<gtk::Application>>(application: &P) -> Self {
-        glib::Object::builder()
-            .property("application", application)
-            .build()
+impl Default for QueueView {
+    fn default() -> Self {
+        glib::Object::new()
+    }
+}
+
+impl QueueView {
+    pub fn new() -> Self {
+        Self::default()
     }
 }

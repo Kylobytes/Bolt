@@ -29,6 +29,10 @@ install_data('com.kylobytes.Bolt.gschema.xml',
   install_dir: join_paths(get_option('datadir'), 'glib-2.0/schemas')
 )
 
+install_subdir('migrations',
+  install_dir: join_paths(get_option('datadir'), 'bolt')
+)
+
 compile_schemas = find_program('glib-compile-schemas', required: false)
 if compile_schemas.found()
   test('Validate schema file',

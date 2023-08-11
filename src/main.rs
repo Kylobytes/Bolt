@@ -1,26 +1,34 @@
 /* main.rs
  *
- * Copyright 2023 Anakin Skywalker
+ * Copyright 2023 Kent Delante
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This file is part of Bolt.
+ *
+ * Bolt is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * Bolt is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
 mod application;
 mod config;
 mod window;
+mod setup;
+
+mod data;
+
+mod queue_view;
+mod empty_view;
+mod discover_view;
+mod podcasts_view_stack;
 
 use self::application::BoltApplication;
 use self::window::BoltWindow;
@@ -41,6 +49,8 @@ fn main() -> glib::ExitCode {
     let resources = gio::Resource::load(PKGDATADIR.to_owned() + "/bolt.gresource")
         .expect("Could not load resources");
     gio::resources_register(&resources);
+
+    setup::run();
 
     // Create a new GtkApplication. The application manages our main loop,
     // application windows, integration with the window manager/compositor, and

@@ -1,21 +1,21 @@
 /* application.rs
  *
- * Copyright 2023 Anakin Skywalker
+ * Copyright 2023 Kent Delante
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This file is part of Bolt.
+ *
+ * Bolt is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * Bolt is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
 use gtk::prelude::*;
@@ -42,6 +42,7 @@ mod imp {
         fn constructed(&self) {
             self.parent_constructed();
             let obj = self.obj();
+
             obj.setup_gactions();
             obj.set_accels_for_action("app.quit", &["<primary>q"]);
         }
@@ -99,12 +100,12 @@ impl BoltApplication {
         let window = self.active_window().unwrap();
         let about = adw::AboutWindow::builder()
             .transient_for(&window)
-            .application_name("bolt")
+            .application_name("Bolt")
             .application_icon("com.kylobytes.Bolt")
-            .developer_name("Anakin Skywalker")
+            .developer_name("Kent Delante")
             .version(VERSION)
-            .developers(vec!["Anakin Skywalker"])
-            .copyright("© 2023 Anakin Skywalker")
+            .developers(vec!["Kent Delante <leftybournes@pm.me>"])
+            .copyright("© 2023 Kylobytes")
             .build();
 
         about.present();
