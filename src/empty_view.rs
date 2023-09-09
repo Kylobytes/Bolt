@@ -1,4 +1,4 @@
-/* queue_view.rs
+/* empty_view.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -26,14 +26,17 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
-    #[template(resource = "/com/kylobytes/Bolt/gtk/queue-view.ui")]
-    pub struct QueueView {}
+    #[template(resource = "/com/kylobytes/Bolt/gtk/empty-view.ui")]
+    pub struct EmptyView {
+        #[template_child]
+        pub btn_discover: TemplateChild<gtk::Button>
+    }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for QueueView {
-        const NAME: &'static str = "QueueView";
-        type Type = super::QueueView;
-        type ParentType = gtk::Widget;
+    impl ObjectSubclass for EmptyView {
+        const NAME: &'static str = "EmptyView";
+        type Type = super::EmptyView;
+        type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
@@ -44,25 +47,30 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for QueueView {}
-    impl WidgetImpl for QueueView {}
+    impl ObjectImpl for EmptyView {}
+    impl WidgetImpl for EmptyView {}
+    impl BoxImpl for EmptyView {}
 }
 
 
 glib::wrapper! {
-    pub struct QueueView(ObjectSubclass<imp::QueueView>)
-        @extends gtk::Widget,
+    pub struct EmptyView(ObjectSubclass<imp::EmptyView>)
+        @extends gtk::Widget, gtk::Box,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 
-impl Default for QueueView {
+impl Default for EmptyView {
     fn default() -> Self {
         glib::Object::new()
     }
 }
 
-impl QueueView {
+impl EmptyView {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn btn_discover(&self) -> gtk::Button {
+        self.imp().btn_discover.get()
     }
 }

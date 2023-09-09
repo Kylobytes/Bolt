@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0" />
+  <requires lib="adw" version="1.0" />
+  <template class="DiscoverView" parent="GtkBox">
+    <property name="orientation">vertical</property>
+    <property name="hexpand">true</property>
+    <property name="vexpand">true</property>
+    <child>
+      <object class="AdwHeaderBar">
+        <style>
+          <class name="flat" />
+        </style>
+        <child type="title">
+          <object class="GtkBox">
+            <property name="visible">false</property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwStatusPage">
+        <property name="icon-name">compass-symbolic</property>
+        <property name="title">Discover</property>
+        <property name="vexpand">true</property>
+        <property name="hexpand">true</property>
+      </object>
+    </child>
+  </template>
+</interface>

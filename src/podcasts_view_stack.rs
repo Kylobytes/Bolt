@@ -1,4 +1,4 @@
-/* queue_view.rs
+/* podcasts_view_stack.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -22,18 +22,23 @@
 use gtk::subclass::prelude::*;
 use gtk::{gio, glib};
 
+use crate::queue_view::QueueView;
+
 mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
-    #[template(resource = "/com/kylobytes/Bolt/gtk/queue-view.ui")]
-    pub struct QueueView {}
+    #[template(resource = "/com/kylobytes/Bolt/gtk/podcasts-view-stack.ui")]
+    pub struct PodcastsViewStack {
+        #[template_child]
+        queue_view: TemplateChild<QueueView>
+    }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for QueueView {
-        const NAME: &'static str = "QueueView";
-        type Type = super::QueueView;
-        type ParentType = gtk::Widget;
+    impl ObjectSubclass for PodcastsViewStack {
+        const NAME: &'static str = "PodcastsViewStack";
+        type Type = super::PodcastsViewStack;
+        type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
@@ -44,24 +49,25 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for QueueView {}
-    impl WidgetImpl for QueueView {}
+    impl ObjectImpl for PodcastsViewStack {}
+    impl WidgetImpl for PodcastsViewStack {}
+    impl BoxImpl for PodcastsViewStack {}
 }
 
 
 glib::wrapper! {
-    pub struct QueueView(ObjectSubclass<imp::QueueView>)
-        @extends gtk::Widget,
+    pub struct PodcastsViewStack(ObjectSubclass<imp::PodcastsViewStack>)
+        @extends gtk::Widget, gtk::Box,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 
-impl Default for QueueView {
+impl Default for PodcastsViewStack {
     fn default() -> Self {
         glib::Object::new()
     }
 }
 
-impl QueueView {
+impl PodcastsViewStack {
     pub fn new() -> Self {
         Self::default()
     }

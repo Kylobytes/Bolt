@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
+  <gresource prefix="/com/kylobytes/Bolt/icons/scalable/actions/">
+    <file alias="compass-symbolic.svg">assets/icons/compass-symbolic.svg</file>
+    <file alias="headphones-symbolic.svg">assets/icons/headphones-symbolic.svg</file>
+    <file alias="list-symbolic.svg">assets/icons/list-symbolic.svg</file>
+    <file alias="microphone-symbolic.svg">assets/icons/microphone-symbolic.svg</file>
+  </gresource>
   <gresource prefix="/com/kylobytes/Bolt">
+    <file preprocess="xml-stripblanks">gtk/empty-view.ui</file>
     <file preprocess="xml-stripblanks">gtk/queue-view.ui</file>
-    <file preprocess="xml-stripblanks">gtk/window.ui</file>
+    <file preprocess="xml-stripblanks">gtk/podcasts-view-stack.ui</file>
+    <file preprocess="xml-stripblanks">gtk/discover-view.ui</file>
     <file preprocess="xml-stripblanks">gtk/help-overlay.ui</file>
+    <file preprocess="xml-stripblanks">gtk/window.ui</file>
   </gresource>
 </gresources>

@@ -1,4 +1,4 @@
-/* queue_view.rs
+/* discover_view.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -26,14 +26,14 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
-    #[template(resource = "/com/kylobytes/Bolt/gtk/queue-view.ui")]
-    pub struct QueueView {}
+    #[template(resource = "/com/kylobytes/Bolt/gtk/discover-view.ui")]
+    pub struct DiscoverView {}
 
     #[glib::object_subclass]
-    impl ObjectSubclass for QueueView {
-        const NAME: &'static str = "QueueView";
-        type Type = super::QueueView;
-        type ParentType = gtk::Widget;
+    impl ObjectSubclass for DiscoverView {
+        const NAME: &'static str = "DiscoverView";
+        type Type = super::DiscoverView;
+        type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
@@ -44,24 +44,25 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for QueueView {}
-    impl WidgetImpl for QueueView {}
+    impl ObjectImpl for DiscoverView {}
+    impl WidgetImpl for DiscoverView {}
+    impl BoxImpl for DiscoverView {}
 }
 
 
 glib::wrapper! {
-    pub struct QueueView(ObjectSubclass<imp::QueueView>)
-        @extends gtk::Widget,
+    pub struct DiscoverView(ObjectSubclass<imp::DiscoverView>)
+        @extends gtk::Widget, gtk::Box,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 
-impl Default for QueueView {
+impl Default for DiscoverView {
     fn default() -> Self {
         glib::Object::new()
     }
 }
 
-impl QueueView {
+impl DiscoverView {
     pub fn new() -> Self {
         Self::default()
     }

@@ -1,27 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <requires lib="gtk" version="4.0" />
-  <requires lib="Adw" version="1.0" />
-    <template class="QueueView" parent="GtkBox">
-        <property name="vexpand">true</property>
-        <property name="hexpand">true</property>
-        <child>
-            <object class="AdwStatusPage">
-                <property name="icon-name">edit-find</property>
-                <property name="title">No subscriptions found</property>
-                <property name="description">It seems you haven't subscribed to any shows yet</property>
-                <property name="vexpand">true</property>
-                <property name="hexpand">true</property>
-                <child>
-                    <object class="GtkButton">
-                        <child>
-                            <object class="GtkLabel">
-                                <property name="label">Discover Podcasts</property>
-                            </object>
-                        </child>
-                    </object>
-                </child>
-            </object>
-        </child>
+    <requires lib="gtk" version="4.0" />
+    <!-- <requires lib="adw" version="1.0" /> -->
+    <template class="QueueView" parent="GtkWidget">
     </template>
 </interface>

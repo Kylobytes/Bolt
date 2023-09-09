@@ -1,84 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk" version="4.0" />
-  <requires lib="Adw" version="1.0" />
+  <requires lib="adw" version="1.0" />
   <template class="BoltWindow" parent="AdwApplicationWindow">
     <property name="default-width">800</property>
     <property name="default-height">600</property>
-    <child>
-      <object class="GtkBox">
-          <property name="orientation">vertical</property>
-          <child>
-              <object class="AdwHeaderBar" id="header_bar">
-                  <property name="centering-policy">strict</property>
-                  <property name="title-widget">
-                      <object class="AdwViewSwitcherTitle" id="title">
-                          <property name="stack">stack</property>
+    <property name="handle-menubar-accel">true</property>
+    <property name="resizable">true</property>
+    <property name="content">
+      <object class="GtkStack" id="main_stack">
+        <property name="transition-type">crossfade</property>
+        <property name="visible-child">podcasts_view_stack</property>
+        <child>
+          <object class="GtkStackPage">
+            <property name="name">empty-page</property>
+            <property name="title">No podcasts found</property>
+            <property name="child">
+              <object class="EmptyView" id="empty_view" />
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkStackPage">
+            <property name="name">discover-page</property>
+            <property name="title">Discover</property>
+            <property name="child">
+              <object class="DiscoverView" id="discover_view" />
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkStackPage">
+            <property name="name">podcasts-page</property>
+            <property name="title">Podcasts</property>
+            <property name="child">
+              <object class="PodcastsViewStack" id="podcasts_view_stack" />
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkStackPage">
+            <property name="name">loading-page</property>
+            <property name="title">Loading</property>
+            <property name="child">
+              <object class="GtkBox" id="loading_view">
+                <property name="orientation">vertical</property>
+                <property name="vexpand">true</property>
+                <property name="hexpand">true</property>
+                <child>
+                  <object class="AdwHeaderBar">
+                    <style>
+                      <class name="flat" />
+                    </style>
+                    <child type="title">
+                      <object class="GtkBox">
+                        <property name="visible">false</property>
                       </object>
-                  </property>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="orientation">vertical</property>
+                    <property name="vexpand">true</property>
+                    <property name="hexpand">true</property>
+                    <property name="halign">center</property>
+                    <property name="valign">center</property>
+                    <child>
+                      <object class="GtkSpinner">
+                        <property name="spinning">true</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">Loading podcasts...</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
               </object>
-          </child>
-          <child>
-              <object class="AdwViewStack" id="stack">
-                  <property name="vexpand">true</property>
-                  <child>
-                      <object class="AdwViewStackPage">
-                          <property name="name">discover</property>
-                          <property name="title">Discover</property>
-                          <property name="icon-name">compass-symbolic</property>
-                          <property name="child">
-                              <object class="AdwStatusPage">
-                                  <property name="title">Discover</property>
-                              </object>
-                          </property>
-                      </object>
-                  </child>
-                  <child>
-                      <object class="AdwViewStackPage">
-                          <property name="name">queue</property>
-                          <property name="title">Queue</property>
-                          <property name="icon-name">view-list-symbolic</property>
-                          <property name="child">
-                              <object class="QueueView" id="queue_view" />
-                          </property>
-                      </object>
-                  </child>
-                  <child>
-                      <object class="AdwViewStackPage">
-                          <property name="name">episodes</property>
-                          <property name="title">Episodes</property>
-                          <property name="icon-name">headphones-symbolic</property>
-                          <property name="child">
-                              <object class="AdwStatusPage">
-                                  <property name="title">Episodes</property>
-                              </object>
-                          </property>
-                      </object>
-                  </child>
-                  <child>
-                      <object class="AdwViewStackPage">
-                          <property name="name">shows</property>
-                          <property name="title">Shows</property>
-                          <property name="icon-name">microphone-symbolic</property>
-                          <property name="child">
-                              <object class="AdwStatusPage">
-                                  <property name="title">Shows</property>
-                              </object>
-                          </property>
-                      </object>
-                  </child>
-              </object>
-          </child>
-          <child>
-              <object class="AdwViewSwitcherBar">
-                  <property name="stack">stack</property>
-                  <binding name="reveal">
-                      <lookup name="title-visible">title</lookup>
-                  </binding>
-              </object>
-          </child>
+            </property>
+          </object>
+        </child>
       </object>
-    </child>
+    </property>
   </template>
   <menu id="primary_menu">
     <section>
