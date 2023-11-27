@@ -5,12 +5,12 @@ edition = "2021"
 
 [dependencies]
 gettext-rs = { version = "0.7", features = ["gettext-system"] }
-gtk = { version = "0.6", package = "gtk4" }
-rusqlite = "0.29"
+gtk = { version = "0.7", package = "gtk4" }
+rusqlite = "0.30"
 r2d2 = "0.8"
-r2d2_sqlite = "0.22"
+r2d2_sqlite = "0.23"
 
 [dependencies.adw]
 package = "libadwaita"
-version = "0.3"
-features = ["v1_2"]
+version = "0.5"
+features = ["v1_4"]
