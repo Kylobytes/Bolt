@@ -1,0 +1,68 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $DiscoverEpisode : Gtk.Box {
+  styles ["discover-episode", "card"]
+  orientation: vertical;
+  vexpand: true;
+  halign: center;
+
+  Adw.Clamp {
+    orientation: vertical;
+    vexpand: true;
+    maximum-size: 480;
+
+    Adw.Clamp {
+      orientation: horizontal;
+      vexpand: true;
+      maximum-size: 328;
+
+      Gtk.Box {
+        orientation: vertical;
+
+        Gtk.Picture image {
+          styles ["discover-image"]
+          vexpand: true;
+          hexpand: true;
+          can-shrink: true;
+          content-fit: cover;
+          visible: false;
+        }
+
+        Gtk.Image icon {
+          vexpand: true;
+          hexpand: true;
+          visible: false;
+          pixel-size: 256;
+        }
+
+        Gtk.Label name {
+          styles ["heading", "discover-title"]
+          wrap: true;
+          max-width-chars: 80;
+          justify: center;
+          margin-start: 16;
+          margin-end: 16;
+        }
+
+        Gtk.Label show {
+          styles ["heading", "dim-label"]
+          justify: center;
+          wrap: true;
+          max-width-chars: 80;
+          margin-start: 16;
+          margin-end: 16;
+        }
+
+        Gtk.Label timestamp {
+          styles ["dim-label"]
+          justify: center;
+          wrap: false;
+          max-width-chars: 80;
+          margin-start: 16;
+          margin-end: 16;
+        }
+      }
+    }
+  }
+}

@@ -18,9 +18,41 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use crate::data::{
+    model::show::Show, remote::episode::Episode as RemoteEpisode,
+};
+
+#[derive(Clone, Debug)]
 pub struct Episode {
-    title: String,
-    description: String,
-    url: String,
-    path: String
+    pub id: u64, // podcastindex.org's id
+    pub title: String,
+    pub description: Option<String>,
+    pub url: String,
+    pub guid: Option<String>,
+    pub image_url: Option<String>,
+    pub date_published: i64,
+    pub show: Option<Show>,
+}
+
+impl From<RemoteEpisode> for Episode {
+    fn from(episode: RemoteEpisode) -> Self {
+        Episode {
+            id: episode.id,
+            title: episode.title,
+            description: Some(episode.description)
+                .filter(|description| !description.is_empty()),
+            url: episode.link,
+            guid: Some(episode.guid).filter(|guid| !guid.is_empty()),
+            image_url: Some(episode.image).filter(|image| !image.is_empty()),
+            date_published: episode.date_published,
+            show: Some(Show {
+                id: episode.feed_id,
+                name: episode.feed_title,
+                description: None,
+                url: None,
+                image_url: Some(episode.feed_image)
+                    .filter(|image| !image.is_empty()),
+            }),
+        }
+    }
 }

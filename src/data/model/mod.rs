@@ -1,2 +1,2 @@
-pub mod show;
 pub mod episode;
+pub mod show;

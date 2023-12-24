@@ -22,9 +22,9 @@ use std::path::PathBuf;
 
 use gtk::glib;
 
-use crate::data::database;
 use crate::config::GETTEXT_PACKAGE;
 use crate::config::PKGDATADIR;
+use crate::data::database;
 
 pub fn run() {
     setup_data_dir();
@@ -61,7 +61,9 @@ fn initialize_database() {
         let migration_path = file.unwrap().path();
         let contents = std::fs::read_to_string(migration_path).unwrap();
 
-        transaction.execute(&contents, []).expect("Failed to run migration");
+        transaction
+            .execute(&contents, [])
+            .expect("Failed to run migration");
     }
 
     let _ = transaction.commit();

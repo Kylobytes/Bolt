@@ -27,18 +27,28 @@ pub fn load_all_shows() -> Result<Vec<Show>, Box<dyn Error>> {
     let pool = database::connect();
     let connection = pool.get().expect("Failed to connect to database");
 
-    let mut statement =  connection.prepare("SELECT id, name, thumbnail FROM shows")?;
+    let mut statement = connection.prepare(
+        "SELECT \
+         id, \
+         name, \
+         description, \
+         url, \
+         image_url \
+         FROM shows \
+         WHERE shows.id IN (SELECT subscriptions.show_id FROM subscriptions)",
+    )?;
+
     let mut rows = statement.query([])?;
     let mut shows: Vec<Show> = vec![];
-    
+
     while let Some(row) = rows.next()? {
-        shows.push(
-            Show {
-                id: row.get(0)?,
-                name: row.get(1)?,
-                thumbnail: row.get(2)?
-            }
-        );
+        shows.push(Show {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            description: row.get(2)?,
+            url: row.get(3)?,
+            image_url: row.get(4)?,
+        });
     }
 
     Ok(shows)

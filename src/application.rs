@@ -18,8 +18,8 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use gtk::prelude::*;
 use adw::subclass::prelude::*;
+use gtk::prelude::*;
 use gtk::{gio, glib};
 
 use crate::config::VERSION;

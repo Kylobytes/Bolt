@@ -48,7 +48,6 @@ mod imp {
     impl WidgetImpl for QueueView {}
 }
 
-
 glib::wrapper! {
     pub struct QueueView(ObjectSubclass<imp::QueueView>)
         @extends gtk::Widget,

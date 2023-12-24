@@ -31,7 +31,9 @@ mod imp {
     #[template(resource = "/com/kylobytes/Bolt/gtk/podcasts-view-stack.ui")]
     pub struct PodcastsViewStack {
         #[template_child]
-        queue_view: TemplateChild<QueueView>
+        queue_view: TemplateChild<QueueView>,
+        #[template_child]
+        pub btn_discover: TemplateChild<gtk::Button>,
     }
 
     #[glib::object_subclass]
@@ -54,7 +56,6 @@ mod imp {
     impl BoxImpl for PodcastsViewStack {}
 }
 
-
 glib::wrapper! {
     pub struct PodcastsViewStack(ObjectSubclass<imp::PodcastsViewStack>)
         @extends gtk::Widget, gtk::Box,
@@ -70,5 +71,9 @@ impl Default for PodcastsViewStack {
 impl PodcastsViewStack {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn btn_discover(&self) -> gtk::Button {
+        self.imp().btn_discover.get()
     }
 }

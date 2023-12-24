@@ -19,21 +19,22 @@
  */
 
 use adw::subclass::prelude::*;
-use gtk::prelude::ButtonExt;
-use gtk::{gio, glib};
-use gtk::glib::{MainContext, clone};
+use gtk::{
+    gio, glib,
+    glib::{clone, MainContext},
+    prelude::*,
+};
 
-use crate::discover_view::DiscoverView;
-use crate::podcasts_view_stack::PodcastsViewStack;
-use crate::empty_view::EmptyView;
 use crate::data::repository::show_repository;
+use crate::discover_view::DiscoverView;
+use crate::empty_view::EmptyView;
+use crate::podcasts_view_stack::PodcastsViewStack;
 
-pub enum WindowState {
+pub enum View {
     Empty,
     Loading,
     Loaded,
-    Discover
-    // PodcastView
+    Discover, // PodcastView
 }
 
 mod imp {
@@ -44,13 +45,13 @@ mod imp {
     pub struct BoltWindow {
         // Template widgets
         #[template_child]
-        pub main_stack: TemplateChild<gtk::Stack>,
+        pub main_stack: TemplateChild<adw::ViewStack>,
         #[template_child]
-        discover_view: TemplateChild<DiscoverView>,
+        pub discover_view: TemplateChild<DiscoverView>,
         #[template_child]
-        podcasts_view_stack: TemplateChild<PodcastsViewStack>,
+        pub podcasts_view_stack: TemplateChild<PodcastsViewStack>,
         #[template_child]
-        pub empty_view: TemplateChild<EmptyView>
+        pub empty_view: TemplateChild<EmptyView>,
     }
 
     #[glib::object_subclass]
@@ -93,36 +94,34 @@ impl BoltWindow {
         window
     }
 
-    pub fn set_state(&self, view: WindowState) {
+    pub fn show_view(&self, view: View) {
         let stack = self.imp().main_stack.get();
 
         match view {
-            WindowState::Empty => {
-                stack.set_visible_child_name("empty-page")
-            },
-            WindowState::Loading => {
-                stack.set_visible_child_name("loading-page")
-            },
-            WindowState::Loaded => {
-                stack.set_visible_child_name("podcasts-page")
-            },
-            WindowState::Discover => {
-                stack.set_visible_child_name("discover-page")
-            },
+            View::Empty => stack.set_visible_child_name("empty-view"),
+            View::Loading => stack.set_visible_child_name("loading-view"),
+            View::Loaded => stack.set_visible_child_name("podcasts-view"),
+            View::Discover => {
+                stack.set_visible_child_name("discover-view");
+
+                glib::spawn_future_local(
+                    clone!(@weak self as view => async move {
+                        view.imp().discover_view.get().show_front_page().await;
+                    }),
+                );
+            }
         };
-    }    
+    }
 
     fn load_shows(&self) {
         let main_context = MainContext::default();
 
-        self.set_state(WindowState::Loading);
+        self.show_view(View::Loading);
 
         main_context.spawn_local(clone!(@weak self as window => async move {
-            let shows_result = show_repository::load_all_shows();
-
-            if let Ok(shows) = shows_result {
+            if let Ok(shows) = show_repository::load_all_shows() {
                 if shows.is_empty() {
-                    window.set_state(WindowState::Empty);
+                    window.show_view(View::Empty);
                 }
             }
         }));
@@ -131,8 +130,26 @@ impl BoltWindow {
     fn connect_signals(&self) {
         self.imp().empty_view.btn_discover().connect_clicked(
             clone!(@weak self as window => move |_| {
-                window.set_state(WindowState::Discover);
-            })
+                window.show_view(View::Discover);
+            }),
+        );
+
+        self.imp()
+            .podcasts_view_stack
+            .btn_discover()
+            .connect_clicked(clone!(@weak self as window => move |_| {
+                window.show_view(View::Discover);
+            }));
+
+        let discover_search_bar = self.imp().discover_view.search_bar();
+        let discover_search_entry = self.imp().discover_view.search_entry();
+
+        discover_search_bar.connect_entry(&discover_search_entry);
+        discover_search_bar.set_key_capture_widget(Some(self));
+        discover_search_entry.connect_search_changed(
+            move |entry: &gtk::SearchEntry| {
+                println!("{entry}");
+            },
         );
     }
 }

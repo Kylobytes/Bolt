@@ -29,7 +29,7 @@ mod imp {
     #[template(resource = "/com/kylobytes/Bolt/gtk/empty-view.ui")]
     pub struct EmptyView {
         #[template_child]
-        pub btn_discover: TemplateChild<gtk::Button>
+        pub btn_discover: TemplateChild<gtk::Button>,
     }
 
     #[glib::object_subclass]
@@ -51,7 +51,6 @@ mod imp {
     impl WidgetImpl for EmptyView {}
     impl BoxImpl for EmptyView {}
 }
-
 
 glib::wrapper! {
     pub struct EmptyView(ObjectSubclass<imp::EmptyView>)

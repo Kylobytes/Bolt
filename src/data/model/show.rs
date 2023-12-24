@@ -18,9 +18,55 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#[derive(Debug)]
+use std::error::Error;
+
+use rusqlite::{params, Transaction};
+
+use crate::data::remote::episode::Episode as RemoteEpisode;
+
+#[derive(Debug, Clone)]
 pub struct Show {
-    pub id: u32,
+    pub id: u64,
     pub name: String,
-    pub thumbnail: String
+    pub description: Option<String>,
+    pub url: Option<String>,
+    pub image_url: Option<String>,
+}
+
+impl From<RemoteEpisode> for Show {
+    fn from(episode: RemoteEpisode) -> Self {
+        Show {
+            id: episode.feed_id,
+            name: episode.feed_title,
+            description: None,
+            url: None,
+            image_url: Some(episode.feed_image)
+                .filter(|image| !image.is_empty()),
+        }
+    }
+}
+
+impl Show {
+    pub fn save_transaction(
+        &self,
+        transaction: &Transaction,
+    ) -> Result<usize, Box<dyn Error>> {
+        let mut statement = transaction.prepare(
+            "REPLACE INTO shows (\
+             id, \
+             name, \
+             description, \
+             url, \
+             image_url \
+             ) VALUES (?,?,?,?,?)",
+        )?;
+
+        Ok(statement.execute(params![
+            self.id,
+            self.name,
+            self.description,
+            self.url,
+            self.image_url
+        ])?)
+    }
 }
