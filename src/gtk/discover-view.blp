@@ -1,0 +1,99 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $DiscoverView : Adw.Bin {
+  hexpand: true;
+  vexpand: true;
+
+  Adw.ToolbarView {
+    [top]
+    Adw.HeaderBar {
+      styles ["flat"]
+
+      [title]
+      Gtk.Label {
+        label: _("Bolt - Discover");
+      }
+    }
+
+    content: Gtk.Box {
+      orientation: vertical;
+      vexpand: true;
+      hexpand: true;
+
+      Gtk.ScrolledWindow {
+        vexpand: true;
+        hexpand: true;
+        hscrollbar-policy: never;
+        vscrollbar-policy: automatic;
+        propagate-natural-height: true;
+        
+        Gtk.Box {
+          orientation: vertical;
+          hexpand: true;
+          margin-start: 16;
+          margin-end: 16;
+
+          Gtk.SearchBar search_bar {
+            styles ["view"]
+            margin-top: 16;
+            margin-bottom: 16;
+            search-mode-enabled: true;
+
+            child: Gtk.SearchEntry search_entry {
+              placeholder-text: _("Search for your favorite podcast");
+              hexpand: true;
+            };
+          }
+
+          Gtk.Box {
+            orientation: vertical;
+            vexpand: true;
+
+            Gtk.Label {
+              styles ["title-1"]
+              label: _("Latest Episodes");
+              halign: start;
+            }
+
+            Gtk.Spinner episodes_spinner {
+              spinning: true;
+              vexpand: true;
+              hexpand: true;
+              halign: center;
+              valign: center;
+            }
+
+            Gtk.FlowBox episodes_container {
+              vexpand: true;
+              visible: false;
+            }
+          }
+
+          Gtk.Box {
+            orientation: vertical;
+            vexpand: true;
+
+            Gtk.Label {
+              styles ["title-1"]
+              label: _("Categories");
+              halign: start;
+            }
+
+            Gtk.Spinner categories_spinner {
+              spinning: true;
+              vexpand: true;
+              hexpand: true;
+              halign: center;
+              valign: center;
+            }
+
+            Gtk.FlowBox categories_container {
+              visible: false;
+            }
+          }
+        }
+      }
+    };
+  }
+}

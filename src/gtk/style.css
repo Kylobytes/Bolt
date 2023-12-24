@@ -1,0 +1,19 @@
+.main-window {
+  min-width: 360px;
+}
+
+.discover-episode {
+  min-height: 360px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+}
+
+.discover-episode .discover-title {
+  margin-top: 8px;
+}
+
+.discover-image {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}

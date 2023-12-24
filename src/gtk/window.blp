@@ -1,0 +1,85 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $BoltWindow : Adw.ApplicationWindow {
+  styles ["main-window"]
+  default-width: 800;
+  default-height: 600;
+  handle-menubar-accel: true;
+  resizable: true;
+
+  Adw.ViewStack main_stack {
+    Adw.ViewStackPage {
+      name: "empty-view";
+      title: _("Empty");
+      child: $EmptyView empty_view {};
+    }
+
+    Adw.ViewStackPage {
+      name: "discover-view";
+      title: _("Discover View");
+      child: $DiscoverView discover_view {};
+    }
+
+    Adw.ViewStackPage {
+      name: "podcasts-view";
+      title: _("Podcasts View");
+      child: $PodcastsViewStack podcasts_view_stack {};
+    }
+    
+    Adw.ViewStackPage {
+      name: "loading-view";
+      title: _("Loading");
+
+      child: Gtk.Box loading_view {
+        orientation: vertical;
+        vexpand: true;
+        hexpand: true;
+        
+        Adw.HeaderBar {
+          styles [ "flat" ]
+
+          [title]
+          Gtk.Box {
+            visible: false;
+          }
+        }
+
+        Gtk.Box {
+          orientation: vertical;
+          vexpand: true;
+          hexpand: true;
+          halign: center;
+          valign: center;
+
+          Gtk.Spinner {
+            spinning: true;
+          }
+
+          Gtk.Label {
+            label: _("Loading podcasts...");
+          }
+        }
+      };
+    }
+  }
+}
+
+menu primary_menu {
+  section {
+    item {
+      label: _("Preferences");
+      action: "app.preferences";
+    }
+
+    item {
+      label: _("Keyboard Shortcuts");
+      action: "win.show-help-overlay";
+    }
+
+    item {
+      label: _("About Bolt");
+      action: "app.about";
+    }
+  }
+}
