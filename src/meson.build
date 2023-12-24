@@ -34,6 +34,10 @@ conf.set_quoted('VERSION', meson.project_version())
 conf.set_quoted('GETTEXT_PACKAGE', 'bolt')
 conf.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
 conf.set_quoted('PKGDATADIR', pkgdatadir)
+conf.set_quoted('USER_AGENT', 'Bolt/1.0')
+conf.set_quoted('BASE_URL', 'https://api.podcastindex.org/api/1.0')
+conf.set_quoted('API_KEY', '')
+conf.set_quoted('API_SECRET', '')
 
 configure_file(
     input: 'config.rs.in',
