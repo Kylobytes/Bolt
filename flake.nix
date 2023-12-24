@@ -21,6 +21,7 @@
                     };
 
                     buildInputs = with pkgs; [
+                        blueprint-compiler
                         gtk4
                         libadwaita
                         sqlite
@@ -37,6 +38,7 @@
                         libadwaita
                         meson
                         ninja
+                        openssl
                         pkg-config
                         sqlite
                         wrapGAppsHook4
@@ -62,7 +64,8 @@
                     rustc
                     rustfmt
 
-                    # glib deps
+                    # glib/gtk deps
+                    blueprint-compiler
                     cairo
                     gtk4
                     libadwaita
@@ -75,6 +78,7 @@
                     libxml2
                     meson
                     ninja
+                    openssl
                     pkg-config
                     sqlite
                     wrapGAppsHook4

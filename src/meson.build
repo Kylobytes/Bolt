@@ -1,9 +1,30 @@
 pkgdatadir = join_paths(get_option('prefix'), get_option('datadir'), meson.project_name())
 gnome = import('gnome')
 
+blueprints = custom_target('blueprints',
+  input: files (
+    'gtk/discover-episode.blp',
+    'gtk/discover-view.blp',
+    'gtk/empty-view.blp',
+    'gtk/help-overlay.blp',
+    'gtk/podcasts-view-stack.blp',
+    'gtk/queue-view.blp',
+    'gtk/window.blp',
+  ),
+  output: '.',
+  command: [
+    find_program('blueprint-compiler'),
+      'batch-compile',
+      '@OUTPUT@',
+      '@CURRENT_SOURCE_DIR@',
+      '@INPUT@'
+    ]
+)
+
 gnome.compile_resources('bolt',
   'bolt.gresource.xml',
   gresource_bundle: true,
+  dependencies: blueprints,
   install: true,
   install_dir: pkgdatadir,
 )
