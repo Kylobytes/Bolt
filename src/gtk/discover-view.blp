@@ -14,6 +14,10 @@ template $DiscoverView : Adw.Bin {
       Gtk.Label {
         label: _("Bolt - Discover");
       }
+
+      Gtk.ToggleButton search_toggle {
+        icon-name: "system-search-symbolic";
+      }
     }
 
     content: Gtk.Box {
@@ -38,7 +42,7 @@ template $DiscoverView : Adw.Bin {
             styles ["discover-searchbar"]
             margin-top: 16;
             margin-bottom: 16;
-            search-mode-enabled: true;
+            search-mode-enabled: bind search_toggle.active bidirectional;
 
             Gtk.SearchEntry search_entry {
               placeholder-text: _("Search for your favorite podcasts");
