@@ -116,10 +116,6 @@ impl DiscoverEpisode {
             self.imp().image.get().set_file(Some(&image));
             self.imp().image.get().set_visible(true);
         } else {
-            self.imp()
-                .icon
-                .get()
-                .set_icon_name(Some("image-missing-symbolic"));
             self.imp().icon.get().set_visible(true);
         };
     }
