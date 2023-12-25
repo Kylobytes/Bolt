@@ -35,15 +35,15 @@ template $DiscoverView : Adw.Bin {
           margin-end: 16;
 
           Gtk.SearchBar search_bar {
-            styles ["view"]
+            styles ["discover-searchbar"]
             margin-top: 16;
             margin-bottom: 16;
             search-mode-enabled: true;
 
-            child: Gtk.SearchEntry search_entry {
+            Gtk.SearchEntry search_entry {
               placeholder-text: _("Search for your favorite podcasts");
               hexpand: true;
-            };
+            }
           }
 
           Gtk.Box {

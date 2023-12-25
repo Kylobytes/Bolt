@@ -2,6 +2,10 @@
   min-width: 360px;
 }
 
+.discover-searchbar box {
+  padding: 0px;
+}
+
 .discover-episode {
   min-height: 360px;
   margin-top: 4px;
