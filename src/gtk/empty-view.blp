@@ -7,8 +7,6 @@ template $EmptyView : Gtk.Box {
   vexpand: true;
 
   Adw.HeaderBar {
-    styles ["flat"]
-
     Gtk.Box {
       visible: false;
     }
@@ -22,6 +20,7 @@ template $EmptyView : Gtk.Box {
     hexpand: true;
 
     Gtk.Button btn_discover {
+      styles ["pill"]
       halign: center;
 
       Gtk.Label {
