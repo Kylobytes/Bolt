@@ -24,7 +24,7 @@ use crate::data::{
 
 #[derive(Clone, Debug)]
 pub struct Episode {
-    pub id: u64, // podcastindex.org's id
+    pub id: i64, // podcastindex.org's id
     pub title: String,
     pub description: Option<String>,
     pub url: String,

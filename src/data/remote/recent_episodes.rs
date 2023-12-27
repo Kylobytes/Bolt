@@ -27,7 +27,7 @@ use crate::data::remote::episode::Episode;
 pub struct RecentEpisodes {
     pub status: String,
     pub items: Vec<Episode>,
-    pub count: u64,
+    pub count: i64,
     pub max: Option<String>,
     pub description: String,
 }

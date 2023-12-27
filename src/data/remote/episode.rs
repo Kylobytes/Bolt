@@ -30,7 +30,7 @@ use crate::config::GETTEXT_PACKAGE;
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Episode {
-    pub id: u64,
+    pub id: i64,
     pub title: String,
     pub link: String,
     pub description: String,
@@ -40,15 +40,15 @@ pub struct Episode {
     pub date_crawled: i64,
     pub enclosure_url: String,
     pub enclosure_type: String,
-    pub enclosure_length: u64,
+    pub enclosure_length: i64,
     pub explicit: u8,
-    pub episode: Option<u64>,
+    pub episode: Option<i64>,
     pub episode_type: Option<String>,
-    pub season: Option<u64>,
+    pub season: Option<i64>,
     pub image: String,
-    pub feed_itunes_id: Option<u64>,
+    pub feed_itunes_id: Option<i64>,
     pub feed_image: String,
-    pub feed_id: u64,
+    pub feed_id: i64,
     pub feed_title: String,
     pub feed_language: String,
 }

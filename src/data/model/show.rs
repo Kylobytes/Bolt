@@ -26,7 +26,7 @@ use crate::data::remote::episode::Episode as RemoteEpisode;
 
 #[derive(Debug, Clone)]
 pub struct Show {
-    pub id: u64,
+    pub id: i64,
     pub name: String,
     pub description: Option<String>,
     pub url: Option<String>,

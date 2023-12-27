@@ -104,7 +104,7 @@ impl EpisodeCard {
         Self::default()
     }
 
-    pub fn show_image(&self, feed_id: u64) {
+    pub fn show_image(&self, feed_id: i64) {
         let mut image_path = glib::user_cache_dir();
         image_path.push(GETTEXT_PACKAGE);
         image_path.push("tmp");
