@@ -6,18 +6,18 @@
   padding: 0px;
 }
 
-.discover-episode {
+.episode-card {
   min-height: 360px;
   margin-top: 4px;
   margin-bottom: 4px;
   padding-bottom: 4px;
 }
 
-.discover-episode .discover-title {
+.episode-card .episode-title {
   margin-top: 8px;
 }
 
-.discover-image {
+.episode-card .episode-image {
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
 }

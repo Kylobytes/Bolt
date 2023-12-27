@@ -3,9 +3,9 @@ gnome = import('gnome')
 
 blueprints = custom_target('blueprints',
   input: files (
-    'gtk/discover-episode.blp',
     'gtk/discover-view.blp',
     'gtk/empty-view.blp',
+    'gtk/episode-card.blp',
     'gtk/help-overlay.blp',
     'gtk/podcasts-view-stack.blp',
     'gtk/queue-view.blp',

@@ -23,7 +23,7 @@ use adw::subclass::prelude::*;
 use gtk::{gio, glib, prelude::*};
 
 use crate::{
-    data::repository::discover_repository, discover_episode::DiscoverEpisode,
+    data::repository::discover_repository, episode_card::EpisodeCard,
 };
 
 mod imp {
@@ -100,11 +100,11 @@ impl DiscoverView {
 
         let episodes_container = self.imp().episodes_container.get();
         for episode in episodes.iter() {
-            let discover_episode = DiscoverEpisode::from(episode.clone());
-            episodes_container.insert(&discover_episode, -1);
+            let card = EpisodeCard::from(episode.clone());
+            episodes_container.insert(&card, -1);
 
             if let Some(show) = &episode.show {
-                discover_episode.show_image(show.id);
+                card.show_image(show.id);
             }
         }
     }

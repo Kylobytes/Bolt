@@ -1,4 +1,4 @@
-/* discover_episode.rs
+/* episode_card.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -29,8 +29,8 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
-    #[template(resource = "/com/kylobytes/Bolt/gtk/discover-episode.ui")]
-    pub struct DiscoverEpisode {
+    #[template(resource = "/com/kylobytes/Bolt/gtk/episode-card.ui")]
+    pub struct EpisodeCard {
         #[template_child]
         pub image: TemplateChild<gtk::Picture>,
         #[template_child]
@@ -44,9 +44,9 @@ mod imp {
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for DiscoverEpisode {
-        const NAME: &'static str = "DiscoverEpisode";
-        type Type = super::DiscoverEpisode;
+    impl ObjectSubclass for EpisodeCard {
+        const NAME: &'static str = "EpisodeCard";
+        type Type = super::EpisodeCard;
         type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
@@ -58,24 +58,24 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for DiscoverEpisode {}
-    impl WidgetImpl for DiscoverEpisode {}
-    impl BoxImpl for DiscoverEpisode {}
+    impl ObjectImpl for EpisodeCard {}
+    impl WidgetImpl for EpisodeCard {}
+    impl BoxImpl for EpisodeCard {}
 }
 
 glib::wrapper! {
-    pub struct DiscoverEpisode(ObjectSubclass<imp::DiscoverEpisode>)
+    pub struct EpisodeCard(ObjectSubclass<imp::EpisodeCard>)
         @extends gtk::Widget, gtk::Box,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 
-impl Default for DiscoverEpisode {
+impl Default for EpisodeCard {
     fn default() -> Self {
         glib::Object::new()
     }
 }
 
-impl From<Episode> for DiscoverEpisode {
+impl From<Episode> for EpisodeCard {
     fn from(episode: Episode) -> Self {
         let view = Self::default();
 
@@ -99,7 +99,7 @@ impl From<Episode> for DiscoverEpisode {
     }
 }
 
-impl DiscoverEpisode {
+impl EpisodeCard {
     pub fn new() -> Self {
         Self::default()
     }
