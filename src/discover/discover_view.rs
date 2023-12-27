@@ -22,9 +22,7 @@
 use adw::subclass::prelude::*;
 use gtk::{gio, glib, prelude::*};
 
-use crate::{
-    data::repository::discover_repository, episode_card::EpisodeCard,
-};
+use crate::discover::{discover_repository, episode_card::EpisodeCard};
 
 mod imp {
     use super::*;

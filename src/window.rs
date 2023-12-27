@@ -26,7 +26,7 @@ use gtk::{
 };
 
 use crate::data::repository::show_repository;
-use crate::discover_view::DiscoverView;
+use crate::discover::discover_view::DiscoverView;
 use crate::empty_view::EmptyView;
 use crate::podcasts_view_stack::PodcastsViewStack;
 

@@ -25,9 +25,8 @@ mod window;
 
 mod data;
 
-mod discover_view;
+mod discover;
 mod empty_view;
-mod episode_card;
 mod podcasts_view_stack;
 mod queue_view;
 
