@@ -19,12 +19,23 @@
  *
  */
 
-use adw::subclass::prelude::*;
-use gtk::{gio, glib, prelude::*};
+use std::cell::RefCell;
 
-use crate::discover::{discover_repository, episode_card::EpisodeCard};
+use adw::subclass::prelude::*;
+use gtk::{
+    gio,
+    glib::{self, clone},
+    prelude::*,
+};
+
+use crate::discover::{
+    discover_episode::DiscoverEpisode, discover_repository,
+    episode_card::EpisodeCard,
+};
 
 mod imp {
+    use crate::discover::discover_episode::DiscoverEpisode;
+
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
@@ -42,6 +53,7 @@ mod imp {
         pub search_bar: TemplateChild<gtk::SearchBar>,
         #[template_child]
         pub search_entry: TemplateChild<gtk::SearchEntry>,
+        pub model: RefCell<Option<gio::ListStore>>,
     }
 
     #[glib::object_subclass]
@@ -59,7 +71,35 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for DiscoverView {}
+    impl ObjectImpl for DiscoverView {
+        fn constructed(&self) {
+            self.parent_constructed();
+            self.model
+                .replace(Some(gio::ListStore::new::<DiscoverEpisode>()));
+
+            let model_binding = self.model.borrow();
+            let model = model_binding.as_ref();
+
+            self.episodes_container.get().bind_model(
+                model,
+                |item: &glib::Object| {
+                    let episode = item
+                        .downcast_ref::<DiscoverEpisode>()
+                        .expect("Item must be an episode");
+
+                    let card = EpisodeCard::from(episode.to_owned());
+
+                    glib::spawn_future_local(
+                        clone!(@weak card, @weak episode => async move {
+                            card.load_image().await;
+                        }),
+                    );
+
+                    card.into()
+                },
+            )
+        }
+    }
     impl WidgetImpl for DiscoverView {}
     impl BinImpl for DiscoverView {}
 }
@@ -81,30 +121,27 @@ impl DiscoverView {
         Self::default()
     }
 
-    pub async fn show_front_page(&self) {
-        let episodes = gio::spawn_blocking(move || {
-            discover_repository::fetch_latest_episodes()
-                .expect("Failed to fetch latest episodes")
-        })
-        .await
-        .expect("Failed to fetch episodes on separate thread");
+    pub fn show_front_page(&self) {
+        glib::spawn_future_local(clone!(@weak self as view => async move {
+            let episodes: Vec<DiscoverEpisode> = gio::spawn_blocking(move || {
+                discover_repository::fetch_latest_episodes()
+                    .expect("Failed to fetch latest episodes")
+            }).await.expect("Failed to fetch episodes on separate thread")
+                .into_iter()
+                .map(DiscoverEpisode::new)
+                .collect();
 
-        self.imp().episodes_spinner.get().stop();
-        self.imp().episodes_spinner.get().set_visible(false);
-        self.imp().categories_spinner.get().stop();
-        self.imp().categories_spinner.get().set_visible(false);
-        self.imp().episodes_container.get().set_visible(true);
-        self.imp().categories_container.get().set_visible(true);
+            if let Some(model) = view.imp().model.borrow().as_ref() {
+                model.extend_from_slice(&episodes);
 
-        let episodes_container = self.imp().episodes_container.get();
-        for episode in episodes.iter() {
-            let card = EpisodeCard::from(episode.clone());
-            episodes_container.insert(&card, -1);
-
-            if let Some(show) = &episode.show {
-                card.show_image(show.id);
-            }
-        }
+                view.imp().episodes_spinner.get().stop();
+                view.imp().episodes_spinner.get().set_visible(false);
+                view.imp().categories_spinner.get().stop();
+                view.imp().categories_spinner.get().set_visible(false);
+                view.imp().episodes_container.get().set_visible(true);
+                view.imp().categories_container.get().set_visible(true);
+            };
+        }));
     }
 
     pub fn search_entry(&self) -> gtk::SearchEntry {

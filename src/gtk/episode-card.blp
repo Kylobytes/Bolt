@@ -20,6 +20,14 @@ template $EpisodeCard : Gtk.Box {
       Gtk.Box {
         orientation: vertical;
 
+        Gtk.Spinner image_spinner {
+          spinning: true;
+          vexpand: true;
+          hexpand: true;
+          halign: center;
+          valign: center;
+        }
+
         Gtk.Picture image {
           styles ["episode-image"]
           vexpand: true;
@@ -37,7 +45,7 @@ template $EpisodeCard : Gtk.Box {
           pixel-size: 256;
         }
 
-        Gtk.Label name {
+        Gtk.Label title {
           styles ["heading", "episode-title"]
           wrap: true;
           max-width-chars: 80;

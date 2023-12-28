@@ -9,11 +9,7 @@ template $DiscoverView : Adw.Bin {
     [top]
     Adw.HeaderBar {
       styles ["flat"]
-
-      [title]
-      Gtk.Label {
-        label: _("Bolt - Discover");
-      }
+      show-title: false;
 
       Gtk.ToggleButton search_toggle {
         icon-name: "system-search-symbolic";
@@ -58,6 +54,7 @@ template $DiscoverView : Adw.Bin {
               styles ["title-1"]
               label: _("Latest Episodes");
               halign: start;
+              margin-bottom: 16;
             }
 
             Gtk.Spinner episodes_spinner {

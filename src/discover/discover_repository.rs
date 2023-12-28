@@ -20,7 +20,6 @@
 
 use std::error::Error;
 
-use rusqlite::params;
 use ureq::AgentBuilder;
 
 use crate::{
@@ -38,7 +37,7 @@ use crate::{
 pub fn fetch_latest_episodes() -> Result<Vec<Episode>, Box<dyn Error>> {
     let agent = AgentBuilder::new().build();
     let (date, authorization) = build_authentication_headers()?;
-    let url = build_url("/recent/episodes?max=10");
+    let url = build_url("/recent/episodes?max=12");
 
     let response = agent
         .get(url.as_str())
@@ -80,11 +79,11 @@ pub fn fetch_latest_episodes() -> Result<Vec<Episode>, Box<dyn Error>> {
          LEFT JOIN shows ON \
          episodes.show_id = shows.id \
          ORDER BY date_published DESC \
-         LIMIT 10",
+         LIMIT 12",
     )?;
 
     let mut episodes: Vec<Episode> = vec![];
-    let mut rows = statement.query(params![])?;
+    let mut rows = statement.query([])?;
 
     while let Some(row) = rows.next()? {
         episodes.push(Episode {
@@ -124,7 +123,7 @@ pub fn fetch_latest_episodes() -> Result<Vec<Episode>, Box<dyn Error>> {
                 }),
                 _ => None,
             },
-        })
+        });
     }
 
     Ok(episodes)

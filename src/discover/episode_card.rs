@@ -22,8 +22,12 @@
 use adw::prelude::*;
 use chrono::NaiveDateTime;
 use gtk::{gio, glib, subclass::prelude::*};
+use std::cell::Cell;
+use ureq::AgentBuilder;
 
 use crate::{config::GETTEXT_PACKAGE, data::model::episode::Episode};
+
+use super::discover_episode::DiscoverEpisode;
 
 mod imp {
     use super::*;
@@ -32,15 +36,18 @@ mod imp {
     #[template(resource = "/com/kylobytes/Bolt/gtk/episode-card.ui")]
     pub struct EpisodeCard {
         #[template_child]
+        pub image_spinner: TemplateChild<gtk::Spinner>,
+        #[template_child]
         pub image: TemplateChild<gtk::Picture>,
         #[template_child]
         pub icon: TemplateChild<gtk::Image>,
         #[template_child]
-        pub name: TemplateChild<gtk::Label>,
+        pub title: TemplateChild<gtk::Label>,
         #[template_child]
         pub show: TemplateChild<gtk::Label>,
         #[template_child]
         pub timestamp: TemplateChild<gtk::Label>,
+        pub episode: Cell<i64>,
     }
 
     #[glib::object_subclass]
@@ -79,7 +86,7 @@ impl From<Episode> for EpisodeCard {
     fn from(episode: Episode) -> Self {
         let view = Self::default();
 
-        view.imp().name.get().set_text(episode.title.as_str());
+        view.imp().title.get().set_text(episode.title.as_str());
 
         let datetime =
             NaiveDateTime::from_timestamp_opt(episode.date_published, 0);
@@ -99,24 +106,146 @@ impl From<Episode> for EpisodeCard {
     }
 }
 
+impl From<DiscoverEpisode> for EpisodeCard {
+    fn from(episode: DiscoverEpisode) -> Self {
+        let card = Self::default();
+        let imp = card.imp();
+
+        if let Some(title) = episode.title() {
+            imp.title.get().set_text(&title);
+        }
+
+        if let Some(show) = episode.show() {
+            imp.show.get().set_text(&show);
+        }
+
+        if episode.date_published() >= 0 {
+            let datetime =
+                NaiveDateTime::from_timestamp_opt(episode.date_published(), 0);
+
+            if let Some(timestamp) = datetime {
+                imp.timestamp
+                    .get()
+                    .set_text(&timestamp.format("%b %e, %Y").to_string());
+            }
+        }
+
+        imp.episode.set(episode.id());
+
+        card
+    }
+}
+
 impl EpisodeCard {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn show_image(&self, feed_id: i64) {
-        let mut image_path = glib::user_cache_dir();
-        image_path.push(GETTEXT_PACKAGE);
-        image_path.push("tmp");
-        image_path.push("images");
-        image_path.push(feed_id.to_string());
+    pub async fn load_image(&self) {
+        let episode_id = self.imp().episode.get();
 
-        if image_path.as_path().exists() {
-            let image = gio::File::for_path(image_path.as_path());
+        let mut episode_image_path = glib::user_cache_dir();
+        episode_image_path.push(GETTEXT_PACKAGE);
+        episode_image_path.push("images");
+        episode_image_path.push("episodes");
+        episode_image_path.push(episode_id.to_string());
+
+        if episode_image_path.as_path().exists() {
+            let image = gio::File::for_path(episode_image_path.as_path());
             self.imp().image.get().set_file(Some(&image));
             self.imp().image.get().set_visible(true);
-        } else {
-            self.imp().icon.get().set_visible(true);
-        };
+            self.imp().image_spinner.get().stop();
+            self.imp().image_spinner.get().set_visible(false);
+
+            return;
+        }
+
+        let episode =
+            gio::spawn_blocking(move || Episode::find_by_id(episode_id))
+                .await
+                .expect("Failed to acquire episode");
+
+        if let Some(image_url) = episode.image_url {
+            let image_path = episode_image_path.clone();
+
+            gio::spawn_blocking(move || {
+                let agent = AgentBuilder::new().build();
+                let mut response = agent
+                    .get(&image_url)
+                    .call()
+                    .expect("Failed to download image")
+                    .into_reader();
+                let mut image = std::fs::File::create(&image_path)
+                    .expect("Failed to initialize image at path");
+                std::io::copy(
+                    &mut response,
+                    &mut std::io::BufWriter::new(&mut image),
+                )
+                .expect("Failed to save image");
+            })
+            .await
+            .expect("Failed to download image from url");
+
+            let image = gio::File::for_path(episode_image_path.as_path());
+            self.imp().image.get().set_file(Some(&image));
+            self.imp().image.get().set_visible(true);
+            self.imp().image_spinner.get().stop();
+            self.imp().image_spinner.get().set_visible(false);
+
+            return;
+        }
+
+        if let Some(show) = episode.show {
+            let mut show_image_path = glib::user_cache_dir();
+            show_image_path.push(GETTEXT_PACKAGE);
+            show_image_path.push("images");
+            show_image_path.push("shows");
+            show_image_path.push(show.id.to_string());
+
+            if show_image_path.as_path().exists() {
+                let image = gio::File::for_path(show_image_path.as_path());
+                self.imp().image.get().set_file(Some(&image));
+                self.imp().image.get().set_visible(true);
+                self.imp().image_spinner.get().stop();
+                self.imp().image_spinner.get().set_visible(false);
+
+                return;
+            }
+
+            if let Some(image_url) = show.image_url {
+                let image_path = show_image_path.clone();
+
+                gio::spawn_blocking(move || {
+                    let agent = AgentBuilder::new().build();
+                    let mut response = agent
+                        .get(&image_url)
+                        .call()
+                        .expect("Could not download image")
+                        .into_reader();
+                    let mut image = std::fs::File::create(image_path)
+                        .expect("Failed to initialize image file");
+                    std::io::copy(
+                        &mut response,
+                        &mut std::io::BufWriter::new(&mut image),
+                    )
+                    .expect("Faild to save image");
+                })
+                .await
+                .expect("Failed to download image from url");
+
+                let image =
+                    gio::File::for_path(show_image_path.clone().as_path());
+                self.imp().image.get().set_file(Some(&image));
+                self.imp().image.get().set_visible(true);
+                self.imp().image_spinner.get().stop();
+                self.imp().image_spinner.get().set_visible(false);
+
+                return;
+            }
+        }
+
+        self.imp().icon.get().set_visible(true);
+        self.imp().image_spinner.get().stop();
+        self.imp().image_spinner.get().set_visible(false);
     }
 }

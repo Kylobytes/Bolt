@@ -27,11 +27,11 @@ use crate::config::PKGDATADIR;
 use crate::data::database;
 
 pub fn run() {
-    setup_data_dir();
+    setup_directories();
     initialize_database();
 }
 
-fn setup_data_dir() {
+fn setup_directories() {
     let mut user_dir = glib::user_data_dir();
     user_dir.push(GETTEXT_PACKAGE);
 
@@ -41,9 +41,43 @@ fn setup_data_dir() {
         match path_created {
             Ok(_) => println!("Created Bolt data directory"),
             Err(message) => {
-                println!("Failed to create data directory: {}", message)
+                println!("Failed to create Bolt data directory: {message}")
             }
         };
+    }
+
+    let mut episode_image_cache = glib::user_cache_dir();
+    episode_image_cache.push(GETTEXT_PACKAGE);
+    episode_image_cache.push("images");
+    episode_image_cache.push("episodes");
+
+    if !episode_image_cache.as_path().exists() {
+        let path_created = std::fs::create_dir_all(episode_image_cache);
+
+        match path_created {
+            Ok(_) => println!("Created Bolt episode image cache"),
+            Err(message) => {
+                println!(
+                    "Failed to create Bolt episode image cache: {message}"
+                );
+            }
+        }
+    }
+
+    let mut show_image_cache = glib::user_cache_dir();
+    show_image_cache.push(GETTEXT_PACKAGE);
+    show_image_cache.push("images");
+    show_image_cache.push("shows");
+
+    if !show_image_cache.as_path().exists() {
+        let path_created = std::fs::create_dir_all(show_image_cache);
+
+        match path_created {
+            Ok(_) => println!("Created Bolt show image cache"),
+            Err(message) => {
+                println!("Failed to create Bolt show image cache: {message}");
+            }
+        }
     }
 }
 

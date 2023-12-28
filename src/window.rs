@@ -103,12 +103,7 @@ impl BoltWindow {
             View::Loaded => stack.set_visible_child_name("podcasts-view"),
             View::Discover => {
                 stack.set_visible_child_name("discover-view");
-
-                glib::spawn_future_local(
-                    clone!(@weak self as view => async move {
-                        view.imp().discover_view.get().show_front_page().await;
-                    }),
-                );
+                self.imp().discover_view.get().show_front_page();
             }
         };
     }
