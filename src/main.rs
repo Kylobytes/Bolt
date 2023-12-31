@@ -23,6 +23,7 @@ mod config;
 mod setup;
 mod window;
 
+mod api;
 mod data;
 
 mod discover;

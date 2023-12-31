@@ -20,35 +20,25 @@
 
 use std::error::Error;
 
-use ureq::AgentBuilder;
-
 use crate::{
-    config::{API_KEY, USER_AGENT},
+    api::{
+        connection::ApiConnection, episode_client::EpisodeClient,
+        recent_episodes::RecentEpisodes, AGENT,
+    },
     data::{
         database,
         model::{episode::Episode, show::Show},
-        remote::{
-            api::{build_authentication_headers, build_url},
-            recent_episodes::RecentEpisodes,
-        },
     },
 };
 
 pub fn fetch_latest_episodes() -> Result<Vec<Episode>, Box<dyn Error>> {
-    let agent = AgentBuilder::new().build();
-    let (date, authorization) = build_authentication_headers()?;
-    let url = build_url("/recent/episodes?max=12");
+    let api_connection: ApiConnection = ApiConnection::builder()
+        .build_url("/recent/episodes?max=12")
+        .build_authentication_headers()
+        .build();
 
-    let response = agent
-        .get(url.as_str())
-        .set("User-Agent", USER_AGENT)
-        .set("X-Auth-Date", date.as_str())
-        .set("X-Auth-Key", API_KEY)
-        .set("Authorization", authorization.as_str())
-        .call()?
-        .into_string()?;
-
-    let recent_episodes: RecentEpisodes = serde_json::from_str(&response)?;
+    let recent_episodes: RecentEpisodes =
+        EpisodeClient::fetch_recent(&AGENT, &api_connection);
     let pool = database::connect();
     let mut database = pool.get()?;
     let transaction = database.transaction()?;

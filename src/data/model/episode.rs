@@ -22,8 +22,9 @@ use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{params, Rows, Statement};
 
-use crate::data::{
-    self, model::show::Show, remote::episode::Episode as RemoteEpisode,
+use crate::{
+    api::episode::Episode as RemoteEpisode,
+    data::{self, model::show::Show},
 };
 
 #[derive(Clone, Debug)]

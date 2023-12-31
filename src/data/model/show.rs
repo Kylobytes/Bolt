@@ -22,7 +22,7 @@ use std::error::Error;
 
 use rusqlite::{params, Transaction};
 
-use crate::data::remote::episode::Episode as RemoteEpisode;
+use crate::api::episode::Episode as RemoteEpisode;
 
 #[derive(Debug, Clone)]
 pub struct Show {

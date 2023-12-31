@@ -1,4 +1,4 @@
-/* api.rs
+/* recent_episodes.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -18,30 +18,16 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::time::{SystemTime, SystemTimeError, UNIX_EPOCH};
+use serde::{Deserialize, Serialize};
 
-use sha1::{Digest, Sha1};
+use crate::api::episode::Episode;
 
-use crate::config::{API_KEY, API_SECRET, BASE_URL};
-
-pub fn build_url(endpoint: &str) -> String {
-    BASE_URL.to_string() + endpoint
-}
-
-pub fn build_authentication_headers(
-) -> Result<(String, String), SystemTimeError> {
-    let date = SystemTime::now()
-        .duration_since(UNIX_EPOCH)?
-        .as_secs()
-        .to_string();
-
-    let auth_string = format!("{}{}{}", API_KEY, API_SECRET, date);
-
-    let mut hasher = Sha1::new();
-    hasher.update(auth_string);
-
-    let result = hasher.finalize();
-    let authorization = format!("{:X}", result).to_lowercase();
-
-    Ok((date, authorization))
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct RecentEpisodes {
+    pub status: String,
+    pub items: Vec<Episode>,
+    pub count: i64,
+    pub max: Option<String>,
+    pub description: String,
 }
