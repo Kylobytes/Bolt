@@ -22,10 +22,10 @@ use std::error::Error;
 
 use rusqlite::{params, Transaction};
 
-use crate::api::episode::Episode as RemoteEpisode;
+use crate::api::episode::Episode;
 
 #[derive(Debug, Clone)]
-pub struct Show {
+pub struct ShowModel {
     pub id: i64,
     pub name: String,
     pub description: Option<String>,
@@ -33,9 +33,9 @@ pub struct Show {
     pub image_url: Option<String>,
 }
 
-impl From<RemoteEpisode> for Show {
-    fn from(episode: RemoteEpisode) -> Self {
-        Show {
+impl From<Episode> for ShowModel {
+    fn from(episode: Episode) -> Self {
+        ShowModel {
             id: episode.feed_id,
             name: episode.feed_title,
             description: None,
@@ -46,7 +46,7 @@ impl From<RemoteEpisode> for Show {
     }
 }
 
-impl Show {
+impl ShowModel {
     pub fn save_transaction(
         &self,
         transaction: &Transaction,

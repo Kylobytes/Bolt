@@ -25,9 +25,14 @@ use gtk::{gio, glib, subclass::prelude::*};
 use std::cell::Cell;
 use ureq::AgentBuilder;
 
-use crate::{config::GETTEXT_PACKAGE, data::model::episode::Episode};
-
-use super::discover_episode::DiscoverEpisode;
+use crate::{
+    config::GETTEXT_PACKAGE,
+    data::episode::episode_model::EpisodeModel,
+    discover::{
+        discover_episode::DiscoverEpisode,
+        discover_repository::DiscoverRepository,
+    },
+};
 
 mod imp {
     use super::*;
@@ -82,8 +87,8 @@ impl Default for EpisodeCard {
     }
 }
 
-impl From<Episode> for EpisodeCard {
-    fn from(episode: Episode) -> Self {
+impl From<EpisodeModel> for EpisodeCard {
+    fn from(episode: EpisodeModel) -> Self {
         let view = Self::default();
 
         view.imp().title.get().set_text(episode.title.as_str());
@@ -160,50 +165,35 @@ impl EpisodeCard {
             return;
         }
 
-        let episode =
-            gio::spawn_blocking(move || Episode::find_by_id(episode_id))
+        let episode = gio::spawn_blocking(move || {
+            DiscoverRepository::find_episode_by_id(episode_id)
+        })
+        .await
+        .expect("Failed to acquire episode");
+
+        if let Some(episode) = episode {
+            if let Some(image_url) = episode.image_url {
+                let image_path = episode_image_path.clone();
+
+                gio::spawn_blocking(move || {
+                    let agent = AgentBuilder::new().build();
+                    let mut response = agent
+                        .get(&image_url)
+                        .call()
+                        .expect("Failed to download image")
+                        .into_reader();
+                    let mut image = std::fs::File::create(&image_path)
+                        .expect("Failed to initialize image at path");
+                    std::io::copy(
+                        &mut response,
+                        &mut std::io::BufWriter::new(&mut image),
+                    )
+                    .expect("Failed to save image");
+                })
                 .await
-                .expect("Failed to acquire episode");
+                .expect("Failed to download image from url");
 
-        if let Some(image_url) = episode.image_url {
-            let image_path = episode_image_path.clone();
-
-            gio::spawn_blocking(move || {
-                let agent = AgentBuilder::new().build();
-                let mut response = agent
-                    .get(&image_url)
-                    .call()
-                    .expect("Failed to download image")
-                    .into_reader();
-                let mut image = std::fs::File::create(&image_path)
-                    .expect("Failed to initialize image at path");
-                std::io::copy(
-                    &mut response,
-                    &mut std::io::BufWriter::new(&mut image),
-                )
-                .expect("Failed to save image");
-            })
-            .await
-            .expect("Failed to download image from url");
-
-            let image = gio::File::for_path(episode_image_path.as_path());
-            self.imp().image.get().set_file(Some(&image));
-            self.imp().image.get().set_visible(true);
-            self.imp().image_spinner.get().stop();
-            self.imp().image_spinner.get().set_visible(false);
-
-            return;
-        }
-
-        if let Some(show) = episode.show {
-            let mut show_image_path = glib::user_cache_dir();
-            show_image_path.push(GETTEXT_PACKAGE);
-            show_image_path.push("images");
-            show_image_path.push("shows");
-            show_image_path.push(show.id.to_string());
-
-            if show_image_path.as_path().exists() {
-                let image = gio::File::for_path(show_image_path.as_path());
+                let image = gio::File::for_path(episode_image_path.as_path());
                 self.imp().image.get().set_file(Some(&image));
                 self.imp().image.get().set_visible(true);
                 self.imp().image_spinner.get().stop();
@@ -212,35 +202,53 @@ impl EpisodeCard {
                 return;
             }
 
-            if let Some(image_url) = show.image_url {
-                let image_path = show_image_path.clone();
+            if let Some(show) = episode.show {
+                let mut show_image_path = glib::user_cache_dir();
+                show_image_path.push(GETTEXT_PACKAGE);
+                show_image_path.push("images");
+                show_image_path.push("shows");
+                show_image_path.push(show.id.to_string());
 
-                gio::spawn_blocking(move || {
-                    let agent = AgentBuilder::new().build();
-                    let mut response = agent
-                        .get(&image_url)
-                        .call()
-                        .expect("Could not download image")
-                        .into_reader();
-                    let mut image = std::fs::File::create(image_path)
-                        .expect("Failed to initialize image file");
-                    std::io::copy(
-                        &mut response,
-                        &mut std::io::BufWriter::new(&mut image),
-                    )
-                    .expect("Faild to save image");
-                })
-                .await
-                .expect("Failed to download image from url");
+                if show_image_path.as_path().exists() {
+                    let image = gio::File::for_path(show_image_path.as_path());
+                    self.imp().image.get().set_file(Some(&image));
+                    self.imp().image.get().set_visible(true);
+                    self.imp().image_spinner.get().stop();
+                    self.imp().image_spinner.get().set_visible(false);
 
-                let image =
-                    gio::File::for_path(show_image_path.clone().as_path());
-                self.imp().image.get().set_file(Some(&image));
-                self.imp().image.get().set_visible(true);
-                self.imp().image_spinner.get().stop();
-                self.imp().image_spinner.get().set_visible(false);
+                    return;
+                }
 
-                return;
+                if let Some(image_url) = show.image_url {
+                    let image_path = show_image_path.clone();
+
+                    gio::spawn_blocking(move || {
+                        let agent = AgentBuilder::new().build();
+                        let mut response = agent
+                            .get(&image_url)
+                            .call()
+                            .expect("Could not download image")
+                            .into_reader();
+                        let mut image = std::fs::File::create(image_path)
+                            .expect("Failed to initialize image file");
+                        std::io::copy(
+                            &mut response,
+                            &mut std::io::BufWriter::new(&mut image),
+                        )
+                        .expect("Faild to save image");
+                    })
+                    .await
+                    .expect("Failed to download image from url");
+
+                    let image =
+                        gio::File::for_path(show_image_path.clone().as_path());
+                    self.imp().image.get().set_file(Some(&image));
+                    self.imp().image.get().set_visible(true);
+                    self.imp().image_spinner.get().stop();
+                    self.imp().image_spinner.get().set_visible(false);
+
+                    return;
+                }
             }
         }
 

@@ -29,8 +29,8 @@ use gtk::{
 };
 
 use crate::discover::{
-    discover_episode::DiscoverEpisode, discover_repository,
-    episode_card::EpisodeCard,
+    discover_episode::DiscoverEpisode,
+    discover_repository::DiscoverRepository, episode_card::EpisodeCard,
 };
 
 mod imp {
@@ -124,7 +124,7 @@ impl DiscoverView {
     pub fn show_front_page(&self) {
         glib::spawn_future_local(clone!(@weak self as view => async move {
             let episodes: Vec<DiscoverEpisode> = gio::spawn_blocking(move || {
-                discover_repository::fetch_latest_episodes()
+                DiscoverRepository::fetch_recent_episodes()
                     .expect("Failed to fetch latest episodes")
             }).await.expect("Failed to fetch episodes on separate thread")
                 .into_iter()

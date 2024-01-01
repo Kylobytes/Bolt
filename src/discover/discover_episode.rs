@@ -13,7 +13,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *https://api.podcastindex.org/api/1.0/recent/feeds?pretty
+ *
  * You should have received a copy of the GNU General Public License
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  *
@@ -24,7 +24,7 @@ use std::cell::RefCell;
 use adw::prelude::*;
 use gtk::glib::{self, subclass::prelude::*, Properties};
 
-use crate::data::model::episode::Episode;
+use crate::data::episode::episode_model::EpisodeModel;
 
 #[derive(Clone, Debug)]
 pub struct EpisodeData {
@@ -82,7 +82,7 @@ impl Default for DiscoverEpisode {
 }
 
 impl DiscoverEpisode {
-    pub fn new(episode: Episode) -> Self {
+    pub fn new(episode: EpisodeModel) -> Self {
         let mut show_name: Option<String> = None;
         let mut show_id: i64 = -1;
 

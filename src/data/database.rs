@@ -18,13 +18,14 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use once_cell::sync::Lazy;
 use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
 
 use crate::config::GETTEXT_PACKAGE;
 use gtk::glib;
 
-pub fn connect() -> Pool<SqliteConnectionManager> {
+static POOL: Lazy<Pool<SqliteConnectionManager>> = Lazy::new(|| {
     let mut database_url = glib::user_data_dir();
     database_url.push(GETTEXT_PACKAGE);
     database_url.push(GETTEXT_PACKAGE);
@@ -32,4 +33,8 @@ pub fn connect() -> Pool<SqliteConnectionManager> {
 
     let manager = SqliteConnectionManager::file(database_url);
     Pool::new(manager).expect("Unable to initialize database pool")
+});
+
+pub fn connect() -> Pool<SqliteConnectionManager> {
+    POOL.clone()
 }

@@ -1,3 +1,4 @@
 pub mod database;
-pub mod model;
+pub mod episode;
 pub mod repository;
+pub mod show;

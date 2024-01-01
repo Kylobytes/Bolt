@@ -20,10 +20,9 @@
 
 use std::error::Error;
 
-use crate::data::database;
-use crate::data::model::show::Show;
+use crate::data::{database, show::show_model::ShowModel};
 
-pub fn load_all_shows() -> Result<Vec<Show>, Box<dyn Error>> {
+pub fn load_all_shows() -> Result<Vec<ShowModel>, Box<dyn Error>> {
     let pool = database::connect();
     let connection = pool.get().expect("Failed to connect to database");
 
@@ -39,10 +38,10 @@ pub fn load_all_shows() -> Result<Vec<Show>, Box<dyn Error>> {
     )?;
 
     let mut rows = statement.query([])?;
-    let mut shows: Vec<Show> = vec![];
+    let mut shows: Vec<ShowModel> = vec![];
 
     while let Some(row) = rows.next()? {
-        shows.push(Show {
+        shows.push(ShowModel {
             id: row.get(0)?,
             name: row.get(1)?,
             description: row.get(2)?,

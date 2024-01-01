@@ -20,6 +20,10 @@
 
 use std::error::Error;
 
+use r2d2::PooledConnection;
+use r2d2_sqlite::SqliteConnectionManager;
+use rusqlite::{params, Statement};
+
 use crate::{
     api::{
         connection::ApiConnection, episode_client::EpisodeClient,
@@ -27,94 +31,137 @@ use crate::{
     },
     data::{
         database,
-        model::{episode::Episode, show::Show},
+        episode::{episode_data::EpisodeData, episode_model::EpisodeModel},
+        show::{show_data::ShowData, show_model::ShowModel},
     },
 };
 
-pub fn fetch_latest_episodes() -> Result<Vec<Episode>, Box<dyn Error>> {
-    let api_connection: ApiConnection = ApiConnection::builder()
-        .build_url("/recent/episodes?max=12")
-        .build_authentication_headers()
-        .build();
+pub struct DiscoverRepository;
 
-    let recent_episodes: RecentEpisodes =
-        EpisodeClient::fetch_recent(&AGENT, &api_connection);
-    let pool = database::connect();
-    let mut database = pool.get()?;
-    let transaction = database.transaction()?;
+impl DiscoverRepository {
+    pub fn fetch_recent_episodes() -> Result<Vec<EpisodeModel>, Box<dyn Error>>
+    {
+        let api_connection: ApiConnection = ApiConnection::builder()
+            .build_url("/recent/episodes?max=12")
+            .build_authentication_headers()
+            .build();
 
-    for episode in recent_episodes.items.iter() {
-        episode.save_episode_transaction(&transaction)?;
-        episode.save_show_transaction(&transaction)?;
-        episode.save_image()?;
+        let recent_episodes: RecentEpisodes =
+            EpisodeClient::fetch_recent(&AGENT, &api_connection);
+        let pool = database::connect();
+        let mut database: PooledConnection<SqliteConnectionManager> =
+            pool.get()?;
+
+        let episodes: Vec<EpisodeModel> = recent_episodes
+            .items
+            .iter()
+            .map(|episode| EpisodeModel::from(episode.clone()))
+            .collect();
+
+        let transaction = database.transaction()?;
+
+        for episode in episodes.iter() {
+            if let Some(show) = &episode.show {
+                ShowData::save_transaction(&transaction, &show);
+                EpisodeData::save_transaction(&transaction, &episode);
+            }
+        }
+
+        transaction.commit()?;
+
+        Ok(episodes)
     }
 
-    transaction.commit()?;
+    pub fn find_episode_by_id(id: i64) -> Option<EpisodeModel> {
+        let pool = database::connect();
+        let database: PooledConnection<SqliteConnectionManager> =
+            pool.get().expect("Failed to build connection pool");
 
-    let mut statement = database.prepare(
-        "SELECT \
-         episodes.id, \
-         episodes.title, \
-         episodes.description, \
-         episodes.url, \
-         episodes.guid, \
-         episodes.image_url, \
-         episodes.date_published, \
-         shows.id, \
-         shows.name, \
-         shows.description, \
-         shows.url, \
-         shows.image_url \
-         FROM episodes \
-         LEFT JOIN shows ON \
-         episodes.show_id = shows.id \
-         ORDER BY date_published DESC \
-         LIMIT 12",
-    )?;
+        let mut statement: Statement = database
+            .prepare(
+                "SELECT \
+             episodes.id, \
+             episodes.title, \
+             episodes.description, \
+             episodes.url, \
+             episodes.guid, \
+             episodes.image_url, \
+             episodes.date_published, \
+             shows.id, \
+             shows.name, \
+             shows.description, \
+             shows.url, \
+             shows.image_url \
+             FROM episodes \
+             LEFT JOIN shows ON \
+             episodes.show_id = shows.id \
+             WHERE episodes.id = ? \
+             LIMIT 1",
+            )
+            .expect("Failed to prepare query");
 
-    let mut episodes: Vec<Episode> = vec![];
-    let mut rows = statement.query([])?;
-
-    while let Some(row) = rows.next()? {
-        episodes.push(Episode {
-            id: row.get(0)?,
-            title: row.get(1)?,
-            description: match row.get::<usize, String>(2) {
-                Ok(description) => Some(description)
-                    .filter(|description| !description.is_empty()),
-                _ => None,
-            },
-            url: row.get(3)?,
-            guid: match row.get::<usize, String>(4) {
-                Ok(guid) => Some(guid).filter(|guid| !guid.is_empty()),
-                _ => None,
-            },
-            image_url: row.get(5)?,
-            date_published: row.get(6)?,
-            show: match row.get(7) {
-                Ok(id) => Some(Show {
-                    id,
-                    name: row.get(8)?,
-                    description: match row.get::<usize, String>(9) {
-                        Ok(description) => Some(description)
-                            .filter(|description| !description.is_empty()),
-                        _ => None,
-                    },
-                    url: match row.get::<usize, String>(10) {
-                        Ok(url) => Some(url).filter(|url| !url.is_empty()),
-                        _ => None,
-                    },
-                    image_url: match row.get::<usize, String>(11) {
-                        Ok(image) => {
-                            Some(image).filter(|image| !image.is_empty())
+        let mut rows = statement
+            .query_map(params![id], |row| {
+                Ok(EpisodeModel {
+                    id: row.get(0).unwrap(),
+                    title: row.get(1).unwrap(),
+                    description: match row.get::<usize, String>(2) {
+                        Ok(description) => {
+                            Some(description).filter(|description: &String| {
+                                !description.is_empty()
+                            })
                         }
                         _ => None,
                     },
-                }),
-                _ => None,
-            },
-        });
-    }
+                    url: row.get(3).unwrap(),
+                    guid: match row.get::<usize, String>(4) {
+                        Ok(guid) => {
+                            Some(guid).filter(|guid: &String| !guid.is_empty())
+                        }
+                        _ => None,
+                    },
+                    image_url: row.get(5).unwrap(),
+                    date_published: row.get(6).unwrap(),
+                    show: match row.get(7) {
+                        Ok(id) => Some(ShowModel {
+                            id,
+                            name: row.get(8).unwrap(),
+                            description: match row.get::<usize, String>(9) {
+                                Ok(description) => Some(description).filter(
+                                    |description: &String| {
+                                        !description.is_empty()
+                                    },
+                                ),
+                                _ => None,
+                            },
+                            url: match row.get::<usize, String>(10) {
+                                Ok(url) => Some(url)
+                                    .filter(|url: &String| !url.is_empty()),
+                                _ => None,
+                            },
+                            image_url: match row.get::<usize, String>(11) {
+                                Ok(image) => {
+                                    Some(image).filter(|image: &String| {
+                                        !image.is_empty()
+                                    })
+                                }
+                                _ => None,
+                            },
+                        }),
+                        _ => None,
+                    },
+                })
+            })
+            .expect("Failed to find episode");
 
-    Ok(episodes)
+        let Some(result) = rows.next() else {
+            return None;
+        };
+
+        let Ok(episode) = result else {
+            return None;
+        };
+
+        Some(episode)
+    }
 }
