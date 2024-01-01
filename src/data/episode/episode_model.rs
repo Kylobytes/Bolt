@@ -18,7 +18,10 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::{api::episode::Episode, data::show::show_model::ShowModel};
+use crate::{
+    api::episode::episode_response::EpisodeResponse,
+    data::show::show_model::ShowModel,
+};
 
 #[derive(Clone, Debug)]
 pub struct EpisodeModel {
@@ -32,8 +35,8 @@ pub struct EpisodeModel {
     pub show: Option<ShowModel>,
 }
 
-impl From<Episode> for EpisodeModel {
-    fn from(episode: Episode) -> Self {
+impl From<EpisodeResponse> for EpisodeModel {
+    fn from(episode: EpisodeResponse) -> Self {
         EpisodeModel {
             id: episode.id,
             title: episode.title,

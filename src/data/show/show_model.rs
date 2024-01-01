@@ -22,7 +22,7 @@ use std::error::Error;
 
 use rusqlite::{params, Transaction};
 
-use crate::api::episode::Episode;
+use crate::api::episode::episode_response::EpisodeResponse;
 
 #[derive(Debug, Clone)]
 pub struct ShowModel {
@@ -33,8 +33,8 @@ pub struct ShowModel {
     pub image_url: Option<String>,
 }
 
-impl From<Episode> for ShowModel {
-    fn from(episode: Episode) -> Self {
+impl From<EpisodeResponse> for ShowModel {
+    fn from(episode: EpisodeResponse) -> Self {
         ShowModel {
             id: episode.feed_id,
             name: episode.feed_title,

@@ -21,7 +21,10 @@
 use ureq::Agent;
 
 use crate::{
-    api::{connection::ApiConnection, recent_episodes::RecentEpisodes},
+    api::{
+        connection::ApiConnection,
+        episode::episodes_response::EpisodesResponse,
+    },
     config::{API_KEY, USER_AGENT},
 };
 
@@ -31,7 +34,7 @@ impl EpisodeClient {
     pub fn fetch_recent(
         agent: &Agent,
         api_connection: &ApiConnection,
-    ) -> RecentEpisodes {
+    ) -> EpisodesResponse {
         let response = agent
             .get(&api_connection.url)
             .set("User-Agent", USER_AGENT)

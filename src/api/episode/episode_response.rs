@@ -29,7 +29,7 @@ use crate::config::GETTEXT_PACKAGE;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Episode {
+pub struct EpisodeResponse {
     pub id: i64,
     pub title: String,
     pub link: String,
@@ -53,7 +53,7 @@ pub struct Episode {
     pub feed_language: String,
 }
 
-impl Episode {
+impl EpisodeResponse {
     pub fn save_episode_transaction(
         &self,
         transaction: &Transaction,

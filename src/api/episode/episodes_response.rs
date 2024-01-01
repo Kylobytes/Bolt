@@ -1,4 +1,4 @@
-/* recent_episodes.rs
+/* episodes_response.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -20,13 +20,13 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::api::episode::Episode;
+use crate::api::episode::episode_response::EpisodeResponse;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct RecentEpisodes {
+pub struct EpisodesResponse {
     pub status: String,
-    pub items: Vec<Episode>,
+    pub items: Vec<EpisodeResponse>,
     pub count: i64,
     pub max: Option<String>,
     pub description: String,

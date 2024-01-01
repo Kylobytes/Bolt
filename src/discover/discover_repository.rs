@@ -26,8 +26,8 @@ use rusqlite::{params, Statement};
 
 use crate::{
     api::{
-        connection::ApiConnection, episode_client::EpisodeClient,
-        recent_episodes::RecentEpisodes, AGENT,
+        connection::ApiConnection, episode::episode_client::EpisodeClient,
+        episode::episodes_response::EpisodesResponse, AGENT,
     },
     data::{
         database,
@@ -46,7 +46,7 @@ impl DiscoverRepository {
             .build_authentication_headers()
             .build();
 
-        let recent_episodes: RecentEpisodes =
+        let recent_episodes: EpisodesResponse =
             EpisodeClient::fetch_recent(&AGENT, &api_connection);
         let pool = database::connect();
         let mut database: PooledConnection<SqliteConnectionManager> =
