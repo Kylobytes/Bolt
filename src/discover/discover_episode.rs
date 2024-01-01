@@ -27,7 +27,7 @@ use gtk::glib::{self, subclass::prelude::*, Properties};
 use crate::data::episode::episode_model::EpisodeModel;
 
 #[derive(Clone, Debug)]
-pub struct EpisodeData {
+pub struct DiscoverEpisodeData {
     pub id: i64,
     pub title: Option<String>,
     pub date_published: i64,
@@ -35,9 +35,9 @@ pub struct EpisodeData {
     pub show_id: i64,
 }
 
-impl Default for EpisodeData {
+impl Default for DiscoverEpisodeData {
     fn default() -> Self {
-        EpisodeData {
+        DiscoverEpisodeData {
             id: -1,
             title: None,
             date_published: -1,
@@ -58,7 +58,7 @@ mod imp {
         #[property(name = "date-published", get, construct_only, type = i64, member = date_published)]
         #[property(name = "show", get, construct_only, type = Option<String>, member = show)]
         #[property(name = "show-id", get, construct_only, type = i64, member = show_id)]
-        data: RefCell<EpisodeData>,
+        data: RefCell<DiscoverEpisodeData>,
     }
 
     #[glib::object_subclass]
