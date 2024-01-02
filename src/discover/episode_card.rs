@@ -23,15 +23,14 @@ use adw::prelude::*;
 use chrono::NaiveDateTime;
 use gtk::{gio, glib, subclass::prelude::*};
 use std::cell::Cell;
-use ureq::AgentBuilder;
 
 use crate::{
-    config::GETTEXT_PACKAGE,
     data::episode::episode_model::EpisodeModel,
     discover::{
         discover_episode::DiscoverEpisode,
         discover_repository::DiscoverRepository,
     },
+    utils::{episode_image_path, show_image_path},
 };
 
 mod imp {
@@ -149,51 +148,27 @@ impl EpisodeCard {
     pub async fn load_image(&self) {
         let episode_id = self.imp().episode.get();
 
-        let mut episode_image_path = glib::user_cache_dir();
-        episode_image_path.push(GETTEXT_PACKAGE);
-        episode_image_path.push("images");
-        episode_image_path.push("episodes");
-        episode_image_path.push(episode_id.to_string());
-
-        if episode_image_path.as_path().exists() {
-            let image = gio::File::for_path(episode_image_path.as_path());
-            self.imp().image.get().set_file(Some(&image));
-            self.imp().image.get().set_visible(true);
-            self.imp().image_spinner.get().stop();
-            self.imp().image_spinner.get().set_visible(false);
-
-            return;
-        }
-
         let episode = gio::spawn_blocking(move || {
             DiscoverRepository::find_episode_by_id(episode_id)
         })
         .await
-        .expect("Failed to acquire episode");
+        .expect("Failed to load episode for image");
 
         if let Some(episode) = episode {
             if let Some(image_url) = episode.image_url {
-                let image_path = episode_image_path.clone();
+                let image_path = episode_image_path(&episode_id.to_string());
+                let episode_image_path = image_path.clone();
 
                 gio::spawn_blocking(move || {
-                    let agent = AgentBuilder::new().build();
-                    let mut response = agent
-                        .get(&image_url)
-                        .call()
-                        .expect("Failed to download image")
-                        .into_reader();
-                    let mut image = std::fs::File::create(&image_path)
-                        .expect("Failed to initialize image at path");
-                    std::io::copy(
-                        &mut response,
-                        &mut std::io::BufWriter::new(&mut image),
-                    )
-                    .expect("Failed to save image");
+                    DiscoverRepository::save_image(
+                        &image_url,
+                        &episode_image_path,
+                    );
                 })
                 .await
                 .expect("Failed to download image from url");
 
-                let image = gio::File::for_path(episode_image_path.as_path());
+                let image = gio::File::for_path(&image_path.as_path());
                 self.imp().image.get().set_file(Some(&image));
                 self.imp().image.get().set_visible(true);
                 self.imp().image_spinner.get().stop();
@@ -203,11 +178,7 @@ impl EpisodeCard {
             }
 
             if let Some(show) = episode.show {
-                let mut show_image_path = glib::user_cache_dir();
-                show_image_path.push(GETTEXT_PACKAGE);
-                show_image_path.push("images");
-                show_image_path.push("shows");
-                show_image_path.push(show.id.to_string());
+                let show_image_path = show_image_path(&show.id.to_string());
 
                 if show_image_path.as_path().exists() {
                     let image = gio::File::for_path(show_image_path.as_path());
@@ -223,19 +194,10 @@ impl EpisodeCard {
                     let image_path = show_image_path.clone();
 
                     gio::spawn_blocking(move || {
-                        let agent = AgentBuilder::new().build();
-                        let mut response = agent
-                            .get(&image_url)
-                            .call()
-                            .expect("Could not download image")
-                            .into_reader();
-                        let mut image = std::fs::File::create(image_path)
-                            .expect("Failed to initialize image file");
-                        std::io::copy(
-                            &mut response,
-                            &mut std::io::BufWriter::new(&mut image),
-                        )
-                        .expect("Faild to save image");
+                        DiscoverRepository::save_image(
+                            &image_url,
+                            &image_path,
+                        );
                     })
                     .await
                     .expect("Failed to download image from url");

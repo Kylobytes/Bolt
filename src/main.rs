@@ -21,6 +21,7 @@
 mod application;
 mod config;
 mod setup;
+mod utils;
 mod window;
 
 mod api;

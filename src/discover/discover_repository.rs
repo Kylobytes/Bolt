@@ -18,7 +18,7 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::error::Error;
+use std::{error::Error, path::PathBuf};
 
 use r2d2::PooledConnection;
 use r2d2_sqlite::SqliteConnectionManager;
@@ -163,5 +163,19 @@ impl DiscoverRepository {
         };
 
         Some(episode)
+    }
+
+    pub fn save_image(url: &str, path: &PathBuf) {
+        let mut response = AGENT
+            .get(url)
+            .call()
+            .expect("Failed to download image")
+            .into_reader();
+
+        let mut image = std::fs::File::create(&path)
+            .expect("Failed to create image at path");
+
+        std::io::copy(&mut response, &mut std::io::BufWriter::new(&mut image))
+            .expect("Failed to save image");
     }
 }
