@@ -9,7 +9,11 @@ template $DiscoverView : Adw.Bin {
     [top]
     Adw.HeaderBar {
       styles ["flat"]
-      show-title: false;
+
+      [title]
+      Gtk.Label {
+        label: _("Discover Podcasts");
+      }
 
       Gtk.ToggleButton search_toggle {
         icon-name: "system-search-symbolic";
