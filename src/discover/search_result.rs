@@ -1,4 +1,4 @@
-/* discover_view.rs
+/* search_result.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -27,7 +27,7 @@ use gtk::glib::{self, subclass::prelude::*, Properties};
 use crate::data::episode::episode_model::EpisodeModel;
 
 #[derive(Clone, Debug)]
-pub struct DiscoverEpisodeData {
+pub struct SearchResultData {
     pub id: i64,
     pub title: Option<String>,
     pub date_published: i64,
@@ -35,9 +35,9 @@ pub struct DiscoverEpisodeData {
     pub show_id: i64,
 }
 
-impl Default for DiscoverEpisodeData {
+impl Default for SearchResultData {
     fn default() -> Self {
-        DiscoverEpisodeData {
+        SearchResultData {
             id: -1,
             title: None,
             date_published: -1,
@@ -51,37 +51,37 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, Properties)]
-    #[properties(wrapper_type = super::DiscoverEpisode)]
-    pub struct DiscoverEpisode {
+    #[properties(wrapper_type = super::SearchResult)]
+    pub struct SearchResult {
         #[property(name = "id", get, construct_only, type = i64, member = id)]
         #[property(name = "title", get, construct_only, type = Option<String>, member = title)]
         #[property(name = "date-published", get, construct_only, type = i64, member = date_published)]
         #[property(name = "show", get, construct_only, type = Option<String>, member = show)]
         #[property(name = "show-id", get, construct_only, type = i64, member = show_id)]
-        data: RefCell<DiscoverEpisodeData>,
+        data: RefCell<SearchResultData>,
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for DiscoverEpisode {
-        const NAME: &'static str = "DiscoverEpisode";
-        type Type = super::DiscoverEpisode;
+    impl ObjectSubclass for SearchResult {
+        const NAME: &'static str = "SearchResult";
+        type Type = super::SearchResult;
     }
 
     #[glib::derived_properties]
-    impl ObjectImpl for DiscoverEpisode {}
+    impl ObjectImpl for SearchResult {}
 }
 
 glib::wrapper! {
-    pub struct DiscoverEpisode(ObjectSubclass<imp::DiscoverEpisode>);
+    pub struct SearchResult(ObjectSubclass<imp::SearchResult>);
 }
 
-impl Default for DiscoverEpisode {
+impl Default for SearchResult {
     fn default() -> Self {
         glib::Object::builder::<Self>().build()
     }
 }
 
-impl DiscoverEpisode {
+impl SearchResult {
     pub fn new(episode: EpisodeModel) -> Self {
         let mut show_name: Option<String> = None;
         let mut show_id: i64 = -1;

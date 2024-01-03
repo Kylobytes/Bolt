@@ -1,8 +1,8 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $EpisodeCard : Gtk.Box {
-  styles ["episode-card", "card"]
+template $DiscoverCard : Gtk.Box {
+  styles ["discover-card", "card"]
   orientation: vertical;
   vexpand: true;
   halign: center;
@@ -29,7 +29,7 @@ template $EpisodeCard : Gtk.Box {
         }
 
         Gtk.Picture image {
-          styles ["episode-image"]
+          styles ["card-image"]
           vexpand: true;
           hexpand: true;
           can-shrink: true;
@@ -46,7 +46,7 @@ template $EpisodeCard : Gtk.Box {
         }
 
         Gtk.Label title {
-          styles ["heading", "episode-title"]
+          styles ["heading", "card-title"]
           wrap: true;
           max-width-chars: 80;
           justify: center;

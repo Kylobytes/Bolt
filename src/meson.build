@@ -5,7 +5,7 @@ blueprints = custom_target('blueprints',
   input: files (
     'gtk/discover-view.blp',
     'gtk/empty-view.blp',
-    'gtk/episode-card.blp',
+    'gtk/discover-card.blp',
     'gtk/help-overlay.blp',
     'gtk/podcasts-view-stack.blp',
     'gtk/queue-view.blp',

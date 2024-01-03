@@ -1,4 +1,4 @@
-/* episode_card.rs
+/* card.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -26,10 +26,7 @@ use std::cell::Cell;
 
 use crate::{
     data::episode::episode_model::EpisodeModel,
-    discover::{
-        discover_episode::DiscoverEpisode,
-        discover_repository::DiscoverRepository,
-    },
+    discover::{repository::DiscoverRepository, search_result::SearchResult},
     utils::{episode_image_path, show_image_path},
 };
 
@@ -38,7 +35,7 @@ mod imp {
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
     #[template(resource = "/com/kylobytes/Bolt/gtk/episode-card.ui")]
-    pub struct EpisodeCard {
+    pub struct DiscoverCard {
         #[template_child]
         pub image_spinner: TemplateChild<gtk::Spinner>,
         #[template_child]
@@ -55,9 +52,9 @@ mod imp {
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for EpisodeCard {
-        const NAME: &'static str = "EpisodeCard";
-        type Type = super::EpisodeCard;
+    impl ObjectSubclass for DiscoverCard {
+        const NAME: &'static str = "DiscoverCard";
+        type Type = super::DiscoverCard;
         type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
@@ -69,24 +66,24 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for EpisodeCard {}
-    impl WidgetImpl for EpisodeCard {}
-    impl BoxImpl for EpisodeCard {}
+    impl ObjectImpl for DiscoverCard {}
+    impl WidgetImpl for DiscoverCard {}
+    impl BoxImpl for DiscoverCard {}
 }
 
 glib::wrapper! {
-    pub struct EpisodeCard(ObjectSubclass<imp::EpisodeCard>)
+    pub struct DiscoverCard(ObjectSubclass<imp::DiscoverCard>)
         @extends gtk::Widget, gtk::Box,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 
-impl Default for EpisodeCard {
+impl Default for DiscoverCard {
     fn default() -> Self {
         glib::Object::new()
     }
 }
 
-impl From<EpisodeModel> for EpisodeCard {
+impl From<EpisodeModel> for DiscoverCard {
     fn from(episode: EpisodeModel) -> Self {
         let view = Self::default();
 
@@ -110,8 +107,8 @@ impl From<EpisodeModel> for EpisodeCard {
     }
 }
 
-impl From<DiscoverEpisode> for EpisodeCard {
-    fn from(episode: DiscoverEpisode) -> Self {
+impl From<SearchResult> for DiscoverCard {
+    fn from(episode: SearchResult) -> Self {
         let card = Self::default();
         let imp = card.imp();
 
@@ -140,7 +137,7 @@ impl From<DiscoverEpisode> for EpisodeCard {
     }
 }
 
-impl EpisodeCard {
+impl DiscoverCard {
     pub fn new() -> Self {
         Self::default()
     }

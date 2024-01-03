@@ -1,4 +1,4 @@
-/* discover_view.rs
+/* view.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -29,13 +29,11 @@ use gtk::{
 };
 
 use crate::discover::{
-    discover_episode::DiscoverEpisode,
-    discover_repository::DiscoverRepository, episode_card::EpisodeCard,
+    card::DiscoverCard, repository::DiscoverRepository,
+    search_result::SearchResult,
 };
 
 mod imp {
-    use crate::discover::discover_episode::DiscoverEpisode;
-
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
@@ -75,19 +73,19 @@ mod imp {
         fn constructed(&self) {
             self.parent_constructed();
             self.model
-                .replace(Some(gio::ListStore::new::<DiscoverEpisode>()));
+                .replace(Some(gio::ListStore::new::<SearchResult>()));
 
             let model_binding = self.model.borrow();
             let model = model_binding.as_ref();
 
-            self.episodes_container.get().bind_model(
+            self.search_results_container.get().bind_model(
                 model,
                 |item: &glib::Object| {
                     let episode = item
-                        .downcast_ref::<DiscoverEpisode>()
+                        .downcast_ref::<SearchResult>()
                         .expect("Item must be an episode");
 
-                    let card = EpisodeCard::from(episode.to_owned());
+                    let card = DiscoverCard::from(episode.to_owned());
 
                     glib::spawn_future_local(
                         clone!(@weak card, @weak episode => async move {
@@ -97,7 +95,7 @@ mod imp {
 
                     card.into()
                 },
-            )
+            );
         }
     }
     impl WidgetImpl for DiscoverView {}

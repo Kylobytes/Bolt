@@ -25,10 +25,10 @@ use gtk::{
     prelude::*,
 };
 
-use crate::data::repository::show_repository;
-use crate::discover::discover_view::DiscoverView;
-use crate::empty_view::EmptyView;
-use crate::podcasts_view_stack::PodcastsViewStack;
+use crate::{
+    data::repository::show_repository, discover::view::DiscoverView,
+    empty_view::EmptyView, podcasts_view_stack::PodcastsViewStack,
+};
 
 pub enum View {
     Empty,
