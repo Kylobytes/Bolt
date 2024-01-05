@@ -40,7 +40,7 @@ template $DiscoverView : Adw.Bin {
             hexpand: true;
             margin-top: 16;
             margin-bottom: 16;
-            search-delay: 1200;
+            search-delay: 800;
           }
 
           Gtk.Label discover_welcome {
@@ -54,7 +54,7 @@ template $DiscoverView : Adw.Bin {
           Gtk.Label discover_results_empty {
             halign: center;
             valign: center;
-            label: _("Search query returned empty results");
+            label: _("No shows found");
             visible: false;
           }
 
@@ -69,6 +69,7 @@ template $DiscoverView : Adw.Bin {
           }
 
           Gtk.Spinner discover_spinner {
+            spinning: true;
             vexpand: true;
             hexpand: true;
             halign: center;

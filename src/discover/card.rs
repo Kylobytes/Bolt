@@ -20,7 +20,11 @@
  */
 
 use adw::prelude::*;
-use gtk::{gio, glib, subclass::prelude::*};
+use gtk::{
+    gio,
+    glib::{self, clone},
+    subclass::prelude::*,
+};
 use std::cell::{Cell, RefCell};
 
 use crate::{
@@ -99,7 +103,7 @@ impl DiscoverCard {
         Self::default()
     }
 
-    pub async fn load_image(&self) {
+    pub fn load_image(&self) {
         let show_id = self.imp().show_id.get();
         let image_url = self.imp().image_url.take();
 
@@ -123,22 +127,25 @@ impl DiscoverCard {
             return;
         };
 
-        let destination = image_path.clone();
+        glib::spawn_future_local(
+            clone!(@weak self as view, @strong image_path => async move {
+                let destination = image_path.clone();
 
-        let image_saved = gio::spawn_blocking(move || {
-            DiscoverRepository::save_image(&url, &destination)
-        })
-        .await;
+                let image_saved = gio::spawn_blocking(move || {
+                    DiscoverRepository::save_image(&url, &destination)
+                }).await;
 
-        if let Ok(_) = image_saved {
-            let image = gio::File::for_path(image_path.as_path());
-            self.imp().image.get().set_file(Some(&image));
-            self.imp().image.get().set_visible(true);
-        } else {
-            self.imp().icon.get().set_visible(true);
-        }
+                if let Ok(_) = image_saved {
+                    let image = gio::File::for_path(image_path.as_path());
+                    view.imp().image.get().set_file(Some(&image));
+                    view.imp().image.get().set_visible(true);
+                } else {
+                    view.imp().icon.get().set_visible(true);
+                }
 
-        self.imp().image_spinner.get().stop();
-        self.imp().image_spinner.get().set_visible(false);
+                view.imp().image_spinner.get().stop();
+                view.imp().image_spinner.get().set_visible(false);
+            }),
+        );
     }
 }

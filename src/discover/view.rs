@@ -86,12 +86,7 @@ mod imp {
 
                     let card = DiscoverCard::from(show.to_owned());
 
-                    glib::spawn_future_local(
-                        clone!(@weak card => async move {
-                            card.load_image().await;
-                        }),
-                    );
-
+                    card.load_image();
                     card.into()
                 },
             );
@@ -144,6 +139,10 @@ impl DiscoverView {
         spinner.stop();
         spinner.set_visible(false);
 
-        self.imp().search_results_container.get().set_visible(true);
+        if discover_shows.len() > 0 {
+            self.imp().search_results_container.get().set_visible(true);
+        } else {
+            self.imp().discover_results_empty.get().set_visible(true);
+        }
     }
 }
