@@ -31,7 +31,7 @@ pub struct ShowResponse {
     url: String,
     original_url: String,
     link: String,
-    description: String,
+    pub description: String,
     author: String,
     owner_name: String,
     pub image: String,

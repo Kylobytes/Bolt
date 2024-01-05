@@ -46,6 +46,8 @@ mod imp {
         pub icon: TemplateChild<gtk::Image>,
         #[template_child]
         pub title: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub description: TemplateChild<gtk::Label>,
         pub show_id: Cell<i64>,
         pub image_url: RefCell<Option<String>>,
     }
@@ -89,6 +91,10 @@ impl From<DiscoverShow> for DiscoverCard {
 
         if let Some(title) = show.title() {
             imp.title.get().set_text(&title);
+        }
+
+        if let Some(description) = show.description() {
+            imp.description.get().set_text(&description);
         }
 
         imp.show_id.set(show.id());

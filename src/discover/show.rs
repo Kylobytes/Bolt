@@ -26,21 +26,12 @@ use gtk::glib::{self, subclass::prelude::*, Properties};
 
 use crate::api::show::response::ShowResponse;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct ShowData {
     pub id: i64,
     pub title: Option<String>,
+    pub description: Option<String>,
     pub image: Option<String>,
-}
-
-impl Default for ShowData {
-    fn default() -> Self {
-        ShowData {
-            id: -1,
-            title: None,
-            image: None,
-        }
-    }
 }
 
 mod imp {
@@ -51,6 +42,7 @@ mod imp {
     pub struct DiscoverShow {
         #[property(name = "id", get, construct_only, type = i64, member = id)]
         #[property(name = "title", get, construct_only, type = Option<String>, member = title)]
+        #[property(name = "description", get, construct_only, type = Option<String>, member = description)]
         #[property(name = "image", get, construct_only, type = Option<String>, member = image)]
         data: RefCell<ShowData>,
     }
@@ -80,6 +72,10 @@ impl From<ShowResponse> for DiscoverShow {
         glib::Object::builder::<Self>()
             .property("id", show.id)
             .property("title", Some(show.title))
+            .property(
+                "description",
+                Some(show.description).filter(|text| !text.is_empty()),
+            )
             .property(
                 "image",
                 Some(show.image).filter(|image| !image.is_empty()),
