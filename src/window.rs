@@ -103,7 +103,6 @@ impl BoltWindow {
             View::Loaded => stack.set_visible_child_name("podcasts-view"),
             View::Discover => {
                 stack.set_visible_child_name("discover-view");
-                self.imp().discover_view.get().show_front_page();
             }
         };
     }
@@ -136,14 +135,14 @@ impl BoltWindow {
                 window.show_view(View::Discover);
             }));
 
-        let discover_search_bar = self.imp().discover_view.search_bar();
-        let discover_search_entry = self.imp().discover_view.search_entry();
+        let discover_view = self.imp().discover_view.get();
+        let discover_search_entry = discover_view.search_entry();
 
-        discover_search_bar.connect_entry(&discover_search_entry);
-        discover_search_bar.set_key_capture_widget(Some(self));
         discover_search_entry.connect_search_changed(
             move |entry: &gtk::SearchEntry| {
-                println!("{entry}");
+                if entry.text().len() > 3 {
+                    discover_view.search_shows(&entry.text());
+                }
             },
         );
     }

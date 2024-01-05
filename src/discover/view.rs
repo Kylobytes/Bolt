@@ -29,8 +29,7 @@ use gtk::{
 };
 
 use crate::discover::{
-    card::DiscoverCard, repository::DiscoverRepository,
-    search_result::SearchResult,
+    card::DiscoverCard, repository::DiscoverRepository, show::DiscoverShow,
 };
 
 mod imp {
@@ -40,17 +39,17 @@ mod imp {
     #[template(resource = "/com/kylobytes/Bolt/gtk/discover-view.ui")]
     pub struct DiscoverView {
         #[template_child]
-        pub episodes_spinner: TemplateChild<gtk::Spinner>,
+        pub search_entry: TemplateChild<gtk::SearchEntry>,
         #[template_child]
-        pub episodes_container: TemplateChild<gtk::FlowBox>,
+        pub discover_welcome: TemplateChild<gtk::Label>,
         #[template_child]
-        pub categories_spinner: TemplateChild<gtk::Spinner>,
+        pub search_results_container: TemplateChild<gtk::FlowBox>,
         #[template_child]
         pub categories_container: TemplateChild<gtk::FlowBox>,
         #[template_child]
-        pub search_bar: TemplateChild<gtk::SearchBar>,
+        pub discover_results_empty: TemplateChild<gtk::Label>,
         #[template_child]
-        pub search_entry: TemplateChild<gtk::SearchEntry>,
+        pub discover_spinner: TemplateChild<gtk::Spinner>,
         pub model: RefCell<Option<gio::ListStore>>,
     }
 
@@ -73,7 +72,7 @@ mod imp {
         fn constructed(&self) {
             self.parent_constructed();
             self.model
-                .replace(Some(gio::ListStore::new::<SearchResult>()));
+                .replace(Some(gio::ListStore::new::<DiscoverShow>()));
 
             let model_binding = self.model.borrow();
             let model = model_binding.as_ref();
@@ -81,14 +80,14 @@ mod imp {
             self.search_results_container.get().bind_model(
                 model,
                 |item: &glib::Object| {
-                    let episode = item
-                        .downcast_ref::<SearchResult>()
-                        .expect("Item must be an episode");
+                    let show = item
+                        .downcast_ref::<DiscoverShow>()
+                        .expect("Item must be an search result");
 
-                    let card = DiscoverCard::from(episode.to_owned());
+                    let card = DiscoverCard::from(show.to_owned());
 
                     glib::spawn_future_local(
-                        clone!(@weak card, @weak episode => async move {
+                        clone!(@weak card => async move {
                             card.load_image().await;
                         }),
                     );
@@ -119,34 +118,32 @@ impl DiscoverView {
         Self::default()
     }
 
-    pub fn show_front_page(&self) {
-        glib::spawn_future_local(clone!(@weak self as view => async move {
-            let episodes: Vec<DiscoverEpisode> = gio::spawn_blocking(move || {
-                DiscoverRepository::fetch_recent_episodes()
-                    .expect("Failed to fetch latest episodes")
-            }).await.expect("Failed to fetch episodes on separate thread")
-                .into_iter()
-                .map(DiscoverEpisode::new)
-                .collect();
-
-            if let Some(model) = view.imp().model.borrow().as_ref() {
-                model.extend_from_slice(&episodes);
-
-                view.imp().episodes_spinner.get().stop();
-                view.imp().episodes_spinner.get().set_visible(false);
-                view.imp().categories_spinner.get().stop();
-                view.imp().categories_spinner.get().set_visible(false);
-                view.imp().episodes_container.get().set_visible(true);
-                view.imp().categories_container.get().set_visible(true);
-            };
-        }));
-    }
-
     pub fn search_entry(&self) -> gtk::SearchEntry {
         self.imp().search_entry.get()
     }
 
-    pub fn search_bar(&self) -> gtk::SearchBar {
-        self.imp().search_bar.get()
+    pub fn search_shows(&self, query: &str) {
+        self.imp().discover_welcome.get().set_visible(false);
+
+        let spinner = self.imp().discover_spinner.get();
+        spinner.start();
+        spinner.set_visible(true);
+
+        let shows = DiscoverRepository::search_shows(&query);
+        let discover_shows: Vec<DiscoverShow> =
+            shows.into_iter().map(DiscoverShow::from).collect();
+
+        let model_binding = self.imp().model.borrow();
+        let model = model_binding.as_ref();
+
+        if let Some(model) = model {
+            model.remove_all();
+            model.extend_from_slice(&discover_shows);
+        }
+
+        spinner.stop();
+        spinner.set_visible(false);
+
+        self.imp().search_results_container.get().set_visible(true);
     }
 }

@@ -14,10 +14,6 @@ template $DiscoverView : Adw.Bin {
       Gtk.Label {
         label: _("Discover Podcasts");
       }
-
-      Gtk.ToggleButton search_toggle {
-        icon-name: "system-search-symbolic";
-      }
     }
 
     content: Gtk.Box {
@@ -35,67 +31,49 @@ template $DiscoverView : Adw.Bin {
         Gtk.Box {
           orientation: vertical;
           hexpand: true;
+          vexpand: true;
           margin-start: 16;
           margin-end: 16;
 
-          Gtk.SearchBar search_bar {
-            styles ["discover-searchbar"]
+          Gtk.SearchEntry search_entry {
+            placeholder-text: _("Search for your favorite podcasts");
+            hexpand: true;
             margin-top: 16;
             margin-bottom: 16;
-            search-mode-enabled: bind search_toggle.active bidirectional;
-
-            Gtk.SearchEntry search_entry {
-              placeholder-text: _("Search for your favorite podcasts");
-              hexpand: true;
-            }
+            search-delay: 1200;
           }
 
-          Gtk.Box {
-            orientation: vertical;
+          Gtk.Label discover_welcome {
+            halign: center;
+            valign: center;
+            hexpand: true;
             vexpand: true;
-
-            Gtk.Label {
-              styles ["title-1"]
-              label: _("Latest Episodes");
-              halign: start;
-              margin-bottom: 16;
-            }
-
-            Gtk.Spinner episodes_spinner {
-              spinning: true;
-              vexpand: true;
-              hexpand: true;
-              halign: center;
-              valign: center;
-            }
-
-            Gtk.FlowBox episodes_container {
-              vexpand: true;
-              visible: false;
-            }
+            label: _("Start searching to see results");
           }
 
-          Gtk.Box {
-            orientation: vertical;
+          Gtk.Label discover_results_empty {
+            halign: center;
+            valign: center;
+            label: _("Search query returned empty results");
+            visible: false;
+          }
+
+          Gtk.FlowBox search_results_container {
+            hexpand: true;
+            visible: false;
+          }
+
+          Gtk.FlowBox categories_container {
             vexpand: true;
+            visible: false;
+          }
 
-            Gtk.Label {
-              styles ["title-1"]
-              label: _("Categories");
-              halign: start;
-            }
-
-            Gtk.Spinner categories_spinner {
-              spinning: true;
-              vexpand: true;
-              hexpand: true;
-              halign: center;
-              valign: center;
-            }
-
-            Gtk.FlowBox categories_container {
-              visible: false;
-            }
+          Gtk.Spinner discover_spinner {
+            vexpand: true;
+            hexpand: true;
+            halign: center;
+            valign: center;
+            visible: false;
           }
         }
       }

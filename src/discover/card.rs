@@ -20,21 +20,19 @@
  */
 
 use adw::prelude::*;
-use chrono::NaiveDateTime;
 use gtk::{gio, glib, subclass::prelude::*};
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 
 use crate::{
-    data::episode::episode_model::EpisodeModel,
-    discover::{repository::DiscoverRepository, search_result::SearchResult},
-    utils::{episode_image_path, show_image_path},
+    discover::{repository::DiscoverRepository, show::DiscoverShow},
+    utils::show_image_path,
 };
 
 mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
-    #[template(resource = "/com/kylobytes/Bolt/gtk/episode-card.ui")]
+    #[template(resource = "/com/kylobytes/Bolt/gtk/discover-card.ui")]
     pub struct DiscoverCard {
         #[template_child]
         pub image_spinner: TemplateChild<gtk::Spinner>,
@@ -44,11 +42,8 @@ mod imp {
         pub icon: TemplateChild<gtk::Image>,
         #[template_child]
         pub title: TemplateChild<gtk::Label>,
-        #[template_child]
-        pub show: TemplateChild<gtk::Label>,
-        #[template_child]
-        pub timestamp: TemplateChild<gtk::Label>,
-        pub episode: Cell<i64>,
+        pub show_id: Cell<i64>,
+        pub image_url: RefCell<Option<String>>,
     }
 
     #[glib::object_subclass]
@@ -83,55 +78,17 @@ impl Default for DiscoverCard {
     }
 }
 
-impl From<EpisodeModel> for DiscoverCard {
-    fn from(episode: EpisodeModel) -> Self {
-        let view = Self::default();
-
-        view.imp().title.get().set_text(episode.title.as_str());
-
-        let datetime =
-            NaiveDateTime::from_timestamp_opt(episode.date_published, 0);
-
-        if let Some(date) = datetime {
-            view.imp()
-                .timestamp
-                .get()
-                .set_text(&date.format("%b %e, %Y").to_string());
-        }
-
-        if let Some(show) = episode.show {
-            view.imp().show.get().set_text(show.name.as_str());
-        }
-
-        view
-    }
-}
-
-impl From<SearchResult> for DiscoverCard {
-    fn from(episode: SearchResult) -> Self {
+impl From<DiscoverShow> for DiscoverCard {
+    fn from(show: DiscoverShow) -> Self {
         let card = Self::default();
         let imp = card.imp();
 
-        if let Some(title) = episode.title() {
+        if let Some(title) = show.title() {
             imp.title.get().set_text(&title);
         }
 
-        if let Some(show) = episode.show() {
-            imp.show.get().set_text(&show);
-        }
-
-        if episode.date_published() >= 0 {
-            let datetime =
-                NaiveDateTime::from_timestamp_opt(episode.date_published(), 0);
-
-            if let Some(timestamp) = datetime {
-                imp.timestamp
-                    .get()
-                    .set_text(&timestamp.format("%b %e, %Y").to_string());
-            }
-        }
-
-        imp.episode.set(episode.id());
+        imp.show_id.set(show.id());
+        imp.image_url.replace(show.image());
 
         card
     }
@@ -143,75 +100,44 @@ impl DiscoverCard {
     }
 
     pub async fn load_image(&self) {
-        let episode_id = self.imp().episode.get();
+        let show_id = self.imp().show_id.get();
+        let image_url = self.imp().image_url.take();
 
-        let episode = gio::spawn_blocking(move || {
-            DiscoverRepository::find_episode_by_id(episode_id)
-        })
-        .await
-        .expect("Failed to load episode for image");
+        let image_path = show_image_path(&show_id.to_string());
 
-        if let Some(episode) = episode {
-            if let Some(image_url) = episode.image_url {
-                let image_path = episode_image_path(&episode_id.to_string());
-                let episode_image_path = image_path.clone();
+        if image_path.as_path().exists() {
+            let image = gio::File::for_path(&image_path.as_path());
+            self.imp().image.get().set_file(Some(&image));
+            self.imp().image_spinner.get().stop();
+            self.imp().image_spinner.get().set_visible(false);
+            self.imp().image.get().set_visible(true);
 
-                gio::spawn_blocking(move || {
-                    DiscoverRepository::save_image(
-                        &image_url,
-                        &episode_image_path,
-                    );
-                })
-                .await
-                .expect("Failed to download image from url");
-
-                let image = gio::File::for_path(&image_path.as_path());
-                self.imp().image.get().set_file(Some(&image));
-                self.imp().image.get().set_visible(true);
-                self.imp().image_spinner.get().stop();
-                self.imp().image_spinner.get().set_visible(false);
-
-                return;
-            }
-
-            if let Some(show) = episode.show {
-                let show_image_path = show_image_path(&show.id.to_string());
-
-                if show_image_path.as_path().exists() {
-                    let image = gio::File::for_path(show_image_path.as_path());
-                    self.imp().image.get().set_file(Some(&image));
-                    self.imp().image.get().set_visible(true);
-                    self.imp().image_spinner.get().stop();
-                    self.imp().image_spinner.get().set_visible(false);
-
-                    return;
-                }
-
-                if let Some(image_url) = show.image_url {
-                    let image_path = show_image_path.clone();
-
-                    gio::spawn_blocking(move || {
-                        DiscoverRepository::save_image(
-                            &image_url,
-                            &image_path,
-                        );
-                    })
-                    .await
-                    .expect("Failed to download image from url");
-
-                    let image =
-                        gio::File::for_path(show_image_path.clone().as_path());
-                    self.imp().image.get().set_file(Some(&image));
-                    self.imp().image.get().set_visible(true);
-                    self.imp().image_spinner.get().stop();
-                    self.imp().image_spinner.get().set_visible(false);
-
-                    return;
-                }
-            }
+            return;
         }
 
-        self.imp().icon.get().set_visible(true);
+        let Some(url) = image_url else {
+            self.imp().image_spinner.get().stop();
+            self.imp().image_spinner.get().set_visible(false);
+            self.imp().icon.get().set_visible(true);
+
+            return;
+        };
+
+        let destination = image_path.clone();
+
+        let image_saved = gio::spawn_blocking(move || {
+            DiscoverRepository::save_image(&url, &destination)
+        })
+        .await;
+
+        if let Ok(_) = image_saved {
+            let image = gio::File::for_path(image_path.as_path());
+            self.imp().image.get().set_file(Some(&image));
+            self.imp().image.get().set_visible(true);
+        } else {
+            self.imp().icon.get().set_visible(true);
+        }
+
         self.imp().image_spinner.get().stop();
         self.imp().image_spinner.get().set_visible(false);
     }

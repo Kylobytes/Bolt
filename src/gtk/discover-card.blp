@@ -4,7 +4,8 @@ using Adw 1;
 template $DiscoverCard : Gtk.Box {
   styles ["discover-card", "card"]
   orientation: vertical;
-  vexpand: true;
+  vexpand: false;
+  hexpand: false;
   halign: center;
 
   Adw.Clamp {
@@ -26,6 +27,7 @@ template $DiscoverCard : Gtk.Box {
           hexpand: true;
           halign: center;
           valign: center;
+          visible: true;
         }
 
         Gtk.Picture image {
@@ -50,24 +52,6 @@ template $DiscoverCard : Gtk.Box {
           wrap: true;
           max-width-chars: 80;
           justify: center;
-          margin-start: 16;
-          margin-end: 16;
-        }
-
-        Gtk.Label show {
-          styles ["heading", "dim-label"]
-          justify: center;
-          wrap: true;
-          max-width-chars: 80;
-          margin-start: 16;
-          margin-end: 16;
-        }
-
-        Gtk.Label timestamp {
-          styles ["dim-label"]
-          justify: center;
-          wrap: false;
-          max-width-chars: 80;
           margin-start: 16;
           margin-end: 16;
         }
