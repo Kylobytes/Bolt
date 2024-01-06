@@ -117,32 +117,41 @@ impl DiscoverView {
         self.imp().search_entry.get()
     }
 
-    pub fn search_shows(&self, query: &str) {
-        self.imp().discover_welcome.get().set_visible(false);
+    pub fn search_shows(&self, search_query: &str) {
+        let query = search_query.to_string();
 
-        let spinner = self.imp().discover_spinner.get();
-        spinner.start();
-        spinner.set_visible(true);
+        glib::spawn_future_local(
+            clone!(@weak self as view, @strong query => async move {
+                view.imp().discover_welcome.get().set_visible(false);
 
-        let shows = DiscoverRepository::search_shows(&query);
-        let discover_shows: Vec<DiscoverShow> =
-            shows.into_iter().map(DiscoverShow::from).collect();
+                let spinner = view.imp().discover_spinner.get();
+                spinner.start();
+                spinner.set_visible(true);
 
-        let model_binding = self.imp().model.borrow();
-        let model = model_binding.as_ref();
+                let shows = gio::spawn_blocking(move || {
+                    DiscoverRepository::search_shows(&query)
+                }).await.expect("Couldn't complete show search");
 
-        if let Some(model) = model {
-            model.remove_all();
-            model.extend_from_slice(&discover_shows);
-        }
+                let discover_shows: Vec<DiscoverShow> =
+                    shows.into_iter().map(DiscoverShow::from).collect();
 
-        spinner.stop();
-        spinner.set_visible(false);
+                let model_binding = view.imp().model.borrow();
+                let model = model_binding.as_ref();
 
-        if discover_shows.len() > 0 {
-            self.imp().search_results_container.get().set_visible(true);
-        } else {
-            self.imp().discover_results_empty.get().set_visible(true);
-        }
+                if let Some(model) = model {
+                    model.remove_all();
+                    model.extend_from_slice(&discover_shows);
+                }
+
+                spinner.stop();
+                spinner.set_visible(false);
+
+                if discover_shows.len() > 0 {
+                    view.imp().search_results_container.get().set_visible(true);
+                } else {
+                    view.imp().discover_results_empty.get().set_visible(true);
+                }
+            }),
+        );
     }
 }
