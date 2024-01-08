@@ -67,7 +67,13 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for DiscoverCard {}
+    impl ObjectImpl for DiscoverCard {
+        fn constructed(&self) {
+            self.parent_constructed();
+
+            self.obj().load_image();
+        }
+    }
     impl WidgetImpl for DiscoverCard {}
     impl BoxImpl for DiscoverCard {}
 }
@@ -110,48 +116,47 @@ impl DiscoverCard {
     }
 
     pub fn load_image(&self) {
-        let show_id = self.imp().show_id.get();
-        let image_url = self.imp().image_url.take();
+        glib::spawn_future_local(clone!(@weak self as view => async move {
+            let show_id = view.imp().show_id.get();
+            let image_url = view.imp().image_url.take();
 
-        let image_path = show_image_path(&show_id.to_string());
+            let image_path = show_image_path(&show_id.to_string());
 
-        if image_path.as_path().exists() {
-            let image = gio::File::for_path(&image_path.as_path());
-            self.imp().image.get().set_file(Some(&image));
-            self.imp().image_spinner.get().stop();
-            self.imp().image_spinner.get().set_visible(false);
-            self.imp().image.get().set_visible(true);
-
-            return;
-        }
-
-        let Some(url) = image_url else {
-            self.imp().image_spinner.get().stop();
-            self.imp().image_spinner.get().set_visible(false);
-            self.imp().icon.get().set_visible(true);
-
-            return;
-        };
-
-        glib::spawn_future_local(
-            clone!(@weak self as view, @strong image_path => async move {
-                let destination = image_path.clone();
-
-                let image_saved = gio::spawn_blocking(move || {
-                    DiscoverRepository::save_image(&url, &destination)
-                }).await;
-
-                if let Ok(_) = image_saved {
-                    let image = gio::File::for_path(image_path.as_path());
-                    view.imp().image.get().set_file(Some(&image));
-                    view.imp().image.get().set_visible(true);
-                } else {
-                    view.imp().icon.get().set_visible(true);
-                }
-
+            if image_path.as_path().exists() {
+                let image = gio::File::for_path(&image_path.as_path());
+                view.imp().image.get().set_file(Some(&image));
                 view.imp().image_spinner.get().stop();
                 view.imp().image_spinner.get().set_visible(false);
-            }),
-        );
+                view.imp().image.get().set_visible(true);
+
+                return;
+            }
+
+            let Some(url) = image_url else {
+                view.imp().image_spinner.get().stop();
+                view.imp().image_spinner.get().set_visible(false);
+                view.imp().icon.get().set_visible(true);
+
+                return;
+            };
+
+            let destination = image_path.clone();
+
+            let image_saved = gio::spawn_blocking(move || {
+                DiscoverRepository::save_image(&url, &destination)
+            })
+                .await;
+
+            if let Ok(_) = image_saved {
+                let image = gio::File::for_path(image_path.as_path());
+                view.imp().image.get().set_file(Some(&image));
+                view.imp().image.get().set_visible(true);
+            } else {
+                view.imp().icon.get().set_visible(true);
+            }
+
+            view.imp().image_spinner.get().stop();
+            view.imp().image_spinner.get().set_visible(false);
+        }));
     }
 }

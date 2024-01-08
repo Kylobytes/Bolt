@@ -84,10 +84,7 @@ mod imp {
                         .downcast_ref::<DiscoverShow>()
                         .expect("Item must be an search result");
 
-                    let card = DiscoverCard::from(show.to_owned());
-
-                    card.load_image();
-                    card.into()
+                    DiscoverCard::from(show.to_owned()).into()
                 },
             );
         }
