@@ -121,6 +121,13 @@ impl DiscoverView {
             clone!(@weak self as view, @strong query => async move {
                 view.imp().discover_welcome.get().set_visible(false);
 
+                let model_binding = view.imp().model.borrow();
+                let model = model_binding.as_ref();
+
+                if let Some(model) = model {
+                    model.remove_all();
+                }
+
                 let spinner = view.imp().discover_spinner.get();
                 spinner.start();
                 spinner.set_visible(true);
@@ -132,11 +139,7 @@ impl DiscoverView {
                 let discover_shows: Vec<DiscoverShow> =
                     shows.into_iter().map(DiscoverShow::from).collect();
 
-                let model_binding = view.imp().model.borrow();
-                let model = model_binding.as_ref();
-
                 if let Some(model) = model {
-                    model.remove_all();
                     model.extend_from_slice(&discover_shows);
                 }
 
