@@ -47,7 +47,7 @@ mod imp {
         #[template_child]
         pub categories_container: TemplateChild<gtk::FlowBox>,
         #[template_child]
-        pub discover_results_empty: TemplateChild<gtk::Label>,
+        pub discover_results_empty: TemplateChild<adw::StatusPage>,
         #[template_child]
         pub discover_spinner: TemplateChild<gtk::Spinner>,
         pub model: RefCell<Option<gio::ListStore>>,

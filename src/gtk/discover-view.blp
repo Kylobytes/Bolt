@@ -51,10 +51,12 @@ template $DiscoverView : Adw.Bin {
             label: _("Start searching to see results");
           }
 
-          Gtk.Label discover_results_empty {
-            halign: center;
-            valign: center;
-            label: _("No shows found");
+          Adw.StatusPage discover_results_empty {
+            hexpand: true;
+            vexpand: true;
+            icon-name: "system-search-symbolic";
+            title: _("No shows found");
+            description: _("Try a different search");
             visible: false;
           }
 
