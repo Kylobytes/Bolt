@@ -24,7 +24,7 @@ use std::cell::RefCell;
 use adw::prelude::*;
 use gtk::glib::{self, subclass::prelude::*, Properties};
 
-use crate::api::show::response::ShowResponse;
+use crate::api::search::result::SearchResult;
 
 #[derive(Clone, Debug, Default)]
 pub struct ShowData {
@@ -67,8 +67,8 @@ impl Default for DiscoverShow {
     }
 }
 
-impl From<ShowResponse> for DiscoverShow {
-    fn from(show: ShowResponse) -> Self {
+impl From<SearchResult> for DiscoverShow {
+    fn from(show: SearchResult) -> Self {
         glib::Object::builder::<Self>()
             .property("id", show.id)
             .property("title", Some(show.title))

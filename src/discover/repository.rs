@@ -22,8 +22,9 @@ use std::path::PathBuf;
 
 use crate::{
     api::{
-        connection::ApiConnection, show::response::ShowResponse,
-        shows::response::ShowsResponse, AGENT,
+        connection::ApiConnection,
+        search::{result::SearchResult, results::SearchResults},
+        AGENT,
     },
     config::{API_KEY, USER_AGENT},
 };
@@ -31,9 +32,9 @@ use crate::{
 pub struct DiscoverRepository;
 
 impl DiscoverRepository {
-    pub fn search_shows(query: &str) -> Vec<ShowResponse> {
+    pub fn search_shows(query: &str) -> Vec<SearchResult> {
         let endpoint = format!(
-            "/search/byterm?q={}&pretty",
+            "/search/byterm?q={}",
             &query.to_string().replace(" ", "+")
         );
 
@@ -42,7 +43,7 @@ impl DiscoverRepository {
             .build_authentication_headers()
             .build();
 
-        let response: ShowsResponse = AGENT
+        let response: SearchResults = AGENT
             .get(&api_connection.url)
             .set("User-Agent", USER_AGENT)
             .set("X-Auth-Key", API_KEY)

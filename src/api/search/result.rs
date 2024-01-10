@@ -1,4 +1,4 @@
-/* response.rs
+/* result.rs
  *
  * Copyright 2024 Kent Delante
  *
@@ -22,9 +22,9 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
-#[derive(Default, Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ShowResponse {
+pub struct SearchResult {
     pub id: i64,
     podcast_guid: String,
     pub title: String,
