@@ -117,6 +117,8 @@ impl DiscoverView {
     pub fn search_shows(&self, search_query: &str) {
         let query = search_query.to_string();
 
+        self.imp().discover_results_empty.set_visible(false);
+
         glib::spawn_future_local(
             clone!(@weak self as view, @strong query => async move {
                 view.imp().discover_welcome.get().set_visible(false);
