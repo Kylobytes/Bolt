@@ -28,6 +28,8 @@ mod api;
 mod data;
 
 mod discover;
+mod podcasts;
+
 mod empty_view;
 mod podcasts_view_stack;
 mod queue_view;

@@ -48,6 +48,8 @@ mod imp {
         pub title: TemplateChild<gtk::Label>,
         #[template_child]
         pub description: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub subscribe_button: TemplateChild<gtk::Button>,
         pub show_id: Cell<i64>,
         pub image_url: RefCell<Option<String>>,
     }
@@ -72,6 +74,7 @@ mod imp {
             self.parent_constructed();
 
             self.obj().load_image();
+            self.obj().connect_signals();
         }
     }
     impl WidgetImpl for DiscoverCard {}
@@ -158,5 +161,25 @@ impl DiscoverCard {
             view.imp().image_spinner.get().stop();
             view.imp().image_spinner.get().set_visible(false);
         }));
+    }
+
+    pub fn connect_signals(&self) {
+        self.imp().subscribe_button.get().connect_clicked(
+            clone!(@weak self as view => move |button: &gtk::Button| {
+                button.set_label("Subscribing...");
+                button.set_sensitive(false);
+                let show_id = view.imp().show_id.get();
+
+                glib::spawn_future_local(
+                    clone!(@weak button, @strong show_id => async move {
+                        gio::spawn_blocking(move || {
+                            DiscoverRepository::subscribe(show_id);
+                        }).await.expect("Failed to finish subscribe task");
+
+                        button.set_label("Subscribed");
+                    })
+                );
+            }),
+        );
     }
 }

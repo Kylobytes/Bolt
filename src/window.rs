@@ -26,8 +26,8 @@ use gtk::{
 };
 
 use crate::{
-    data::repository::show_repository, discover::view::DiscoverView,
-    empty_view::EmptyView, podcasts_view_stack::PodcastsViewStack,
+    discover::view::DiscoverView, empty_view::EmptyView, podcasts,
+    podcasts_view_stack::PodcastsViewStack,
 };
 
 pub enum View {
@@ -113,7 +113,7 @@ impl BoltWindow {
         self.show_view(View::Loading);
 
         main_context.spawn_local(clone!(@weak self as window => async move {
-            if let Ok(shows) = show_repository::load_all_shows() {
+            if let Ok(shows) = podcasts::repository::load_all_shows() {
                 if shows.is_empty() {
                     window.show_view(View::Empty);
                 }

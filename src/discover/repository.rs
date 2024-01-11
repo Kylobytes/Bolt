@@ -23,10 +23,12 @@ use std::path::PathBuf;
 use crate::{
     api::{
         connection::ApiConnection,
+        podcast::response::PodcastResponse,
         search::{result::SearchResult, results::SearchResults},
         AGENT,
     },
     config::{API_KEY, USER_AGENT},
+    data::{database, show},
 };
 
 pub struct DiscoverRepository;
@@ -67,5 +69,31 @@ impl DiscoverRepository {
             .expect("Failed to save image");
 
         Ok(())
+    }
+
+    pub fn subscribe(show_id: i64) {
+        let endpoint = format!("/podcasts/byfeedid?id={show_id}&pretty");
+
+        let api_connection = ApiConnection::builder()
+            .build_url(&endpoint)
+            .build_authentication_headers()
+            .build();
+
+        let response: PodcastResponse = AGENT
+            .get(&api_connection.url)
+            .set("User-Agent", USER_AGENT)
+            .set("X-Auth-Key", API_KEY)
+            .set("X-Auth-Date", &api_connection.auth_date)
+            .set("Authorization", &api_connection.authorization)
+            .call()
+            .expect("Failed to subscribe to podcast")
+            .into_json()
+            .expect("Failed to parse search results");
+
+        let database = database::connect()
+            .get()
+            .expect("Failed to connect to database");
+
+        show::model::save_subscription(&database, &response);
     }
 }

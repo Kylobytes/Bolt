@@ -1,4 +1,4 @@
-/* show_repository.rs
+/* repository.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -20,9 +20,9 @@
 
 use std::error::Error;
 
-use crate::data::{database, show::show_model::ShowModel};
+use crate::data::{database, show::Show};
 
-pub fn load_all_shows() -> Result<Vec<ShowModel>, Box<dyn Error>> {
+pub fn load_all_shows() -> Result<Vec<Show>, Box<dyn Error>> {
     let pool = database::connect();
     let connection = pool.get().expect("Failed to connect to database");
 
@@ -38,10 +38,10 @@ pub fn load_all_shows() -> Result<Vec<ShowModel>, Box<dyn Error>> {
     )?;
 
     let mut rows = statement.query([])?;
-    let mut shows: Vec<ShowModel> = vec![];
+    let mut shows: Vec<Show> = vec![];
 
     while let Some(row) = rows.next()? {
-        shows.push(ShowModel {
+        shows.push(Show {
             id: row.get(0)?,
             name: row.get(1)?,
             description: row.get(2)?,
