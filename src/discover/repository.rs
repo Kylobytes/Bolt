@@ -72,7 +72,7 @@ impl DiscoverRepository {
     }
 
     pub fn subscribe(show_id: i64) {
-        let endpoint = format!("/podcasts/byfeedid?id={show_id}&pretty");
+        let endpoint = format!("/podcasts/byfeedid?id={show_id}");
 
         let api_connection = ApiConnection::builder()
             .build_url(&endpoint)
