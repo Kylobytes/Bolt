@@ -106,6 +106,10 @@ impl From<DiscoverShow> for DiscoverCard {
             imp.description.get().set_text(&description);
         }
 
+        if show.subscribed() {
+            card.mark_subscribed();
+        }
+
         imp.show_id.set(show.id());
         imp.image_url.replace(show.image());
 
@@ -181,5 +185,12 @@ impl DiscoverCard {
                 );
             }),
         );
+    }
+
+    pub fn mark_subscribed(&self) {
+        let subscribe_button: gtk::Button = self.imp().subscribe_button.get();
+
+        subscribe_button.set_sensitive(false);
+        subscribe_button.set_label("Subscribed");
     }
 }

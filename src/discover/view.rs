@@ -77,7 +77,7 @@ mod imp {
 
             self.search_results_container.get().bind_model(
                 model,
-                |item: &glib::Object| {
+                move |item: &glib::Object| {
                     let show = item
                         .downcast_ref::<DiscoverShow>()
                         .expect("Item must be an search result");
@@ -136,8 +136,23 @@ impl DiscoverView {
                     discover::repository::search_shows(&query)
                 }).await.expect("Failed to complete show search");
 
-                let discover_shows: Vec<DiscoverShow> =
-                    shows.into_iter().map(DiscoverShow::from).collect();
+                let subscribed_shows = gio::spawn_blocking(move || {
+                    discover::repository::load_subscribed_shows()
+                }).await.expect("Failed to complete show loading task");
+
+                let discover_shows: Vec<DiscoverShow> = search_results
+                    .into_iter()
+                    .map(|search_result| {
+                        let show = DiscoverShow::from(search_result);
+
+                        if subscribed_shows.contains(&show.id()) {
+                            show.mark_subscribed();
+                        }
+
+                        show
+                    })
+                    .collect();
+
 
                 if let Some(model) = model {
                     model.extend_from_slice(&discover_shows);

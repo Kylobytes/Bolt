@@ -32,6 +32,7 @@ pub struct ShowData {
     pub title: Option<String>,
     pub description: Option<String>,
     pub image: Option<String>,
+    pub subscribed: bool,
 }
 
 mod imp {
@@ -44,6 +45,7 @@ mod imp {
         #[property(name = "title", get, construct_only, type = Option<String>, member = title)]
         #[property(name = "description", get, construct_only, type = Option<String>, member = description)]
         #[property(name = "image", get, construct_only, type = Option<String>, member = image)]
+        #[property(name = "subscribed", get, set, type = bool, member = subscribed)]
         data: RefCell<ShowData>,
     }
 
@@ -81,5 +83,11 @@ impl From<SearchResult> for DiscoverShow {
                 Some(show.image).filter(|image| !image.is_empty()),
             )
             .build()
+    }
+}
+
+impl DiscoverShow {
+    pub fn mark_subscribed(&self) {
+        self.set_property("subscribed", true);
     }
 }
