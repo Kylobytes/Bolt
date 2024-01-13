@@ -28,9 +28,7 @@ use gtk::{
     prelude::*,
 };
 
-use crate::discover::{
-    card::DiscoverCard, repository::DiscoverRepository, show::DiscoverShow,
-};
+use crate::discover::{self, card::DiscoverCard, show::DiscoverShow};
 
 mod imp {
     use super::*;
@@ -134,9 +132,9 @@ impl DiscoverView {
                 spinner.start();
                 spinner.set_visible(true);
 
-                let shows = gio::spawn_blocking(move || {
-                    DiscoverRepository::search_shows(&query)
-                }).await.expect("Couldn't complete show search");
+                let search_results = gio::spawn_blocking(move || {
+                    discover::repository::search_shows(&query)
+                }).await.expect("Failed to complete show search");
 
                 let discover_shows: Vec<DiscoverShow> =
                     shows.into_iter().map(DiscoverShow::from).collect();

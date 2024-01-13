@@ -28,7 +28,7 @@ use gtk::{
 use std::cell::{Cell, RefCell};
 
 use crate::{
-    discover::{repository::DiscoverRepository, show::DiscoverShow},
+    discover::{self, show::DiscoverShow},
     utils::show_image_path,
 };
 
@@ -146,7 +146,7 @@ impl DiscoverCard {
             let destination = image_path.clone();
 
             let image_saved = gio::spawn_blocking(move || {
-                DiscoverRepository::save_image(&url, &destination)
+                discover::repository::save_image(&url, &destination)
             })
                 .await;
 
@@ -173,7 +173,7 @@ impl DiscoverCard {
                 glib::spawn_future_local(
                     clone!(@weak button, @strong show_id => async move {
                         gio::spawn_blocking(move || {
-                            DiscoverRepository::subscribe(show_id);
+                            discover::repository::subscribe(show_id);
                         }).await.expect("Failed to finish subscribe task");
 
                         button.set_label("Subscribed");
