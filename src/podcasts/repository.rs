@@ -33,8 +33,7 @@ pub fn load_all_shows() -> Result<Vec<Show>, Box<dyn Error>> {
          description, \
          url, \
          image_url \
-         FROM shows \
-         WHERE shows.id IN (SELECT subscriptions.show_id FROM subscriptions)",
+         FROM shows",
     )?;
 
     let mut rows = statement.query([])?;

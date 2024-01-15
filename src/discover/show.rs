@@ -24,16 +24,7 @@ use std::cell::RefCell;
 use adw::prelude::*;
 use gtk::glib::{self, subclass::prelude::*, Properties};
 
-use crate::api::search::result::SearchResult;
-
-#[derive(Clone, Debug, Default)]
-pub struct ShowData {
-    pub id: i64,
-    pub title: Option<String>,
-    pub description: Option<String>,
-    pub image: Option<String>,
-    pub subscribed: bool,
-}
+use crate::{api::search::result::SearchResult, data::show::Show};
 
 mod imp {
     use super::*;
@@ -42,11 +33,13 @@ mod imp {
     #[properties(wrapper_type = super::DiscoverShow)]
     pub struct DiscoverShow {
         #[property(name = "id", get, construct_only, type = i64, member = id)]
-        #[property(name = "title", get, construct_only, type = Option<String>, member = title)]
+        #[property(name = "name", get, construct_only, type = Option<String>, member = name)]
         #[property(name = "description", get, construct_only, type = Option<String>, member = description)]
-        #[property(name = "image", get, construct_only, type = Option<String>, member = image)]
-        #[property(name = "subscribed", get, set, type = bool, member = subscribed)]
-        data: RefCell<ShowData>,
+        #[property(name = "url", get, construct_only, type = Option<String>, member = url)]
+        #[property(name = "image-url", get, construct_only, type = Option<String>, member = image_url)]
+        data: RefCell<Show>,
+        #[property(get, set)]
+        subscribed: RefCell<bool>,
     }
 
     #[glib::object_subclass]
@@ -73,15 +66,17 @@ impl From<SearchResult> for DiscoverShow {
     fn from(show: SearchResult) -> Self {
         glib::Object::builder::<Self>()
             .property("id", show.id)
-            .property("title", Some(show.title))
+            .property("name", Some(show.title))
             .property(
                 "description",
                 Some(show.description).filter(|text| !text.is_empty()),
             )
+            .property("url", Some(show.url).filter(|url| !url.is_empty()))
             .property(
-                "image",
+                "image-url",
                 Some(show.image).filter(|image| !image.is_empty()),
             )
+            .property("subscribed", false)
             .build()
     }
 }

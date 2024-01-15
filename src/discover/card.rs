@@ -45,7 +45,7 @@ mod imp {
         #[template_child]
         pub icon: TemplateChild<gtk::Image>,
         #[template_child]
-        pub title: TemplateChild<gtk::Label>,
+        pub name: TemplateChild<gtk::Label>,
         #[template_child]
         pub description: TemplateChild<gtk::Label>,
         #[template_child]
@@ -98,8 +98,8 @@ impl From<DiscoverShow> for DiscoverCard {
         let card = Self::default();
         let imp = card.imp();
 
-        if let Some(title) = show.title() {
-            imp.title.get().set_text(&title);
+        if let Some(name) = show.name() {
+            imp.name.get().set_text(&name);
         }
 
         if let Some(description) = show.description() {
@@ -111,7 +111,7 @@ impl From<DiscoverShow> for DiscoverCard {
         }
 
         imp.show_id.set(show.id());
-        imp.image_url.replace(show.image());
+        imp.image_url.replace(show.image_url());
 
         card
     }

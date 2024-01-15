@@ -36,7 +36,7 @@ pub fn save_subscription(
              id, \
              name, \
              description, \
-             url,  \
+             url, \
              image_url \
              ) VALUES (?,?,?,?,?)",
         )
@@ -48,7 +48,7 @@ pub fn save_subscription(
             feed.title,
             feed.description,
             feed.url,
-            feed.image
+            feed.image,
         ])
         .expect("Failed to save subscription");
 }
@@ -57,7 +57,15 @@ pub fn load_shows(
     database: &PooledConnection<SqliteConnectionManager>,
 ) -> Vec<Show> {
     let mut statement = database
-        .prepare("SELECT id, name, description, url, image_url FROM shows")
+        .prepare(
+            "SELECT \
+             id, \
+             name, \
+             description, \
+             url, \
+             image_url \
+             FROM shows",
+        )
         .expect("Failed to prepare select statement (shows)");
 
     let rows = statement

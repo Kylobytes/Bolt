@@ -20,7 +20,7 @@
 
 pub mod model;
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Default)]
 pub struct Show {
     pub id: i64,
     pub name: String,
