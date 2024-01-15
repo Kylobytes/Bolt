@@ -1,4 +1,4 @@
-/* results.rs
+/* response.rs
  *
  * Copyright 2024 Kent Delante
  *
@@ -23,10 +23,10 @@ use serde::Deserialize;
 use crate::api::search::result::SearchResult;
 
 #[derive(Debug, Default, Deserialize)]
-pub struct SearchResults {
-    status: String,
+pub struct SearchResponse {
+    pub status: String,
     pub feeds: Vec<SearchResult>,
-    count: u64,
-    query: String,
-    description: String,
+    pub count: u64,
+    pub query: String,
+    pub description: String,
 }
