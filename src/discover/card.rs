@@ -36,7 +36,7 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
-    #[template(resource = "/com/kylobytes/Bolt/gtk/discover-card.ui")]
+    #[template(resource = "/com/kylobytes/Bolt/gtk/discover/card.ui")]
     pub struct DiscoverCard {
         #[template_child]
         pub image_spinner: TemplateChild<gtk::Spinner>,

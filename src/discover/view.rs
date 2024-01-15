@@ -34,7 +34,7 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
-    #[template(resource = "/com/kylobytes/Bolt/gtk/discover-view.ui")]
+    #[template(resource = "/com/kylobytes/Bolt/gtk/discover/view.ui")]
     pub struct DiscoverView {
         #[template_child]
         pub search_entry: TemplateChild<gtk::SearchEntry>,
