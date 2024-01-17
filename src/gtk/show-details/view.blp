@@ -1,0 +1,99 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $ShowDetails : Adw.Bin {
+  hexpand: true;
+  vexpand: true;
+
+  Adw.ToolbarView {
+    [top]
+    Adw.HeaderBar {
+      [title]
+      Gtk.Label title {}
+    }
+
+    content: Gtk.Box {
+      orientation: vertical;
+      hexpand: true;
+      vexpand: true;
+
+      Gtk.ScrolledWindow {
+        vexpand: true;
+        hexpand: true;
+
+        Gtk.Box {
+          orientation: vertical;
+          hexpand: true;
+          valign: start;
+          margin-top: 16;
+          margin-start: 16;
+          margin-end: 16;
+          margin-bottom: 16;
+
+          Adw.Clamp {
+            orientation: horizontal;
+            maximum-size: 328;
+
+            Gtk.Box {
+              orientation: vertical;
+              hexpand: true;
+              vexpand: true;
+
+              Adw.Clamp {
+                orientation: vertical;
+                maximum-size: 328;
+                margin-top: 16;
+                margin-bottom: 16;
+
+                Gtk.Picture image {
+                  styles ["image-md"]
+                  hexpand: true;
+                  vexpand: true;
+                  can-shrink: true;
+                  content-fit: cover;
+                  visible: false;
+                }
+              }
+
+              Adw.Clamp {
+                orientation: vertical;
+                maximum-size: 328;
+
+                Gtk.Spinner image_spinner {
+                  spinning: true;
+                  hexpand: true;
+                  vexpand: true;
+                  halign: center;
+                  valign: center;
+                  visible: false;
+                }
+              }
+
+              Gtk.Image noimage {
+                icon-name: "image-missing-symbolic";
+                visible: false;
+                halign: center;
+                pixel-size: 256;
+                margin-top: 16;
+                margin-bottom: 16;
+              }
+
+              Gtk.TextView description {
+                styles ["show-details-description"]
+                editable: false;
+                cursor-visible: false;
+                wrap-mode: word;
+                margin-bottom: 16;
+              }
+            }
+          }
+
+          Gtk.ListBox podcasts {
+            styles ["boxed-list"]
+            selection-mode: none;
+          }
+        }
+      }
+    };
+  }
+}

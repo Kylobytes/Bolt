@@ -1,6 +1,6 @@
-/* show.rs
+/* object.rs
  *
- * Copyright 2023 Kent Delante
+ * Copyright 2024 Kent Delante
  *
  * This file is part of Bolt.
  *
@@ -13,7 +13,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ *https://api.podcastindex.org/api/1.0/recent/feeds?pretty
  * You should have received a copy of the GNU General Public License
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  *
@@ -24,65 +24,60 @@ use std::cell::RefCell;
 use adw::prelude::*;
 use gtk::glib::{self, subclass::prelude::*, Properties};
 
-use crate::{api::search::result::SearchResult, data::show::Show};
+use crate::{api::episode::Episode as ApiEpisode, data::episode::Episode};
 
 mod imp {
     use super::*;
 
     #[derive(Debug, Default, Properties)]
-    #[properties(wrapper_type = super::DiscoverShow)]
-    pub struct DiscoverShow {
+    #[properties(wrapper_type = super::EpisodeObject)]
+    pub struct EpisodeObject {
         #[property(name = "id", get, construct_only, type = i64, member = id)]
-        #[property(name = "name", get, construct_only, type = Option<String>, member = name)]
+        #[property(name = "title", get, construct_only, type = Option<String>, member = title)]
         #[property(name = "description", get, construct_only, type = Option<String>, member = description)]
         #[property(name = "url", get, construct_only, type = Option<String>, member = url)]
         #[property(name = "image-url", get, construct_only, type = Option<String>, member = image_url)]
-        data: RefCell<Show>,
-        #[property(get, set)]
-        subscribed: RefCell<bool>,
+        #[property(name = "date-published", get, construct_only, type = i64, member = date_published)]
+        #[property(name = "show-id", get, construct_only, type = i64, member = show_id)]
+        data: RefCell<Episode>,
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for DiscoverShow {
-        const NAME: &'static str = "DiscoverShow";
-        type Type = super::DiscoverShow;
+    impl ObjectSubclass for EpisodeObject {
+        const NAME: &'static str = "EpisodeObject";
+        type Type = super::EpisodeObject;
     }
 
     #[glib::derived_properties]
-    impl ObjectImpl for DiscoverShow {}
+    impl ObjectImpl for EpisodeObject {}
 }
 
 glib::wrapper! {
-    pub struct DiscoverShow(ObjectSubclass<imp::DiscoverShow>);
+    pub struct EpisodeObject(ObjectSubclass<imp::EpisodeObject>);
 }
 
-impl Default for DiscoverShow {
+impl Default for EpisodeObject {
     fn default() -> Self {
         glib::Object::builder::<Self>().build()
     }
 }
 
-impl From<SearchResult> for DiscoverShow {
-    fn from(show: SearchResult) -> Self {
+impl From<ApiEpisode> for EpisodeObject {
+    fn from(episode: ApiEpisode) -> Self {
         glib::Object::builder::<Self>()
-            .property("id", show.id)
-            .property("name", Some(show.title))
+            .property("id", episode.id)
+            .property("title", Some(episode.title))
             .property(
                 "description",
-                Some(show.description).filter(|text| !text.is_empty()),
+                Some(episode.description).filter(|text| !text.is_empty()),
             )
-            .property("url", Some(show.url).filter(|url| !url.is_empty()))
+            .property("url", Some(episode.link).filter(|url| !url.is_empty()))
             .property(
                 "image-url",
-                Some(show.image).filter(|image| !image.is_empty()),
+                Some(episode.image).filter(|image| !image.is_empty()),
             )
-            .property("subscribed", false)
+            .property("date-published", episode.date_published)
+            .property("show-id", episode.feed_id)
             .build()
-    }
-}
-
-impl DiscoverShow {
-    pub fn mark_subscribed(&self) {
-        self.set_property("subscribed", true);
     }
 }

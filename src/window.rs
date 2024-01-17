@@ -20,21 +20,23 @@
 
 use adw::subclass::prelude::*;
 use gtk::{
-    gio, glib,
-    glib::{clone, MainContext},
+    gio,
+    glib::{self, clone, closure_local},
     prelude::*,
 };
 
 use crate::{
-    discover::view::DiscoverView, empty_view::EmptyView, podcasts,
-    podcasts_view_stack::PodcastsViewStack,
+    data::show::object::ShowObject, discover::view::DiscoverView,
+    empty_view::EmptyView, podcasts, podcasts_view_stack::PodcastsViewStack,
+    show_details::view::ShowDetails,
 };
 
 pub enum View {
+    Discover,
     Empty,
     Loading,
     Loaded,
-    Discover, // PodcastView
+    ShowDetails,
 }
 
 mod imp {
@@ -43,7 +45,6 @@ mod imp {
     #[derive(Debug, Default, gtk::CompositeTemplate)]
     #[template(resource = "/com/kylobytes/Bolt/gtk/window.ui")]
     pub struct BoltWindow {
-        // Template widgets
         #[template_child]
         pub main_stack: TemplateChild<adw::ViewStack>,
         #[template_child]
@@ -52,6 +53,8 @@ mod imp {
         pub podcasts_view_stack: TemplateChild<PodcastsViewStack>,
         #[template_child]
         pub empty_view: TemplateChild<EmptyView>,
+        #[template_child]
+        pub show_details_view: TemplateChild<ShowDetails>,
     }
 
     #[glib::object_subclass]
@@ -104,38 +107,44 @@ impl BoltWindow {
             View::Discover => {
                 stack.set_visible_child_name("discover-view");
             }
+            View::ShowDetails => {
+                stack.set_visible_child_name("show-details-view")
+            }
         };
     }
 
     fn load_shows(&self) {
-        let main_context = MainContext::default();
-
         self.show_view(View::Loading);
 
-        main_context.spawn_local(clone!(@weak self as window => async move {
+        glib::spawn_future_local(clone!(@weak self as window => async move {
             if let Ok(shows) = podcasts::repository::load_all_shows() {
-                if shows.is_empty() {
-                    window.show_view(View::Empty);
-                }
+                let view = if shows.is_empty() {
+                    View::Empty
+                } else {
+                    View::Loaded
+                };
+
+                window.show_view(view);
             }
         }));
     }
 
     fn connect_signals(&self) {
-        self.imp().empty_view.btn_discover().connect_clicked(
+        let imp = self.imp();
+
+        imp.empty_view.btn_discover().connect_clicked(
             clone!(@weak self as window => move |_| {
                 window.show_view(View::Discover);
             }),
         );
 
-        self.imp()
-            .podcasts_view_stack
-            .btn_discover()
-            .connect_clicked(clone!(@weak self as window => move |_| {
+        imp.podcasts_view_stack.btn_discover().connect_clicked(
+            clone!(@weak self as window => move |_| {
                 window.show_view(View::Discover);
-            }));
+            }),
+        );
 
-        let discover_view = self.imp().discover_view.get();
+        let discover_view = imp.discover_view.get();
         let discover_search_entry = discover_view.search_entry();
 
         discover_search_entry.connect_search_changed(
@@ -145,5 +154,17 @@ impl BoltWindow {
                 }
             },
         );
+
+        imp.discover_view
+            .get()
+            .connect_closure(
+                "search-result-activated",
+                false,
+                closure_local!(@strong self as window => move |_view: DiscoverView, show: ShowObject| {
+                    window.imp().show_details_view.get().load_details(&show);
+
+                    window.show_view(View::ShowDetails);
+                }
+            ));
     }
 }

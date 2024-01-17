@@ -3,7 +3,6 @@ CREATE TABLE IF NOT EXISTS episodes (
        title TEXT NOT NULL,
        description TEXT,
        url TEXT,
-       guid TEXT,
        image_url TEXT,
        date_published INTEGER,
        show_id INTEGER,

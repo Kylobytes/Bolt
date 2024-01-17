@@ -22,6 +22,12 @@ template $BoltWindow : Adw.ApplicationWindow {
     }
 
     Adw.ViewStackPage {
+      name: "show-details-view";
+      title: _("Show Details View");
+      child: $ShowDetails show_details_view {};
+    }
+
+    Adw.ViewStackPage {
       name: "podcasts-view";
       title: _("Podcasts View");
       child: $PodcastsViewStack podcasts_view_stack {};

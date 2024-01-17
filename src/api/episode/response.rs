@@ -1,4 +1,4 @@
-/* episodes_response.rs
+/* response.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -18,16 +18,16 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
-use crate::api::episode::episode_response::EpisodeResponse;
+use crate::api::episode::Episode;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Clone, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct EpisodesResponse {
+pub struct EpisodeResponse {
     pub status: String,
-    pub items: Vec<EpisodeResponse>,
+    pub items: Vec<Episode>,
     pub count: i64,
-    pub max: Option<String>,
+    pub query: String,
     pub description: String,
 }

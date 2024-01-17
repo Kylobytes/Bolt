@@ -18,13 +18,11 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::path::PathBuf;
-
 use crate::{
     api::{
         connection::ApiConnection,
         podcast::response::PodcastResponse,
-        search::{result::SearchResult, results::SearchResults},
+        search::{response::SearchResponse, result::SearchResult},
         AGENT,
     },
     config::{API_KEY, USER_AGENT},
@@ -43,7 +41,7 @@ pub fn search_shows(query: &str) -> Vec<SearchResult> {
         .build_authentication_headers()
         .build();
 
-    let response: SearchResults = AGENT
+    let response: SearchResponse = AGENT
         .get(&api_connection.url)
         .set("User-Agent", USER_AGENT)
         .set("X-Auth-Key", API_KEY)
@@ -57,19 +55,7 @@ pub fn search_shows(query: &str) -> Vec<SearchResult> {
     response.feeds
 }
 
-pub fn save_image(url: &str, path: &PathBuf) -> Result<(), ureq::Error> {
-    let mut response = AGENT.get(url).call()?.into_reader();
-
-    let mut image =
-        std::fs::File::create(&path).expect("Failed to create image at path");
-
-    std::io::copy(&mut response, &mut std::io::BufWriter::new(&mut image))
-        .expect("Failed to save image");
-
-    Ok(())
-}
-
-pub fn load_subscribed_shows() -> Vec<i64> {
+pub fn load_subscribed_show_ids() -> Vec<i64> {
     let database = database::connect()
         .get()
         .expect("Failed to connect to database");

@@ -24,11 +24,15 @@ use std::cell::RefCell;
 use adw::subclass::prelude::*;
 use gtk::{
     gio,
-    glib::{self, clone},
+    glib::{self, clone, subclass::Signal},
     prelude::*,
 };
+use once_cell::sync::Lazy;
 
-use crate::discover::{self, card::DiscoverCard, show::DiscoverShow};
+use crate::{
+    data::show::object::ShowObject,
+    discover::{self, card::DiscoverCard},
+};
 
 mod imp {
     use super::*;
@@ -70,7 +74,7 @@ mod imp {
         fn constructed(&self) {
             self.parent_constructed();
             self.model
-                .replace(Some(gio::ListStore::new::<DiscoverShow>()));
+                .replace(Some(gio::ListStore::new::<ShowObject>()));
 
             let model_binding = self.model.borrow();
             let model = model_binding.as_ref();
@@ -79,14 +83,27 @@ mod imp {
                 model,
                 move |item: &glib::Object| {
                     let show = item
-                        .downcast_ref::<DiscoverShow>()
+                        .downcast_ref::<ShowObject>()
                         .expect("Item must be an search result");
 
                     DiscoverCard::from(show.to_owned()).into()
                 },
             );
+
+            self.obj().connect_signals();
+        }
+
+        fn signals() -> &'static [Signal] {
+            static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
+                vec![Signal::builder("search-result-activated")
+                    .param_types([ShowObject::static_type()])
+                    .build()]
+            });
+
+            SIGNALS.as_ref()
         }
     }
+
     impl WidgetImpl for DiscoverView {}
     impl BinImpl for DiscoverView {}
 }
@@ -137,13 +154,13 @@ impl DiscoverView {
                 }).await.expect("Failed to complete show search");
 
                 let subscribed_shows = gio::spawn_blocking(move || {
-                    discover::repository::load_subscribed_shows()
+                    discover::repository::load_subscribed_show_ids()
                 }).await.expect("Failed to complete show loading task");
 
-                let discover_shows: Vec<DiscoverShow> = search_results
+                let discover_shows: Vec<ShowObject> = search_results
                     .into_iter()
                     .map(|search_result| {
-                        let show = DiscoverShow::from(search_result);
+                        let show = ShowObject::from(search_result);
 
                         if subscribed_shows.contains(&show.id()) {
                             show.mark_subscribed();
@@ -168,5 +185,20 @@ impl DiscoverView {
                 }
             }),
         );
+    }
+
+    pub fn connect_signals(&self) {
+        self.imp()
+            .search_results_container
+            .get()
+            .connect_child_activated(
+                clone!(@weak self as view => move |_container, child| {
+                    if let Some(ref model) = *view.imp().model.borrow() {
+                        let index: u32 = child.index().try_into().expect("Index cannot be out of range");
+                        let show = model.item(index);
+                        view.emit_by_name::<()>("search-result-activated", &[&show]);
+                    };
+                }),
+            );
     }
 }

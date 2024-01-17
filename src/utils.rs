@@ -23,7 +23,7 @@ use std::path::PathBuf;
 
 use gtk::glib;
 
-use crate::config::GETTEXT_PACKAGE;
+use crate::{api::AGENT, config::GETTEXT_PACKAGE};
 
 pub fn episode_image_path(filename: &str) -> PathBuf {
     let mut image_path = glib::user_cache_dir();
@@ -43,4 +43,16 @@ pub fn show_image_path(filename: &str) -> PathBuf {
     image_path.push(filename);
 
     image_path
+}
+
+pub fn save_image(url: &str, path: &PathBuf) -> Result<(), ureq::Error> {
+    let mut response = AGENT.get(url).call()?.into_reader();
+
+    let mut image =
+        std::fs::File::create(&path).expect("Failed to create image at path");
+
+    std::io::copy(&mut response, &mut std::io::BufWriter::new(&mut image))
+        .expect("Failed to save image");
+
+    Ok(())
 }

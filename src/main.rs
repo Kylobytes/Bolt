@@ -29,6 +29,7 @@ mod data;
 
 mod discover;
 mod podcasts;
+mod show_details;
 
 mod empty_view;
 mod podcasts_view_stack;

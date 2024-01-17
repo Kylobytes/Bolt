@@ -27,10 +27,7 @@ use gtk::{
 };
 use std::cell::{Cell, RefCell};
 
-use crate::{
-    discover::{self, show::DiscoverShow},
-    utils::show_image_path,
-};
+use crate::{data::show::object::ShowObject, discover, utils};
 
 mod imp {
     use super::*;
@@ -77,6 +74,7 @@ mod imp {
             self.obj().connect_signals();
         }
     }
+
     impl WidgetImpl for DiscoverCard {}
     impl BoxImpl for DiscoverCard {}
 }
@@ -93,8 +91,8 @@ impl Default for DiscoverCard {
     }
 }
 
-impl From<DiscoverShow> for DiscoverCard {
-    fn from(show: DiscoverShow) -> Self {
+impl From<ShowObject> for DiscoverCard {
+    fn from(show: ShowObject) -> Self {
         let card = Self::default();
         let imp = card.imp();
 
@@ -127,7 +125,7 @@ impl DiscoverCard {
             let show_id = view.imp().show_id.get();
             let image_url = view.imp().image_url.take();
 
-            let image_path = show_image_path(&show_id.to_string());
+            let image_path = utils::show_image_path(&show_id.to_string());
 
             if image_path.as_path().exists() {
                 let image = gio::File::for_path(&image_path.as_path());
@@ -150,9 +148,8 @@ impl DiscoverCard {
             let destination = image_path.clone();
 
             let image_saved = gio::spawn_blocking(move || {
-                discover::repository::save_image(&url, &destination)
-            })
-                .await;
+                utils::save_image(&url, &destination)
+            }).await;
 
             if let Ok(_) = image_saved {
                 let image = gio::File::for_path(image_path.as_path());
