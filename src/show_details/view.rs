@@ -50,6 +50,8 @@ mod imp {
         #[template_child]
         pub noimage: TemplateChild<gtk::Image>,
         #[template_child]
+        pub subscribe_button: TemplateChild<gtk::Button>,
+        #[template_child]
         pub description: TemplateChild<gtk::TextView>,
         #[template_child]
         pub podcasts: TemplateChild<gtk::ListBox>,
@@ -120,6 +122,20 @@ impl ShowDetails {
             buffer.delete(&mut start, &mut end);
             buffer.insert(&mut start, &description);
         }
+
+        let show_id = show.id().clone();
+
+        glib::spawn_future_local(
+            clone!(@weak self as view, @strong show_id => async move {
+                let show_exists = gio::spawn_blocking(move || {
+                    show_details::repository::check_show_exists(&show_id)}
+                ).await.expect("Failed to check whether show exists");
+
+                if !show_exists {
+                    view.imp().subscribe_button.get().set_visible(true);
+                }
+            }),
+        );
 
         self.load_episodes(&show.id());
         self.load_image(show.id(), &show.image_url());

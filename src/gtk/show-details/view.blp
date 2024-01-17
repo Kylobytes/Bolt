@@ -85,6 +85,14 @@ template $ShowDetails : Adw.Bin {
                 wrap-mode: word;
                 margin-bottom: 16;
               }
+
+              Gtk.Button subscribe_button {
+                styles ["pill"]
+                label: _("Subscribe");
+                vexpand: true;
+                margin-bottom: 16;
+                visible: false;
+              }
             }
           }
 

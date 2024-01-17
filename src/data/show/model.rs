@@ -90,3 +90,19 @@ pub fn load_shows(
 
     shows
 }
+
+pub fn check_exists(
+    database: &PooledConnection<SqliteConnectionManager>,
+    id: &i64,
+) -> bool {
+    let mut statement = database
+        .prepare("SELECT COUNT(id) FROM shows WHERE id = ?")
+        .unwrap();
+    let count = statement
+        .query_row(params![id], |row| {
+            Ok(row.get::<usize, i64>(0).expect("Failed to get count"))
+        })
+        .expect("Failed to check if show id exists");
+
+    count == 1
+}

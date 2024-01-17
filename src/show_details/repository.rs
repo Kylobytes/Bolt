@@ -25,6 +25,7 @@ use crate::{
         AGENT,
     },
     config::{API_KEY, USER_AGENT},
+    data::{database, show},
 };
 
 pub fn load_show_episodes(show_id: i64) -> Vec<Episode> {
@@ -47,4 +48,12 @@ pub fn load_show_episodes(show_id: i64) -> Vec<Episode> {
         .expect("Failed to parse show's episode response");
 
     response.items
+}
+
+pub fn check_show_exists(show_id: &i64) -> bool {
+    let database = database::connect()
+        .get()
+        .expect("Failed to connect to database");
+
+    show::model::check_exists(&database, show_id)
 }
