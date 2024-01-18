@@ -8,6 +8,11 @@ template $DiscoverView : Adw.Bin {
   Adw.ToolbarView {
     [top]
     Adw.HeaderBar {
+      Gtk.Button back_button {
+        icon-name: "left-symbolic";
+        tooltip-text: _("Back");
+      }
+
       [title]
       Gtk.Label {
         label: _("Discover Podcasts");

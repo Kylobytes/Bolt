@@ -41,6 +41,8 @@ mod imp {
     #[template(resource = "/com/kylobytes/Bolt/gtk/discover/view.ui")]
     pub struct DiscoverView {
         #[template_child]
+        pub back_button: TemplateChild<gtk::Button>,
+        #[template_child]
         pub search_entry: TemplateChild<gtk::SearchEntry>,
         #[template_child]
         pub discover_welcome: TemplateChild<gtk::Label>,
@@ -127,6 +129,10 @@ impl DiscoverView {
 
     pub fn search_entry(&self) -> gtk::SearchEntry {
         self.imp().search_entry.get()
+    }
+
+    pub fn back_button(&self) -> gtk::Button {
+        self.imp().back_button.get()
     }
 
     pub fn search_shows(&self, search_query: &str) {

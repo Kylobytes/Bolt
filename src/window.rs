@@ -35,7 +35,7 @@ pub enum View {
     Discover,
     Empty,
     Loading,
-    Loaded,
+    Podcasts,
     ShowDetails,
 }
 
@@ -103,7 +103,7 @@ impl BoltWindow {
         match view {
             View::Empty => stack.set_visible_child_name("empty-view"),
             View::Loading => stack.set_visible_child_name("loading-view"),
-            View::Loaded => stack.set_visible_child_name("podcasts-view"),
+            View::Podcasts => stack.set_visible_child_name("podcasts-view"),
             View::Discover => {
                 stack.set_visible_child_name("discover-view");
             }
@@ -121,7 +121,7 @@ impl BoltWindow {
                 let view = if shows.is_empty() {
                     View::Empty
                 } else {
-                    View::Loaded
+                    View::Podcasts
                 };
 
                 window.show_view(view);
@@ -155,16 +155,19 @@ impl BoltWindow {
             },
         );
 
-        imp.discover_view
-            .get()
-            .connect_closure(
-                "search-result-activated",
-                false,
-                closure_local!(@strong self as window => move |_view: DiscoverView, show: ShowObject| {
-                    window.imp().show_details_view.get().load_details(&show);
+        imp.discover_view.connect_closure(
+            "search-result-activated",
+            false,
+            closure_local!(@strong self as window => move |_view: DiscoverView, show: ShowObject| {
+                window.imp().show_details_view.get().load_details(&show);
 
-                    window.show_view(View::ShowDetails);
-                }
-            ));
+                window.show_view(View::ShowDetails);
+            }));
+
+        imp.discover_view.back_button().connect_clicked(
+            clone!(@weak self as window => move |_| {
+                window.show_view(View::Podcasts);
+            }),
+        );
     }
 }
