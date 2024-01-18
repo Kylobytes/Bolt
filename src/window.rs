@@ -169,5 +169,11 @@ impl BoltWindow {
                 window.show_view(View::Podcasts);
             }),
         );
+
+        imp.show_details_view.back_button().connect_clicked(
+            clone!(@weak self as window => move |_| {
+                window.show_view(View::Discover);
+            }),
+        );
     }
 }

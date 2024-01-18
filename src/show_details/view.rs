@@ -29,18 +29,18 @@ use gtk::{
 
 use crate::{
     data::{episode::object::EpisodeObject, show::object::ShowObject},
-    show_details,
+    show_details::{self, episode_row::EpisodeRow},
     utils::{self, show_image_path},
 };
 
 mod imp {
-    use crate::show_details::episode_row::EpisodeRow;
-
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
     #[template(resource = "/com/kylobytes/Bolt/gtk/show-details/view.ui")]
     pub struct ShowDetails {
+        #[template_child]
+        pub back_button: TemplateChild<gtk::Button>,
         #[template_child]
         pub title: TemplateChild<gtk::Label>,
         #[template_child]
@@ -109,6 +109,10 @@ impl Default for ShowDetails {
 }
 
 impl ShowDetails {
+    pub fn back_button(&self) -> gtk::Button {
+        self.imp().back_button.get()
+    }
+
     pub fn load_details(&self, show: &ShowObject) {
         if let Some(title) = show.name() {
             self.imp().title.set_label(&title);
