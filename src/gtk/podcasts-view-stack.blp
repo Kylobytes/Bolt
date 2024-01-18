@@ -1,53 +1,56 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $PodcastsViewStack : Gtk.Box {
-  orientation: vertical;
+template $PodcastsViewStack : Adw.Bin {
+  hexpand: true;
+  vexpand: true;
 
-  Adw.HeaderBar header_bar {
-    centering-policy: strict;
-    title-widget: Adw.ViewSwitcherTitle title {
-      stack: podcasts_stack;
+  Adw.ToolbarView {
+    [top]
+    Adw.HeaderBar header_bar {
+      centering-policy: strict;
+      title-widget: Adw.ViewSwitcherTitle title {
+        stack: podcasts_stack;
+      };
+
+      Gtk.Button btn_discover {
+        icon-name: "compass-symbolic";
+        tooltip-text: _("Discover Podcasts");
+      }
+    }
+
+    content: Adw.ViewStack podcasts_stack {
+      vexpand: true;
+
+      Adw.ViewStackPage {
+        name: "queue";
+        title: _("Queue");
+        icon-name: "view-list-symbolic";
+        child: $QueueView queue_view {};
+      }
+
+      Adw.ViewStackPage {
+        name: "episodes";
+        title: _("Episodes");
+        icon-name: "headphones-symbolic";
+        child: Adw.StatusPage {
+          title: _("Episodes");
+        };
+      }
+
+      Adw.ViewStackPage {
+        name: "shows";
+        title: _("Shows");
+        icon-name: "microphone-symbolic";
+        child: Adw.StatusPage {
+          title: _("Shows");
+        };
+      }
     };
 
-    Gtk.Button btn_discover {
-      icon-name: "compass-symbolic";
-      tooltip-text: _("Discover Podcasts");
+    Adw.ViewSwitcherBar {
+      stack: podcasts_stack;
+      reveal: bind title.title-visible;
     }
-  }
-
-  Adw.ViewStack podcasts_stack {
-    vexpand: true;
-
-    Adw.ViewStackPage {
-      name: "queue";
-      title: _("Queue");
-      icon-name: "view-list-symbolic";
-
-      child: $QueueView queue_view {};
-    }
-
-    Adw.ViewStackPage {
-      name: "episodes";
-      title: _("Episodes");
-      icon-name: "headphones-symbolic";
-      child: Adw.StatusPage {
-        title: _("Episodes");
-      };
-    }
-
-    Adw.ViewStackPage {
-      name: "shows";
-      title: _("Shows");
-      icon-name: "microphone-symbolic";
-      child: Adw.StatusPage {
-        title: _("Shows");
-      };
-    }
-  }
-
-  Adw.ViewSwitcherBar {
-    stack: podcasts_stack;
-    reveal: bind title.title-visible;
   }
 }

@@ -19,7 +19,7 @@
  *
  */
 
-use gtk::subclass::prelude::*;
+use adw::subclass::prelude::*;
 use gtk::{gio, glib};
 
 use crate::queue_view::QueueView;
@@ -40,7 +40,7 @@ mod imp {
     impl ObjectSubclass for PodcastsViewStack {
         const NAME: &'static str = "PodcastsViewStack";
         type Type = super::PodcastsViewStack;
-        type ParentType = gtk::Box;
+        type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
@@ -53,12 +53,12 @@ mod imp {
 
     impl ObjectImpl for PodcastsViewStack {}
     impl WidgetImpl for PodcastsViewStack {}
-    impl BoxImpl for PodcastsViewStack {}
+    impl BinImpl for PodcastsViewStack {}
 }
 
 glib::wrapper! {
     pub struct PodcastsViewStack(ObjectSubclass<imp::PodcastsViewStack>)
-        @extends gtk::Widget, gtk::Box,
+        @extends gtk::Widget, adw::Bin,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 
