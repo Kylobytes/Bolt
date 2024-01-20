@@ -14,8 +14,17 @@ template $DiscoverView : Adw.Bin {
       }
 
       [title]
-      Gtk.Label {
-        label: _("Discover Podcasts");
+      Adw.Clamp {
+        orientation: horizontal;
+        maximum-size: 600;
+
+        Gtk.SearchEntry search_entry {
+          placeholder-text: _("Search for your favorite podcasts");
+          hexpand: true;
+          margin-top: 4;
+          margin-bottom: 4;
+          search-delay: 800;
+        }
       }
     }
 
@@ -37,14 +46,6 @@ template $DiscoverView : Adw.Bin {
           vexpand: true;
           margin-start: 16;
           margin-end: 16;
-
-          Gtk.SearchEntry search_entry {
-            placeholder-text: _("Search for your favorite podcasts");
-            hexpand: true;
-            margin-top: 16;
-            margin-bottom: 16;
-            search-delay: 800;
-          }
 
           Gtk.Label discover_welcome {
             halign: center;
