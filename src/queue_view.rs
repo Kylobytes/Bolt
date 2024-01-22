@@ -27,13 +27,16 @@ mod imp {
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
     #[template(resource = "/com/kylobytes/Bolt/gtk/queue-view.ui")]
-    pub struct QueueView {}
+    pub struct QueueView {
+        #[template_child]
+        pub empty_status: TemplateChild<adw::StatusPage>,
+    }
 
     #[glib::object_subclass]
     impl ObjectSubclass for QueueView {
         const NAME: &'static str = "QueueView";
         type Type = super::QueueView;
-        type ParentType = gtk::Widget;
+        type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
@@ -46,11 +49,12 @@ mod imp {
 
     impl ObjectImpl for QueueView {}
     impl WidgetImpl for QueueView {}
+    impl BoxImpl for QueueView {}
 }
 
 glib::wrapper! {
     pub struct QueueView(ObjectSubclass<imp::QueueView>)
-        @extends gtk::Widget,
+        @extends gtk::Widget, gtk::Box,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 

@@ -40,7 +40,7 @@ mod imp {
     impl ObjectSubclass for PodcastsViewStack {
         const NAME: &'static str = "PodcastsViewStack";
         type Type = super::PodcastsViewStack;
-        type ParentType = adw::Bin;
+        type ParentType = adw::BreakpointBin;
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
@@ -53,12 +53,12 @@ mod imp {
 
     impl ObjectImpl for PodcastsViewStack {}
     impl WidgetImpl for PodcastsViewStack {}
-    impl BinImpl for PodcastsViewStack {}
+    impl BreakpointBinImpl for PodcastsViewStack {}
 }
 
 glib::wrapper! {
     pub struct PodcastsViewStack(ObjectSubclass<imp::PodcastsViewStack>)
-        @extends gtk::Widget, adw::Bin,
+        @extends gtk::Widget, adw::BreakpointBin,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 

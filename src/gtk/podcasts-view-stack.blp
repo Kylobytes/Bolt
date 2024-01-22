@@ -1,16 +1,27 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $PodcastsViewStack : Adw.Bin {
+template $PodcastsViewStack : Adw.BreakpointBin {
   hexpand: true;
   vexpand: true;
+  width-request: 300;
+  height-request: 400;
 
-  Adw.ToolbarView {
+  Adw.Breakpoint {
+    condition ("max-width: 500sp")
+    setters {
+      header_bar.title-widget: null;
+      switcher_bar.reveal: true;
+    }
+  }
+
+  child: Adw.ToolbarView {
     [top]
     Adw.HeaderBar header_bar {
       centering-policy: strict;
-      title-widget: Adw.ViewSwitcherTitle title {
+      title-widget: Adw.ViewSwitcher title {
         stack: podcasts_stack;
+        policy: wide;
       };
 
       Gtk.Button btn_discover {
@@ -21,8 +32,9 @@ template $PodcastsViewStack : Adw.Bin {
 
     content: Adw.ViewStack podcasts_stack {
       vexpand: true;
+      hexpand: true;
 
-      Adw.ViewStackPage {
+      Adw.ViewStackPage queue {
         name: "queue";
         title: _("Queue");
         icon-name: "view-list-symbolic";
@@ -48,9 +60,9 @@ template $PodcastsViewStack : Adw.Bin {
       }
     };
 
-    Adw.ViewSwitcherBar {
+    [bottom]
+    Adw.ViewSwitcherBar switcher_bar {
       stack: podcasts_stack;
-      reveal: bind title.title-visible;
     }
-  }
+  };
 }
