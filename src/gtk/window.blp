@@ -8,63 +8,43 @@ template $BoltWindow : Adw.ApplicationWindow {
   handle-menubar-accel: true;
   resizable: true;
 
-  Adw.ViewStack main_stack {
-    Adw.ViewStackPage {
+  Gtk.Stack main_stack {
+    Gtk.StackPage {
       name: "empty-view";
       title: _("Empty");
       child: $EmptyView empty_view {};
     }
 
-    Adw.ViewStackPage {
+    Gtk.StackPage {
       name: "discover-view";
       title: _("Discover View");
       child: $DiscoverView discover_view {};
     }
 
-    Adw.ViewStackPage {
+    Gtk.StackPage {
       name: "show-details-view";
       title: _("Show Details View");
       child: $ShowDetails show_details_view {};
     }
 
-    Adw.ViewStackPage {
+    Gtk.StackPage {
       name: "podcasts-view";
       title: _("Podcasts View");
       child: $PodcastsViewStack podcasts_view_stack {};
     }
     
-    Adw.ViewStackPage {
+    Gtk.StackPage {
       name: "loading-view";
       title: _("Loading");
-
       child: Gtk.Box loading_view {
         orientation: vertical;
-        vexpand: true;
         hexpand: true;
-        
-        Adw.HeaderBar {
-          styles [ "flat" ]
+        vexpand: true;
+        halign: center;
+        valign: center;
 
-          [title]
-          Gtk.Box {
-            visible: false;
-          }
-        }
-
-        Gtk.Box {
-          orientation: vertical;
-          vexpand: true;
-          hexpand: true;
-          halign: center;
-          valign: center;
-
-          Gtk.Spinner {
-            spinning: true;
-          }
-
-          Gtk.Label {
-            label: _("Loading podcasts...");
-          }
+        Gtk.Spinner {
+          spinning: true;
         }
       };
     }

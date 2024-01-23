@@ -46,7 +46,7 @@ mod imp {
     #[template(resource = "/com/kylobytes/Bolt/gtk/window.ui")]
     pub struct BoltWindow {
         #[template_child]
-        pub main_stack: TemplateChild<adw::ViewStack>,
+        pub main_stack: TemplateChild<gtk::Stack>,
         #[template_child]
         pub discover_view: TemplateChild<DiscoverView>,
         #[template_child]
