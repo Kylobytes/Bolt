@@ -45,7 +45,7 @@ mod imp {
         #[template_child]
         pub search_entry: TemplateChild<gtk::SearchEntry>,
         #[template_child]
-        pub discover_welcome: TemplateChild<gtk::Label>,
+        pub discover_welcome: TemplateChild<adw::StatusPage>,
         #[template_child]
         pub search_results_container: TemplateChild<gtk::FlowBox>,
         #[template_child]

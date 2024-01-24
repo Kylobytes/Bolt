@@ -47,12 +47,12 @@ template $DiscoverView : Adw.Bin {
           margin-start: 16;
           margin-end: 16;
 
-          Gtk.Label discover_welcome {
-            halign: center;
-            valign: center;
+          Adw.StatusPage discover_welcome {
             hexpand: true;
             vexpand: true;
-            label: _("Start searching to see results");
+            icon-name: "compass-symbolic";
+            title: _("Discover Podcasts");
+            description: _("Start searching to discover shows");
           }
 
           Adw.StatusPage discover_results_empty {
