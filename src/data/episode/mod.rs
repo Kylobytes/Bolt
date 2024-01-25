@@ -19,6 +19,7 @@
  *
  */
 
+pub mod model;
 pub mod object;
 
 #[derive(Default, Debug)]

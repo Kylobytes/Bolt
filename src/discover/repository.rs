@@ -21,13 +21,14 @@
 use crate::{
     api::{
         connection::ApiConnection,
+        episode::response::EpisodeResponse,
         podcast::response::PodcastResponse,
         search::{response::SearchResponse, result::SearchResult},
         AGENT,
     },
     config::{API_KEY, USER_AGENT},
     data::{
-        database,
+        database, episode,
         show::{self, Show},
     },
 };
@@ -87,9 +88,33 @@ pub fn subscribe(show_id: i64) {
         .into_json()
         .expect("Failed to parse search results");
 
-    let database = database::connect()
+    let mut database = database::connect()
         .get()
         .expect("Failed to connect to database");
 
     show::model::save_subscription(&database, &response);
+
+    let episodes_endpoint = format!("/episodes/byfeedid?id={show_id}");
+
+    let episodes_connection = ApiConnection::builder()
+        .build_url(&episodes_endpoint)
+        .build_authentication_headers()
+        .build();
+
+    let response: EpisodeResponse = AGENT
+        .get(&episodes_connection.url)
+        .set("User-Agent", USER_AGENT)
+        .set("X-Auth-Key", API_KEY)
+        .set("X-Auth-Date", &api_connection.auth_date)
+        .set("Authorization", &api_connection.authorization)
+        .call()
+        .expect("Failed to subscribe to podcast")
+        .into_json()
+        .expect("Failed to parse search results");
+
+    episode::model::save_episodes_for_show(
+        &mut database,
+        &response.items,
+        &show_id,
+    );
 }
