@@ -1,0 +1,24 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $EpisodesView : Gtk.Box {
+  orientation: vertical;
+  hexpand: true;
+  vexpand: true;
+
+  Gtk.ScrolledWindow {
+    hexpand: true;
+    vexpand: true;
+    
+    Adw.Clamp {
+      orientation: horizontal;
+      maximum-size: 600;
+      
+      Gtk.ListBox episodes {
+        styles ["boxed-list"]
+        margin-start: 8;
+        margin-end: 8;
+      }
+    }
+  }
+}

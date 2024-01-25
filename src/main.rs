@@ -28,6 +28,7 @@ mod api;
 mod data;
 
 mod discover;
+mod episodes;
 mod podcasts;
 mod show_details;
 

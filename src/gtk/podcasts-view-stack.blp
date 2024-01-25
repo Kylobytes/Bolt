@@ -45,9 +45,7 @@ template $PodcastsViewStack : Adw.BreakpointBin {
         name: "episodes";
         title: _("Episodes");
         icon-name: "headphones-symbolic";
-        child: Adw.StatusPage {
-          title: _("Episodes");
-        };
+        child: $EpisodesView episodes_view {};
       }
 
       Adw.ViewStackPage {

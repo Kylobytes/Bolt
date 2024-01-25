@@ -22,7 +22,7 @@
 use adw::subclass::prelude::*;
 use gtk::{gio, glib};
 
-use crate::queue_view::QueueView;
+use crate::{episodes::view::EpisodesView, queue_view::QueueView};
 
 mod imp {
     use super::*;
@@ -31,7 +31,9 @@ mod imp {
     #[template(resource = "/com/kylobytes/Bolt/gtk/podcasts-view-stack.ui")]
     pub struct PodcastsViewStack {
         #[template_child]
-        queue_view: TemplateChild<QueueView>,
+        pub queue_view: TemplateChild<QueueView>,
+        #[template_child]
+        pub episodes_view: TemplateChild<EpisodesView>,
         #[template_child]
         pub btn_discover: TemplateChild<gtk::Button>,
     }

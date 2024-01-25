@@ -1,0 +1,44 @@
+using Gtk 4.0;
+
+template $EpisodeRow : Gtk.Box {
+  orientation: horizontal;
+  hexpand: true;
+  vexpand: true;
+  margin-top: 8;
+  margin-bottom: 8;
+  margin-start: 8;
+  margin-end: 8;
+  spacing: 12;
+
+  Gtk.Box {
+    orientation: vertical;
+    hexpand: true;
+    vexpand: true;
+    valign: center;
+    halign: start;
+
+    Gtk.Label title {
+      wrap: true;
+      xalign: 0;
+    }
+
+    Gtk.Label date {
+      styles ["dim-label"]
+      halign: start;
+    }
+  }
+
+  [end]
+  Gtk.Box {
+    orientation: vertical;
+    halign: end;
+    vexpand: true;
+    valign: center;
+
+    Gtk.Button {
+      styles ["circular"]
+      icon-name: "folder-download-symbolic";
+      tooltip-text: _("Download and add to queue");
+    }
+  }
+}
