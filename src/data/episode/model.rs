@@ -13,7 +13,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *https://api.podcastindex.org/api/1.0/recent/feeds?pretty
+ *
  * You should have received a copy of the GNU General Public License
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  *
@@ -35,6 +35,12 @@ pub fn save_episodes_for_show(
         .expect("Failed to start transaction to save episodes");
 
     for episode in episodes.iter() {
+        let image: Option<String> = if episode.image.is_empty() {
+            None
+        } else {
+            Some(episode.image.clone())
+        };
+
         transaction
             .execute(
                 "INSERT INTO episodes (\
@@ -51,7 +57,7 @@ pub fn save_episodes_for_show(
                     episode.title,
                     episode.description,
                     episode.link,
-                    episode.image,
+                    image,
                     episode.date_published,
                     show_id
                 ],
