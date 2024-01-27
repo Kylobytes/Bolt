@@ -7,6 +7,11 @@
   min-width: 328px;
 }
 
+.episode-row-image {
+  min-height: 48px;
+  min-width: 48px;
+}
+
 .discover-card {
   min-height: 360px;
   margin-top: 4px;

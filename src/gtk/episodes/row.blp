@@ -1,4 +1,5 @@
 using Gtk 4.0;
+using Adw 1;
 
 template $EpisodeRow : Gtk.Box {
   orientation: horizontal;
@@ -9,6 +10,29 @@ template $EpisodeRow : Gtk.Box {
   margin-start: 8;
   margin-end: 8;
   spacing: 12;
+
+  Adw.Clamp {
+    orientation: horizontal;
+    maximum-size: 48;
+
+    Adw.Clamp {
+      orientation: vertical;
+      maximum-size: 48;
+
+      Gtk.Picture picture {
+        styles ["episode-row-image"]
+        visible: false;
+        can-shrink: true;
+        content-fit: cover;
+      }
+    }
+  }
+
+  Gtk.Image image_missing_icon {
+    visible: false;
+    icon-name: "image-missing-symbolic";
+    pixel-size: 48;
+  }
 
   Gtk.Box {
     orientation: vertical;

@@ -13,16 +13,23 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *https://api.podcastindex.org/api/1.0/recent/feeds?pretty
+ *
  * You should have received a copy of the GNU General Public License
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
-use chrono::DateTime;
-use gtk::{gio, glib, subclass::prelude::*};
+use std::cell::{Cell, RefCell};
 
-use crate::data::episode::object::EpisodeObject;
+use chrono::DateTime;
+use gtk::{
+    gio,
+    glib::{self, clone},
+    prelude::WidgetExt,
+    subclass::prelude::*,
+};
+
+use crate::{data::episode::object::EpisodeObject, utils};
 
 mod imp {
     use super::*;
@@ -31,9 +38,16 @@ mod imp {
     #[template(resource = "/com/kylobytes/Bolt/gtk/episodes/row.ui")]
     pub struct EpisodeRow {
         #[template_child]
+        pub picture: TemplateChild<gtk::Picture>,
+        #[template_child]
+        pub image_missing_icon: TemplateChild<gtk::Image>,
+        #[template_child]
         pub title: TemplateChild<gtk::Label>,
         #[template_child]
         pub date: TemplateChild<gtk::Label>,
+        pub image_url: RefCell<Option<String>>,
+        pub episode_id: Cell<i64>,
+        pub show_id: Cell<i64>,
     }
 
     #[glib::object_subclass]
@@ -54,6 +68,8 @@ mod imp {
     impl ObjectImpl for EpisodeRow {
         fn constructed(&self) {
             self.parent_constructed();
+
+            self.obj().load_image();
         }
     }
 
@@ -76,6 +92,9 @@ impl Default for EpisodeRow {
 impl From<EpisodeObject> for EpisodeRow {
     fn from(episode: EpisodeObject) -> Self {
         let row = EpisodeRow::new();
+        row.imp().image_url.replace(episode.image_url());
+        row.imp().episode_id.replace(episode.id());
+        row.imp().show_id.replace(episode.show_id());
 
         if let Some(title) = episode.title() {
             row.imp().title.get().set_label(&title);
@@ -95,5 +114,23 @@ impl From<EpisodeObject> for EpisodeRow {
 impl EpisodeRow {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn load_image(&self) {
+        glib::spawn_future_local(clone!(@weak self as view => async move {
+            let show_id = view.imp().show_id.get();
+            let show_image_path = utils::show_image_path(&show_id.to_string());
+
+            if show_image_path.as_path().exists() {
+                let picture = view.imp().picture.get();
+                let image = gio::File::for_path(show_image_path.as_path());
+
+                picture.set_file(Some(&image));
+                picture.set_visible(true);
+            } else {
+                view.imp().image_missing_icon.get().set_visible(true);
+            }
+            // }
+        }));
     }
 }
