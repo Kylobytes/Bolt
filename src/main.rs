@@ -33,7 +33,6 @@ mod podcasts;
 mod show_details;
 
 mod empty_view;
-mod podcasts_view_stack;
 mod queue_view;
 
 use self::application::BoltApplication;

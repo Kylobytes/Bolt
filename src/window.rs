@@ -27,8 +27,8 @@ use gtk::{
 
 use crate::{
     data::show::object::ShowObject, discover::view::DiscoverView,
-    empty_view::EmptyView, podcasts, podcasts_view_stack::PodcastsViewStack,
-    show_details::view::ShowDetails,
+    empty_view::EmptyView, episodes::view::EpisodesView, podcasts,
+    queue_view::QueueView, show_details::view::ShowDetails,
 };
 
 pub enum View {
@@ -48,11 +48,15 @@ mod imp {
         #[template_child]
         pub main_stack: TemplateChild<gtk::Stack>,
         #[template_child]
+        pub btn_discover: TemplateChild<gtk::Button>,
+        #[template_child]
         pub discover_view: TemplateChild<DiscoverView>,
         #[template_child]
-        pub podcasts_view_stack: TemplateChild<PodcastsViewStack>,
-        #[template_child]
         pub empty_view: TemplateChild<EmptyView>,
+        #[template_child]
+        pub queue_view: TemplateChild<QueueView>,
+        #[template_child]
+        pub episodes_view: TemplateChild<EpisodesView>,
         #[template_child]
         pub show_details_view: TemplateChild<ShowDetails>,
     }
@@ -138,7 +142,7 @@ impl BoltWindow {
             }),
         );
 
-        imp.podcasts_view_stack.btn_discover().connect_clicked(
+        imp.btn_discover.get().connect_clicked(
             clone!(@weak self as window => move |_| {
                 window.show_view(View::Discover);
             }),

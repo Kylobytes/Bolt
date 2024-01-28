@@ -5,8 +5,18 @@ template $BoltWindow : Adw.ApplicationWindow {
   styles ["main-window"]
   default-width: 800;
   default-height: 600;
+  height-request: 400;
+  width-request: 300;
   handle-menubar-accel: true;
   resizable: true;
+
+  Adw.Breakpoint {
+    condition ("max-width: 500sp")
+    setters {
+      podcasts_header_bar.title-widget: null;
+      podcasts_switcher_bar.reveal: true;
+    }
+  }
 
   Gtk.Stack main_stack {
     Gtk.StackPage {
@@ -30,7 +40,54 @@ template $BoltWindow : Adw.ApplicationWindow {
     Gtk.StackPage {
       name: "podcasts-view";
       title: _("Podcasts View");
-      child: $PodcastsViewStack podcasts_view_stack {};
+      child: Adw.ToolbarView podcasts_view_stack {
+        [top]
+        Adw.HeaderBar podcasts_header_bar {
+          centering-policy: strict;
+          title-widget: Adw.ViewSwitcher podcasts_view_switcher {
+            stack: podcasts_stack;
+            policy: wide;
+          };
+
+          Gtk.Button btn_discover {
+            icon-name: "compass-symbolic";
+            tooltip-text: _("Discover Podcasts");
+          }
+        }
+
+        content: Adw.ViewStack podcasts_stack {
+          vexpand: true;
+          hexpand: true;
+
+          Adw.ViewStackPage podcasts_queue {
+            name: "queue";
+            title: _("Queue");
+            icon-name: "view-list-symbolic";
+            child: $QueueView queue_view {};
+          }
+
+          Adw.ViewStackPage {
+            name: "episodes";
+            title: _("Episodes");
+            icon-name: "headphones-symbolic";
+            child: $EpisodesView episodes_view {};
+          }
+
+          Adw.ViewStackPage {
+            name: "shows";
+            title: _("Shows");
+            icon-name: "microphone-symbolic";
+            child: Adw.StatusPage {
+              title: _("Shows");
+            };
+          }
+        };
+
+        [bottom]
+        Adw.ViewSwitcherBar podcasts_switcher_bar {
+          stack: podcasts_stack;
+        }
+      };
     }
     
     Gtk.StackPage {
