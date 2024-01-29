@@ -29,7 +29,7 @@ use gtk::{
 
 use crate::{
     data::{episode::object::EpisodeObject, show::object::ShowObject},
-    show_details::{self, episode_row::EpisodeRow},
+    show_details::{self, episode_row::DiscoverEpisodeRow},
     utils::{self, show_image_path},
 };
 
@@ -88,7 +88,7 @@ mod imp {
                     .downcast_ref::<EpisodeObject>()
                     .expect("Item must be an episode");
 
-                EpisodeRow::from(episode.to_owned()).into()
+                DiscoverEpisodeRow::from(episode.to_owned()).into()
             });
         }
     }

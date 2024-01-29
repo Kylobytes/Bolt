@@ -1,7 +1,7 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $EpisodeRow : Gtk.Box {
+template $DiscoverEpisodeRow : Gtk.Box {
   orientation: horizontal;
   hexpand: true;
 
@@ -17,6 +17,7 @@ template $EpisodeRow : Gtk.Box {
       styles ["heading"]
       margin-bottom: 4;
       halign: start;
+      wrap: true;
     }
 
     Gtk.Label episode_date {

@@ -31,7 +31,7 @@ mod imp {
     #[template(
         resource = "/com/kylobytes/Bolt/gtk/show-details/episode-row.ui"
     )]
-    pub struct EpisodeRow {
+    pub struct DiscoverEpisodeRow {
         #[template_child]
         pub episode_title: TemplateChild<gtk::Label>,
         #[template_child]
@@ -39,9 +39,9 @@ mod imp {
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for EpisodeRow {
-        const NAME: &'static str = "EpisodeRow";
-        type Type = super::EpisodeRow;
+    impl ObjectSubclass for DiscoverEpisodeRow {
+        const NAME: &'static str = "DiscoverEpisodeRow";
+        type Type = super::DiscoverEpisodeRow;
         type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
@@ -53,26 +53,26 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for EpisodeRow {}
-    impl WidgetImpl for EpisodeRow {}
-    impl BoxImpl for EpisodeRow {}
+    impl ObjectImpl for DiscoverEpisodeRow {}
+    impl WidgetImpl for DiscoverEpisodeRow {}
+    impl BoxImpl for DiscoverEpisodeRow {}
 }
 
 glib::wrapper! {
-    pub struct EpisodeRow(ObjectSubclass<imp::EpisodeRow>)
+    pub struct DiscoverEpisodeRow(ObjectSubclass<imp::DiscoverEpisodeRow>)
         @extends gtk::Widget, gtk::Box,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 
-impl Default for EpisodeRow {
+impl Default for DiscoverEpisodeRow {
     fn default() -> Self {
         glib::Object::new()
     }
 }
 
-impl From<EpisodeObject> for EpisodeRow {
+impl From<EpisodeObject> for DiscoverEpisodeRow {
     fn from(episode: EpisodeObject) -> Self {
-        let row = EpisodeRow::new();
+        let row = DiscoverEpisodeRow::new();
 
         if let Some(title) = episode.title() {
             row.imp().episode_title.get().set_label(&title);
@@ -89,7 +89,7 @@ impl From<EpisodeObject> for EpisodeRow {
     }
 }
 
-impl EpisodeRow {
+impl DiscoverEpisodeRow {
     pub fn new() -> Self {
         Self::default()
     }
