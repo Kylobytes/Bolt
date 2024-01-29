@@ -101,9 +101,14 @@ template $ShowDetails : Adw.Bin {
             }
           }
 
-          Gtk.ListBox podcasts {
-            styles ["boxed-list"]
-            selection-mode: none;
+          Adw.Clamp {
+            orientation: horizontal;
+            maximum-size: 800;
+
+            Gtk.ListBox podcasts {
+              styles ["boxed-list"]
+              selection-mode: none;
+            }
           }
         }
       }
