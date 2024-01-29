@@ -53,6 +53,13 @@ template $BoltWindow : Adw.ApplicationWindow {
             icon-name: "compass-symbolic";
             tooltip-text: _("Discover Podcasts");
           }
+
+          [end]
+          Gtk.Button btn_refresh {
+            icon-name: "view-refresh-symbolic";
+            tooltip-text: _("Refresh Episodes");
+            visible: false;
+          }
         }
 
         content: Adw.ViewStack podcasts_stack {

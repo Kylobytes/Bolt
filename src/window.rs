@@ -50,6 +50,8 @@ mod imp {
         #[template_child]
         pub btn_discover: TemplateChild<gtk::Button>,
         #[template_child]
+        pub btn_refresh: TemplateChild<gtk::Button>,
+        #[template_child]
         pub discover_view: TemplateChild<DiscoverView>,
         #[template_child]
         pub empty_view: TemplateChild<EmptyView>,
@@ -59,6 +61,8 @@ mod imp {
         pub episodes_view: TemplateChild<EpisodesView>,
         #[template_child]
         pub show_details_view: TemplateChild<ShowDetails>,
+        #[template_child]
+        pub podcasts_stack: TemplateChild<adw::ViewStack>,
     }
 
     #[glib::object_subclass]
@@ -158,6 +162,26 @@ impl BoltWindow {
                 }
             },
         );
+
+        imp.podcasts_stack.get().connect_visible_child_notify(
+            clone!(@weak imp => move |stack| {
+                if let Some(name) = stack.visible_child_name() {
+                    let name = name.as_str();
+
+                    if name == "episodes" {
+                        imp.btn_refresh.get().set_visible(true);
+                    } else {
+                        imp.btn_refresh.get().set_visible(false);
+                    }
+                }
+            }),
+        );
+
+        imp.btn_refresh
+            .get()
+            .connect_clicked(clone!(@weak imp => move |_| {
+                imp.episodes_view.get().load_episodes();
+            }));
 
         let discover_view = imp.discover_view.get();
 

@@ -75,8 +75,6 @@ mod imp {
 
                 EpisodeRow::from(episode.to_owned()).into()
             });
-
-            self.obj().load_episodes();
         }
     }
 
@@ -103,6 +101,14 @@ impl EpisodesView {
 
     pub fn load_episodes(&self) {
         glib::spawn_future_local(clone!(@weak self as view => async move {
+            let model_binding = view.imp().model.borrow();
+
+            let Some(model) = model_binding.as_ref() else {
+                return;
+            };
+
+            model.remove_all();
+
             let episodes: Vec<EpisodeObject> = gio::spawn_blocking(|| { repository::load_episodes() })
                 .await
                 .expect("Failed to execute load episodes task")
@@ -110,11 +116,8 @@ impl EpisodesView {
                 .map(EpisodeObject::from)
                 .collect();
 
-            let model_binding = view.imp().model.borrow();
 
-            if let Some(model) = model_binding.as_ref() {
-                model.extend_from_slice(&episodes);
-            }
+            model.extend_from_slice(&episodes);
         }));
     }
 }
