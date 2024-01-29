@@ -159,6 +159,18 @@ impl BoltWindow {
             },
         );
 
+        let discover_view = imp.discover_view.get();
+
+        discover_view.search_results_container().connect_child_activated(
+            clone!(@weak discover_view => move |_container, child| {
+                if let Some (ref model) = *discover_view.imp().model.borrow() {
+                    let index: u32 = child.index().try_into().expect("Index cannot be out of range");
+                    let show = model.item(index);
+                    discover_view.emit_by_name::<()>("search-result-activated", &[&show]);
+                };
+            })
+        );
+
         imp.discover_view.connect_closure(
             "search-result-activated",
             false,

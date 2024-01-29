@@ -36,11 +36,11 @@ mod imp {
     #[template(resource = "/com/kylobytes/Bolt/gtk/discover/card.ui")]
     pub struct DiscoverCard {
         #[template_child]
-        pub image_spinner: TemplateChild<gtk::Spinner>,
+        pub picture_spinner: TemplateChild<gtk::Spinner>,
         #[template_child]
-        pub image: TemplateChild<gtk::Picture>,
+        pub picture: TemplateChild<gtk::Picture>,
         #[template_child]
-        pub icon: TemplateChild<gtk::Image>,
+        pub image_missing_icon: TemplateChild<gtk::Image>,
         #[template_child]
         pub name: TemplateChild<gtk::Label>,
         #[template_child]
@@ -123,44 +123,48 @@ impl DiscoverCard {
     pub fn load_image(&self) {
         glib::spawn_future_local(clone!(@weak self as view => async move {
             let show_id = view.imp().show_id.get();
-            let image_url = view.imp().image_url.take();
-
             let image_path = utils::show_image_path(&show_id.to_string());
+
+            let picture_view = view.imp().picture.get();
+            let picture_spinner = view.imp().picture_spinner.get();
 
             if image_path.as_path().exists() {
                 let image = gio::File::for_path(&image_path.as_path());
-                view.imp().image.get().set_file(Some(&image));
-                view.imp().image_spinner.get().stop();
-                view.imp().image_spinner.get().set_visible(false);
-                view.imp().image.get().set_visible(true);
+                picture_view.set_file(Some(&image));
+                picture_spinner.stop();
+                picture_spinner.set_visible(false);
+                picture_view.set_visible(true);
 
                 return;
             }
 
+            let image_url = view.imp().image_url.clone().into_inner();
+            let image_missing_icon = view.imp().image_missing_icon.get();
+
             let Some(url) = image_url else {
-                view.imp().image_spinner.get().stop();
-                view.imp().image_spinner.get().set_visible(false);
-                view.imp().icon.get().set_visible(true);
+                picture_spinner.stop();
+                picture_spinner.set_visible(false);
+                image_missing_icon.set_visible(true);
 
                 return;
             };
 
             let destination = image_path.clone();
 
-            let image_saved = gio::spawn_blocking(move || {
+            let image_saved_result = gio::spawn_blocking(move || {
                 utils::save_image(&url, &destination)
             }).await;
 
-            if let Ok(_) = image_saved {
+            if let Ok(_) = image_saved_result {
                 let image = gio::File::for_path(image_path.as_path());
-                view.imp().image.get().set_file(Some(&image));
-                view.imp().image.get().set_visible(true);
+                picture_view.set_file(Some(&image));
+                picture_view.set_visible(true);
             } else {
-                view.imp().icon.get().set_visible(true);
+                image_missing_icon.set_visible(true);
             }
 
-            view.imp().image_spinner.get().stop();
-            view.imp().image_spinner.get().set_visible(false);
+            picture_spinner.stop();
+            picture_spinner.set_visible(false);
         }));
     }
 

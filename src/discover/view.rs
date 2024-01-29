@@ -91,8 +91,6 @@ mod imp {
                     DiscoverCard::from(show.to_owned()).into()
                 },
             );
-
-            self.obj().connect_signals();
         }
 
         fn signals() -> &'static [Signal] {
@@ -193,18 +191,7 @@ impl DiscoverView {
         );
     }
 
-    pub fn connect_signals(&self) {
-        self.imp()
-            .search_results_container
-            .get()
-            .connect_child_activated(
-                clone!(@weak self as view => move |_container, child| {
-                    if let Some(ref model) = *view.imp().model.borrow() {
-                        let index: u32 = child.index().try_into().expect("Index cannot be out of range");
-                        let show = model.item(index);
-                        view.emit_by_name::<()>("search-result-activated", &[&show]);
-                    };
-                }),
-            );
+    pub fn search_results_container(&self) -> gtk::FlowBox {
+        self.imp().search_results_container.get()
     }
 }
