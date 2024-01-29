@@ -125,14 +125,15 @@ impl BoltWindow {
         self.show_view(View::Loading);
 
         glib::spawn_future_local(clone!(@weak self as window => async move {
-            if let Ok(shows) = podcasts::repository::load_all_shows() {
-                let view = if shows.is_empty() {
-                    View::Empty
-                } else {
-                    View::Podcasts
-                };
+            let shows = gio::spawn_blocking(move || podcasts::repository::load_show_count())
+                .await
+                .expect("Failed to load all shows");
 
-                window.show_view(view);
+            if shows > 0 {
+                window.imp().episodes_view.get().load_episodes();
+                window.show_view(View::Podcasts);
+            } else {
+                window.show_view(View::Empty);
             }
         }));
     }

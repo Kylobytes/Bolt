@@ -18,36 +18,11 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::error::Error;
+use crate::data::{database, show};
 
-use crate::data::{database, show::Show};
-
-pub fn load_all_shows() -> Result<Vec<Show>, Box<dyn Error>> {
+pub fn load_show_count() -> u8 {
     let pool = database::connect();
     let connection = pool.get().expect("Failed to connect to database");
 
-    let mut statement = connection.prepare(
-        "SELECT \
-         id, \
-         name, \
-         description, \
-         url, \
-         image_url \
-         FROM shows",
-    )?;
-
-    let mut rows = statement.query([])?;
-    let mut shows: Vec<Show> = vec![];
-
-    while let Some(row) = rows.next()? {
-        shows.push(Show {
-            id: row.get(0)?,
-            name: row.get(1)?,
-            description: row.get(2)?,
-            url: row.get(3)?,
-            image_url: row.get(4)?,
-        });
-    }
-
-    Ok(shows)
+    show::model::load_show_count(&connection)
 }

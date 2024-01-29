@@ -106,3 +106,15 @@ pub fn check_exists(
 
     count == 1
 }
+
+pub fn load_show_count(
+    database: &PooledConnection<SqliteConnectionManager>,
+) -> u8 {
+    let mut statement = database
+        .prepare("SELECT COUNT(*) FROM shows")
+        .expect("Failed to prepare load shows statement");
+
+    statement
+        .query_row([], |row| Ok(row.get::<usize, u8>(0)?))
+        .expect("Failed to load show count")
+}
