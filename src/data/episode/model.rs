@@ -81,7 +81,7 @@ pub fn load_episodes(
          image_url, \
          date_published, \
          show_id \
-         FROM episodes ORDER BY date_published DESC",
+         FROM episodes ORDER BY date_published DESC LIMIT 100",
         )
         .expect("Failed to prepare select episodes statement");
 
