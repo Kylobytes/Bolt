@@ -1,31 +1,34 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $EmptyView : Gtk.Box {
-  orientation: vertical;
+template $EmptyView : Adw.Bin {
   hexpand: true;
   vexpand: true;
 
-  Adw.HeaderBar {
-    Gtk.Box {
-      visible: false;
-    }
-  }
-
-  Adw.StatusPage {
-    icon-name: "edit-find";
-    title: _("No podcasts found");
-    description: _("It seems you haven't subscribed to any shows yet");
-    vexpand: true;
-    hexpand: true;
-
-    Gtk.Button btn_discover {
-      styles ["pill"]
-      halign: center;
-
-      Gtk.Label {
-        label: _("Discover Podcasts");
+  Adw.ToolbarView {
+    [top]
+    Adw.HeaderBar {
+      [title]
+      Gtk.Box {
+        visible: false;
       }
     }
+
+    content: Adw.StatusPage {
+      icon-name: "edit-find";
+      title: _("No podcasts found");
+      description: _("It seems you haven't subscribed to any shows yet");
+      vexpand: true;
+      hexpand: true;
+
+      Gtk.Button btn_discover {
+        styles ["pill"]
+        halign: center;
+
+        Gtk.Label {
+          label: _("Discover Podcasts");
+        }
+      }
+    };
   }
 }

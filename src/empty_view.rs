@@ -19,7 +19,7 @@
  *
  */
 
-use gtk::subclass::prelude::*;
+use adw::subclass::prelude::*;
 use gtk::{gio, glib};
 
 mod imp {
@@ -36,7 +36,7 @@ mod imp {
     impl ObjectSubclass for EmptyView {
         const NAME: &'static str = "EmptyView";
         type Type = super::EmptyView;
-        type ParentType = gtk::Box;
+        type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
@@ -49,12 +49,12 @@ mod imp {
 
     impl ObjectImpl for EmptyView {}
     impl WidgetImpl for EmptyView {}
-    impl BoxImpl for EmptyView {}
+    impl BinImpl for EmptyView {}
 }
 
 glib::wrapper! {
     pub struct EmptyView(ObjectSubclass<imp::EmptyView>)
-        @extends gtk::Widget, gtk::Box,
+        @extends gtk::Widget, adw::Bin,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 
