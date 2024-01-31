@@ -107,8 +107,6 @@ impl EpisodesView {
                 return;
             };
 
-            model.remove_all();
-
             let episodes: Vec<EpisodeObject> = gio::spawn_blocking(|| { repository::load_episodes() })
                 .await
                 .expect("Failed to execute load episodes task")
@@ -117,6 +115,7 @@ impl EpisodesView {
                 .collect();
 
 
+            model.remove_all();
             model.extend_from_slice(&episodes);
         }));
     }
