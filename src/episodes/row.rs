@@ -23,7 +23,7 @@ use std::cell::{Cell, RefCell};
 
 use chrono::DateTime;
 use gtk::{
-    gio,
+    gdk, gdk_pixbuf, gio,
     glib::{self, clone},
     prelude::WidgetExt,
     subclass::prelude::*,
@@ -123,14 +123,16 @@ impl EpisodeRow {
 
             if show_image_path.as_path().exists() {
                 let picture = view.imp().picture.get();
-                let image = gio::File::for_path(show_image_path.as_path());
+                let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(&show_image_path.as_path(), 48, 48, true)
+                    .unwrap();
+                let texture = gdk::Texture::for_pixbuf(&pixbuf);
 
-                picture.set_file(Some(&image));
+
+                picture.set_paintable(Some(&texture));
                 picture.set_visible(true);
             } else {
                 view.imp().image_missing_icon.get().set_visible(true);
             }
-            // }
         }));
     }
 }
