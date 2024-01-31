@@ -21,7 +21,7 @@
 
 use adw::prelude::*;
 use gtk::{
-    gio,
+    gdk, gdk_pixbuf, gio,
     glib::{self, clone},
     subclass::prelude::*,
 };
@@ -129,8 +129,14 @@ impl DiscoverCard {
             let picture_spinner = view.imp().picture_spinner.get();
 
             if image_path.as_path().exists() {
-                let image = gio::File::for_path(&image_path.as_path());
-                picture_view.set_file(Some(&image));
+                let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
+                    &image_path.as_path(),
+                    328,
+                    328,
+                    true
+                ).unwrap();
+                let texture = gdk::Texture::for_pixbuf(&pixbuf);
+                picture_view.set_paintable(Some(&texture));
                 picture_spinner.stop();
                 picture_spinner.set_visible(false);
                 picture_view.set_visible(true);
@@ -156,8 +162,14 @@ impl DiscoverCard {
             }).await;
 
             if let Ok(_) = image_saved_result {
-                let image = gio::File::for_path(image_path.as_path());
-                picture_view.set_file(Some(&image));
+                let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
+                    &image_path.as_path(),
+                    328,
+                    328,
+                    true
+                ).unwrap();
+                let texture = gdk::Texture::for_pixbuf(&pixbuf);
+                picture_view.set_paintable(Some(&texture));
                 picture_view.set_visible(true);
             } else {
                 image_missing_icon.set_visible(true);

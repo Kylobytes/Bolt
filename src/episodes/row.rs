@@ -123,10 +123,13 @@ impl EpisodeRow {
 
             if show_image_path.as_path().exists() {
                 let picture = view.imp().picture.get();
-                let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(&show_image_path.as_path(), 48, 48, true)
-                    .unwrap();
+                let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
+                    &show_image_path.as_path(),
+                    48,
+                    48,
+                    true
+                ).unwrap();
                 let texture = gdk::Texture::for_pixbuf(&pixbuf);
-
 
                 picture.set_paintable(Some(&texture));
                 picture.set_visible(true);
