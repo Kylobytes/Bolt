@@ -25,7 +25,7 @@ use chrono::DateTime;
 use gtk::{
     gdk, gdk_pixbuf, gio,
     glib::{self, clone},
-    prelude::WidgetExt,
+    prelude::*,
     subclass::prelude::*,
 };
 
@@ -37,6 +37,8 @@ mod imp {
     #[derive(Debug, Default, gtk::CompositeTemplate)]
     #[template(resource = "/com/kylobytes/Bolt/gtk/episodes/row.ui")]
     pub struct EpisodeRow {
+        #[template_child]
+        pub picture_container: TemplateChild<adw::Clamp>,
         #[template_child]
         pub picture: TemplateChild<gtk::Picture>,
         #[template_child]
@@ -92,9 +94,6 @@ impl Default for EpisodeRow {
 impl From<EpisodeObject> for EpisodeRow {
     fn from(episode: EpisodeObject) -> Self {
         let row = EpisodeRow::new();
-        row.imp().image_url.replace(episode.image_url());
-        row.imp().episode_id.replace(episode.id());
-        row.imp().show_id.replace(episode.show_id());
 
         if let Some(title) = episode.title() {
             row.imp().title.get().set_label(&title);
@@ -107,6 +106,10 @@ impl From<EpisodeObject> for EpisodeRow {
             row.imp().date.get().set_label(&formatted_date);
         }
 
+        row.imp().image_url.replace(episode.image_url());
+        row.imp().episode_id.replace(episode.id());
+        row.imp().show_id.replace(episode.show_id());
+
         row
     }
 }
@@ -118,23 +121,59 @@ impl EpisodeRow {
 
     pub fn load_image(&self) {
         glib::spawn_future_local(clone!(@weak self as view => async move {
-            let show_id = view.imp().show_id.get();
-            let show_image_path = utils::show_image_path(&show_id.to_string());
+            let image_url = view
+                .imp()
+                .image_url
+                .clone()
+                .into_inner();
 
-            if show_image_path.as_path().exists() {
-                let picture = view.imp().picture.get();
+            let episode_id = &view.imp().episode_id.get();
+
+            let picture = view.imp().picture.get();
+            let picture_container = view.imp().picture_container.get();
+
+            if let Some(image_url) = image_url {
+                let image_path = utils::episode_image_path(&episode_id.to_string());
+
+                if !image_path.as_path().exists() {
+                    let destination = image_path.clone();
+
+                    let _ = gio::spawn_blocking(move || {
+                        utils::save_image(&image_url, &destination)
+                    }).await;
+                }
+
                 let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
-                    &show_image_path.as_path(),
+                    &image_path.as_path(),
                     48,
                     48,
                     true
                 ).unwrap();
+
                 let texture = gdk::Texture::for_pixbuf(&pixbuf);
 
                 picture.set_paintable(Some(&texture));
                 picture.set_visible(true);
             } else {
-                view.imp().image_missing_icon.get().set_visible(true);
+                let show_id = &view.imp().show_id.get();
+                let show_image_path = utils::show_image_path(&show_id.to_string());
+
+                if show_image_path.as_path().exists() {
+                    let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
+                        &show_image_path.as_path(),
+                        48,
+                        48,
+                        true
+                    ).unwrap();
+
+                    let texture = gdk::Texture::for_pixbuf(&pixbuf);
+
+                    picture.set_paintable(Some(&texture));
+                    picture.set_visible(true);
+                } else {
+                    picture_container.set_visible(false);
+                    view.imp().image_missing_icon.get().set_visible(true);
+                }
             }
         }));
     }
