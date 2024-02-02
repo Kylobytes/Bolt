@@ -21,7 +21,8 @@
 
 use adw::prelude::*;
 use gtk::{
-    gdk, gdk_pixbuf, gio,
+    gdk, gdk_pixbuf,
+    gio::{self, MemoryInputStream},
     glib::{self, clone},
     subclass::prelude::*,
 };
@@ -122,61 +123,59 @@ impl DiscoverCard {
 
     pub fn load_image(&self) {
         glib::spawn_future_local(clone!(@weak self as view => async move {
-            let show_id = view.imp().show_id.get();
-            let image_path = utils::show_image_path(&show_id.to_string());
-
-            let picture_view = view.imp().picture.get();
-            let picture_spinner = view.imp().picture_spinner.get();
-
-            if image_path.as_path().exists() {
-                let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
-                    &image_path.as_path(),
-                    328,
-                    328,
-                    true
-                ).unwrap();
-                let texture = gdk::Texture::for_pixbuf(&pixbuf);
-                picture_view.set_paintable(Some(&texture));
-                picture_spinner.stop();
-                picture_spinner.set_visible(false);
-                picture_view.set_visible(true);
-
-                return;
-            }
-
-            let image_url = view.imp().image_url.clone().into_inner();
             let image_missing_icon = view.imp().image_missing_icon.get();
+            let picture_spinner = view.imp().picture_spinner.get();
+            let picture = view.imp().picture.get();
 
-            let Some(url) = image_url else {
+            let Some(url) = view.imp().image_url.clone().into_inner() else {
                 picture_spinner.stop();
                 picture_spinner.set_visible(false);
                 image_missing_icon.set_visible(true);
 
-                return;
+                return
             };
 
-            let destination = image_path.clone();
-
-            let image_saved_result = gio::spawn_blocking(move || {
-                utils::save_image(&url, &destination)
-            }).await;
-
-            if let Ok(_) = image_saved_result {
-                let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
-                    &image_path.as_path(),
-                    328,
-                    328,
-                    true
-                ).unwrap();
-                let texture = gdk::Texture::for_pixbuf(&pixbuf);
-                picture_view.set_paintable(Some(&texture));
-                picture_view.set_visible(true);
-            } else {
+            if url.is_empty() {
+                picture_spinner.stop();
+                picture_spinner.set_visible(false);
                 image_missing_icon.set_visible(true);
+
+                return
             }
 
-            picture_spinner.stop();
-            picture_spinner.set_visible(false);
+            let fetch_async_result = gio::spawn_blocking(move || {
+                utils::fetch_image(&url)
+            }).await;
+
+            let Ok(fetch_result) = fetch_async_result else {
+                picture_spinner.stop();
+                picture_spinner.set_visible(false);
+                image_missing_icon.set_visible(true);
+
+                return
+            };
+
+            if let Ok(content) = fetch_result {
+                let image_bytes = glib::Bytes::from(&content);
+                let stream = MemoryInputStream::from_bytes(&image_bytes);
+                let pixbuf = gdk_pixbuf::Pixbuf::from_stream_at_scale(
+                    &stream,
+                    328,
+                    328,
+                    true,
+                    gio::Cancellable::NONE
+                ).unwrap();
+                let texture = gdk::Texture::for_pixbuf(&pixbuf);
+
+                picture.set_paintable(Some(&texture));
+                picture_spinner.stop();
+                picture_spinner.set_visible(false);
+                picture.set_visible(true);
+            } else {
+                picture_spinner.stop();
+                picture_spinner.set_visible(false);
+                image_missing_icon.set_visible(true);
+            }
         }));
     }
 

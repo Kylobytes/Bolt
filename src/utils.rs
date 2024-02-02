@@ -19,7 +19,7 @@
  *
  */
 
-use std::path::PathBuf;
+use std::{io::Read, path::PathBuf};
 
 use gtk::glib;
 
@@ -43,6 +43,21 @@ pub fn show_image_path(filename: &str) -> PathBuf {
     image_path.push(filename);
 
     image_path
+}
+
+pub fn fetch_image(url: &str) -> Result<Vec<u8>, ureq::Error> {
+    let response = AGENT.get(url).call()?;
+
+    let length: usize =
+        response.header("Content-Length").unwrap().parse().unwrap();
+    let mut bytes: Vec<u8> = Vec::with_capacity(length);
+
+    let _ = response
+        .into_reader()
+        .take(10_000_000)
+        .read_to_end(&mut bytes);
+
+    Ok(bytes)
 }
 
 pub fn save_image(url: &str, path: &PathBuf) -> Result<(), ureq::Error> {

@@ -50,10 +50,10 @@ pub fn load_show_episodes(show_id: i64) -> Vec<Episode> {
     response.items
 }
 
-pub fn check_show_exists(show_id: &i64) -> bool {
+pub fn check_subscribed(show_id: &i64) -> bool {
     let database = database::connect()
         .get()
         .expect("Failed to connect to database");
 
-    show::model::check_exists(&database, show_id)
+    show::model::check_subscribed(&database, show_id)
 }

@@ -23,14 +23,15 @@ use std::cell::RefCell;
 
 use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
-    gio,
+    gdk, gdk_pixbuf,
+    gio::{self, MemoryInputStream},
     glib::{self, clone},
 };
 
 use crate::{
     data::{episode::object::EpisodeObject, show::object::ShowObject},
     show_details::{self, episode_row::DiscoverEpisodeRow},
-    utils::{self, show_image_path},
+    utils,
 };
 
 mod imp {
@@ -44,11 +45,15 @@ mod imp {
         #[template_child]
         pub title: TemplateChild<gtk::Label>,
         #[template_child]
-        pub image: TemplateChild<gtk::Picture>,
+        pub picture_container: TemplateChild<adw::Clamp>,
         #[template_child]
-        pub image_spinner: TemplateChild<gtk::Spinner>,
+        pub picture: TemplateChild<gtk::Picture>,
         #[template_child]
-        pub noimage: TemplateChild<gtk::Image>,
+        pub spinner_container: TemplateChild<adw::Clamp>,
+        #[template_child]
+        pub picture_spinner: TemplateChild<gtk::Spinner>,
+        #[template_child]
+        pub image_missing_icon: TemplateChild<gtk::Image>,
         #[template_child]
         pub subscribe_button: TemplateChild<gtk::Button>,
         #[template_child]
@@ -131,18 +136,18 @@ impl ShowDetails {
 
         glib::spawn_future_local(
             clone!(@weak self as view, @strong show_id => async move {
-                let show_exists = gio::spawn_blocking(move || {
-                    show_details::repository::check_show_exists(&show_id)}
+                let subscribed = gio::spawn_blocking(move || {
+                    show_details::repository::check_subscribed(&show_id)}
                 ).await.expect("Failed to check whether show exists");
 
-                if !show_exists {
+                if !subscribed {
                     view.imp().subscribe_button.get().set_visible(true);
                 }
             }),
         );
 
         self.load_episodes(&show.id());
-        self.load_image(show.id(), &show.image_url());
+        self.load_image(&show.image_url());
     }
 
     pub fn load_episodes(&self, show_id: &i64) {
@@ -163,48 +168,68 @@ impl ShowDetails {
         );
     }
 
-    pub fn load_image(&self, show_id: i64, image_url: &Option<String>) {
+    pub fn load_image(&self, image_url: &Option<String>) {
         glib::spawn_future_local(
-            clone!(@weak self as view, @strong show_id, @strong image_url => async move {
-                let image_path = show_image_path(&show_id.to_string());
-
-                view.imp().image_spinner.get().set_visible(true);
-
-                if image_path.as_path().exists() {
-                    view.imp().image_spinner.get().stop();
-                    view.imp().image_spinner.get().set_visible(false);
-
-                    let image = gio::File::for_path(&image_path.as_path());
-                    view.imp().image.get().set_file(Some(&image));
-                    view.imp().image.get().set_visible(true);
-
-                    return;
-                }
+            clone!(@weak self as view, @strong image_url => async move {
+                let image_missing_icon = view.imp().image_missing_icon.get();
+                let spinner_container = view.imp().spinner_container.get();
+                let picture_container = view.imp().picture_container.get();
+                let picture_spinner = view.imp().picture_spinner.get();
+                let picture = view.imp().picture.get();
 
                 let Some(url) = image_url else {
-                    view.imp().image_spinner.get().stop();
-                    view.imp().image_spinner.get().set_visible(false);
-                    view.imp().noimage.get().set_visible(true);
+                    picture_spinner.stop();
+                    spinner_container.set_visible(false);
+                    picture_container.set_visible(false);
+                    image_missing_icon.set_visible(true);
 
-                    return;
+                    return
                 };
 
-                let destination = image_path.clone();
+                if url.is_empty() {
+                    picture_spinner.stop();
+                    spinner_container.set_visible(false);
+                    picture_container.set_visible(false);
+                    image_missing_icon.set_visible(true);
 
-                let image_saved = gio::spawn_blocking(move || {
-                    utils::save_image(&url, &destination)
+                    return
+                };
+
+                let fetch_async_result = gio::spawn_blocking(move || {
+                    utils::fetch_image(&url)
                 }).await;
 
-                if let Ok(_) = image_saved {
-                    let image = gio::File::for_path(image_path.as_path());
-                    view.imp().image.get().set_file(Some(&image));
-                    view.imp().image.get().set_visible(true);
-                } else {
-                    view.imp().noimage.get().set_visible(true);
-                }
+                let Ok(fetch_result) = fetch_async_result else {
+                    picture_spinner.stop();
+                    spinner_container.set_visible(false);
+                    picture_container.set_visible(false);
+                    image_missing_icon.set_visible(true);
 
-                view.imp().image_spinner.get().stop();
-                view.imp().image_spinner.get().set_visible(false);
+                    return
+                };
+
+                if let Ok(content) = fetch_result {
+                    let image_bytes = glib::Bytes::from(&content);
+                    let stream = MemoryInputStream::from_bytes(&image_bytes);
+                    let pixbuf = gdk_pixbuf::Pixbuf::from_stream_at_scale(
+                        &stream,
+                        328,
+                        328,
+                        true,
+                        gio::Cancellable::NONE
+                    ).unwrap();
+                    let texture = gdk::Texture::for_pixbuf(&pixbuf);
+
+                    picture.set_paintable(Some(&texture));
+                    picture_spinner.stop();
+                    spinner_container.set_visible(false);
+                    picture_container.set_visible(true);
+                } else {
+                    picture_spinner.stop();
+                    spinner_container.set_visible(false);
+                    picture_container.set_visible(false);
+                    image_missing_icon.set_visible(true);
+                }
             }),
         );
     }

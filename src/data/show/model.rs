@@ -91,7 +91,7 @@ pub fn load_shows(
     shows
 }
 
-pub fn check_exists(
+pub fn check_subscribed(
     database: &PooledConnection<SqliteConnectionManager>,
     id: &i64,
 ) -> bool {
