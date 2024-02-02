@@ -31,6 +31,7 @@ use crate::{
         database, episode,
         show::{self, Show},
     },
+    utils,
 };
 
 pub fn search_shows(query: &str) -> Vec<SearchResult> {
@@ -69,7 +70,7 @@ pub fn load_subscribed_show_ids() -> Vec<i64> {
     show_ids
 }
 
-pub fn subscribe(show_id: i64) {
+pub fn subscribe(show_id: &i64) {
     let endpoint = format!("/podcasts/byfeedid?id={show_id}");
 
     let api_connection = ApiConnection::builder()
@@ -94,6 +95,11 @@ pub fn subscribe(show_id: i64) {
 
     show::model::save_subscription(&database, &response);
 
+    if !response.feed.image.is_empty() {
+        let image_path = utils::show_image_path(&show_id.to_string());
+        let _ = utils::save_image(&response.feed.image, &image_path);
+    }
+
     let episodes_endpoint = format!("/episodes/byfeedid?id={show_id}");
 
     let episodes_connection = ApiConnection::builder()
@@ -101,7 +107,7 @@ pub fn subscribe(show_id: i64) {
         .build_authentication_headers()
         .build();
 
-    let response: EpisodeResponse = AGENT
+    let episode_response: EpisodeResponse = AGENT
         .get(&episodes_connection.url)
         .set("User-Agent", USER_AGENT)
         .set("X-Auth-Key", API_KEY)
@@ -114,7 +120,7 @@ pub fn subscribe(show_id: i64) {
 
     episode::model::save_episodes_for_show(
         &mut database,
-        &response.items,
+        &episode_response.items,
         &show_id,
     );
 }

@@ -26,7 +26,7 @@ use gtk::glib;
 use crate::{api::AGENT, config::GETTEXT_PACKAGE};
 
 pub fn episode_image_path(filename: &str) -> PathBuf {
-    let mut image_path = glib::user_cache_dir();
+    let mut image_path = glib::user_data_dir();
     image_path.push(GETTEXT_PACKAGE);
     image_path.push("images");
     image_path.push("episodes");
@@ -36,7 +36,7 @@ pub fn episode_image_path(filename: &str) -> PathBuf {
 }
 
 pub fn show_image_path(filename: &str) -> PathBuf {
-    let mut image_path = glib::user_cache_dir();
+    let mut image_path = glib::user_data_dir();
     image_path.push(GETTEXT_PACKAGE);
     image_path.push("images");
     image_path.push("shows");

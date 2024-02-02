@@ -190,7 +190,7 @@ impl DiscoverCard {
                 glib::spawn_future_local(
                     clone!(@weak button, @strong show_id => async move {
                         gio::spawn_blocking(move || {
-                            discover::repository::subscribe(show_id);
+                            discover::repository::subscribe(&show_id);
                         }).await.expect("Failed to finish subscribe task");
 
                         button.set_label("Subscribed");
