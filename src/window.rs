@@ -26,9 +26,13 @@ use gtk::{
 };
 
 use crate::{
-    data::show::object::ShowObject, discover::view::DiscoverView,
-    empty_view::EmptyView, episodes::view::EpisodesView, podcasts,
-    queue_view::QueueView, show_details::view::ShowDetails,
+    data::show::object::ShowObject,
+    discover::{card::DiscoverCard, view::DiscoverView},
+    empty_view::EmptyView,
+    episodes::view::EpisodesView,
+    podcasts,
+    queue_view::QueueView,
+    show_details::view::ShowDetails,
 };
 
 pub enum View {
@@ -101,6 +105,7 @@ impl BoltWindow {
 
         window.connect_signals();
         window.load_shows();
+        window.setup_discover();
 
         window
     }
@@ -136,6 +141,13 @@ impl BoltWindow {
                 window.show_view(View::Empty);
             }
         }));
+    }
+
+    fn setup_discover(&self) {
+        let model = ListStore::new::<ShowObject>();
+        self.imp().discover_view.get().setup_model(&model);
+    }
+
     }
 
     fn connect_signals(&self) {
@@ -186,35 +198,32 @@ impl BoltWindow {
 
         let discover_view = imp.discover_view.get();
 
-        discover_view.search_results_container().connect_child_activated(
-            clone!(@weak discover_view => move |_container, child| {
+        discover_view.search_results().connect_child_activated(
+            clone!(@weak self as window, @weak discover_view => move |_container, child| {
                 if let Some (ref model) = *discover_view.imp().model.borrow() {
                     let index: u32 = child.index().try_into().expect("Index cannot be out of range");
-                    let show = model.item(index);
-                    discover_view.emit_by_name::<()>("search-result-activated", &[&show]);
+                    let show = model.item(index).and_downcast::<ShowObject>();
+
+                    if let Some(show) = show {
+                        window.imp().show_details_view.get().load_details(&show);
+                        window.show_view(View::ShowDetails);
+                    }
                 };
             })
         );
 
-        imp.discover_view.connect_closure(
-            "search-result-activated",
-            false,
-            closure_local!(@strong self as window => move |_view: DiscoverView, show: ShowObject| {
-                window.imp().show_details_view.get().load_details(&show);
-
-                window.show_view(View::ShowDetails);
-            }));
-
-        imp.discover_view.back_button().connect_clicked(
+        discover_view.back_button().connect_clicked(
             clone!(@weak self as window => move |_| {
                 window.show_view(View::Podcasts);
             }),
         );
 
-        imp.show_details_view.back_button().connect_clicked(
-            clone!(@weak self as window => move |_| {
+        self.imp()
+            .show_details_view
+            .get()
+            .back_button()
+            .connect_clicked(clone!(@weak self as window => move |_| {
                 window.show_view(View::Discover);
-            }),
-        );
+            }));
     }
 }

@@ -23,11 +23,10 @@ use std::cell::RefCell;
 
 use adw::subclass::prelude::*;
 use gtk::{
-    gio,
-    glib::{self, clone, subclass::Signal},
+    gio::{self, ListStore},
+    glib::{self, clone},
     prelude::*,
 };
-use once_cell::sync::Lazy;
 
 use crate::{
     data::show::object::ShowObject,
@@ -47,14 +46,14 @@ mod imp {
         #[template_child]
         pub discover_welcome: TemplateChild<adw::StatusPage>,
         #[template_child]
-        pub search_results_container: TemplateChild<gtk::FlowBox>,
+        pub search_results: TemplateChild<gtk::FlowBox>,
         #[template_child]
-        pub categories_container: TemplateChild<gtk::FlowBox>,
+        pub categories: TemplateChild<gtk::FlowBox>,
         #[template_child]
         pub discover_results_empty: TemplateChild<adw::StatusPage>,
         #[template_child]
         pub discover_spinner: TemplateChild<gtk::Spinner>,
-        pub model: RefCell<Option<gio::ListStore>>,
+        pub model: RefCell<Option<ListStore>>,
     }
 
     #[glib::object_subclass]
@@ -72,38 +71,7 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for DiscoverView {
-        fn constructed(&self) {
-            self.parent_constructed();
-            self.model
-                .replace(Some(gio::ListStore::new::<ShowObject>()));
-
-            let model_binding = self.model.borrow();
-            let model = model_binding.as_ref();
-
-            self.search_results_container.get().bind_model(
-                model,
-                move |item: &glib::Object| {
-                    let show = item
-                        .downcast_ref::<ShowObject>()
-                        .expect("Item must be an search result");
-
-                    DiscoverCard::from(show.to_owned()).into()
-                },
-            );
-        }
-
-        fn signals() -> &'static [Signal] {
-            static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
-                vec![Signal::builder("search-result-activated")
-                    .param_types([ShowObject::static_type()])
-                    .build()]
-            });
-
-            SIGNALS.as_ref()
-        }
-    }
-
+    impl ObjectImpl for DiscoverView {}
     impl WidgetImpl for DiscoverView {}
     impl BinImpl for DiscoverView {}
 }
@@ -131,6 +99,24 @@ impl DiscoverView {
 
     pub fn back_button(&self) -> gtk::Button {
         self.imp().back_button.get()
+    }
+
+    pub fn search_results(&self) -> gtk::FlowBox {
+        self.imp().search_results.get()
+    }
+
+    pub fn setup_model(&self, model: &ListStore) {
+        self.imp().model.replace(Some(model.clone()));
+        self.imp().search_results.get().bind_model(
+            Some(model),
+            move |item: &glib::Object| {
+                let show = item
+                    .downcast_ref::<ShowObject>()
+                    .expect("Item must be a search result");
+
+                DiscoverCard::from(show.to_owned()).into()
+            },
+        )
     }
 
     pub fn search_shows(&self, search_query: &str) {
@@ -183,15 +169,11 @@ impl DiscoverView {
                 spinner.set_visible(false);
 
                 if discover_shows.len() > 0 {
-                    view.imp().search_results_container.get().set_visible(true);
+                    view.imp().search_results.get().set_visible(true);
                 } else {
                     view.imp().discover_results_empty.get().set_visible(true);
                 }
             }),
         );
-    }
-
-    pub fn search_results_container(&self) -> gtk::FlowBox {
-        self.imp().search_results_container.get()
     }
 }
