@@ -121,60 +121,72 @@ impl EpisodeRow {
 
     pub fn load_image(&self) {
         glib::spawn_future_local(clone!(@weak self as view => async move {
-            let image_url = view
-                .imp()
-                .image_url
-                .clone()
-                .into_inner();
+            let image_url = view.imp().image_url.clone().into_inner();
+            let episode_id = view.imp().episode_id.get();
+            let show_id = view.imp().show_id.get();
 
-            let episode_id = &view.imp().episode_id.get();
-
-            let picture = view.imp().picture.get();
-            let picture_container = view.imp().picture_container.get();
-
-            if let Some(image_url) = image_url {
-                let image_path = utils::episode_image_path(&episode_id.to_string());
-
-                if !image_path.as_path().exists() {
-                    let destination = image_path.clone();
-
-                    let _ = gio::spawn_blocking(move || {
-                        utils::save_image(&image_url, &destination)
-                    }).await;
+            match image_url {
+                Some(url) => {
+                    if url.is_empty() {
+                        view.load_show_image(&show_id);
+                    } else {
+                        view.load_episode_image(&url, &episode_id).await;
+                    }
                 }
-
-                let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
-                    &image_path.as_path(),
-                    48,
-                    48,
-                    true
-                ).unwrap();
-
-                let texture = gdk::Texture::for_pixbuf(&pixbuf);
-
-                picture.set_paintable(Some(&texture));
-                picture.set_visible(true);
-            } else {
-                let show_id = &view.imp().show_id.get();
-                let show_image_path = utils::show_image_path(&show_id.to_string());
-
-                if show_image_path.as_path().exists() {
-                    let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
-                        &show_image_path.as_path(),
-                        48,
-                        48,
-                        true
-                    ).unwrap();
-
-                    let texture = gdk::Texture::for_pixbuf(&pixbuf);
-
-                    picture.set_paintable(Some(&texture));
-                    picture.set_visible(true);
-                } else {
-                    picture_container.set_visible(false);
-                    view.imp().image_missing_icon.get().set_visible(true);
-                }
+                None => view.load_show_image(&show_id),
             }
         }));
+    }
+
+    async fn load_episode_image(&self, url: &String, episode_id: &i64) {
+        let image_path = utils::episode_image_path(&episode_id.to_string());
+
+        if !image_path.as_path().exists() {
+            let destination = image_path.clone();
+            let image_url = url.clone();
+
+            let _ = gio::spawn_blocking(move || {
+                utils::save_image(&image_url, &destination)
+            })
+            .await;
+        }
+
+        let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
+            &image_path.as_path(),
+            48,
+            48,
+            true,
+        )
+        .unwrap();
+
+        let texture = gdk::Texture::for_pixbuf(&pixbuf);
+
+        self.imp().picture.get().set_paintable(Some(&texture));
+        self.imp().picture_container.get().set_visible(true);
+    }
+
+    fn load_show_image(&self, show_id: &i64) {
+        let picture_container = self.imp().picture_container.get();
+        let show_image_path = utils::show_image_path(&show_id.to_string());
+
+        if show_image_path.as_path().exists() {
+            let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
+                &show_image_path.as_path(),
+                48,
+                48,
+                true,
+            )
+            .unwrap();
+
+            let texture = gdk::Texture::for_pixbuf(&pixbuf);
+
+            self.imp().picture.get().set_paintable(Some(&texture));
+            picture_container.set_visible(true);
+        } else {
+            println!("artwork doesn't exist");
+
+            picture_container.set_visible(false);
+            self.imp().image_missing_icon.get().set_visible(true);
+        }
     }
 }
