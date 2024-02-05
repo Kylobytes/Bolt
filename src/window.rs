@@ -28,7 +28,7 @@ use gtk::{
 use crate::{
     data::{episode::object::EpisodeObject, show::object::ShowObject},
     discover::view::DiscoverView,
-    empty_view::EmptyView,
+    empty::view::EmptyView,
     episodes::view::EpisodesView,
     podcasts,
     queue_view::QueueView,

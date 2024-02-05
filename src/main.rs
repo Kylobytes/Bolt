@@ -28,11 +28,11 @@ mod api;
 mod data;
 
 mod discover;
+mod empty;
 mod episodes;
 mod podcasts;
 mod show_details;
 
-mod empty_view;
 mod queue_view;
 
 use std::sync::OnceLock;
