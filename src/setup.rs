@@ -21,14 +21,17 @@
 use std::path::PathBuf;
 
 use gtk::glib;
+use sqlx::{query, Executor};
 
-use crate::config::GETTEXT_PACKAGE;
-use crate::config::PKGDATADIR;
-use crate::data::database;
+use crate::{
+    config::{GETTEXT_PACKAGE, PKGDATADIR},
+    data::database,
+    runtime,
+};
 
 pub fn run() {
     setup_directories();
-    initialize_database();
+    runtime().block_on(initialize_database());
 }
 
 fn setup_directories() {
@@ -83,24 +86,22 @@ fn setup_directories() {
     }
 }
 
-fn initialize_database() {
-    let pool = database::connect();
-    let mut connection = pool.get().expect("Could not connect to database");
-    let transaction = connection
-        .transaction()
-        .expect("Failed to start transaction for migrations");
-
+async fn initialize_database() {
+    let pool = database::connect_async().await;
     let path: PathBuf = [PKGDATADIR, "migrations"].iter().collect();
     let files = std::fs::read_dir(path).expect("Failed to acquire migrations");
 
+    let mut transaction = pool
+        .begin()
+        .await
+        .expect("Failed to start transaction for migrations");
+
     for file in files {
         let migration_path = file.unwrap().path();
-        let contents = std::fs::read_to_string(migration_path).unwrap();
+        let migration = std::fs::read_to_string(migration_path).unwrap();
 
-        transaction
-            .execute(&contents, [])
-            .expect("Failed to run migration");
+        let _ = transaction.execute(query(&migration)).await;
     }
 
-    let _ = transaction.commit();
+    let _ = transaction.commit().await;
 }

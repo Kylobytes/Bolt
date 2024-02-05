@@ -18,12 +18,15 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use std::path::PathBuf;
+
+use gtk::glib;
 use once_cell::sync::Lazy;
 use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
+use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
 
 use crate::config::GETTEXT_PACKAGE;
-use gtk::glib;
 
 static POOL: Lazy<Pool<SqliteConnectionManager>> = Lazy::new(|| {
     let mut database_url = glib::user_data_dir();
@@ -37,4 +40,24 @@ static POOL: Lazy<Pool<SqliteConnectionManager>> = Lazy::new(|| {
 
 pub fn connect() -> Pool<SqliteConnectionManager> {
     POOL.clone()
+}
+
+pub async fn connect_async() -> SqlitePool {
+    let mut database_url: PathBuf = [
+        "sqlite://",
+        &glib::user_data_dir().display().to_string(),
+        GETTEXT_PACKAGE.into(),
+        GETTEXT_PACKAGE.into(),
+    ]
+    .iter()
+    .collect();
+
+    database_url.set_extension("db");
+    database_url.push("?mode=rwc");
+
+    SqlitePoolOptions::new()
+        .max_connections(5)
+        .connect(&database_url.display().to_string())
+        .await
+        .expect("Failed to initialize database pool")
 }
