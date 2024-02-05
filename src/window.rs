@@ -20,14 +20,14 @@
 
 use adw::subclass::prelude::*;
 use gtk::{
-    gio,
-    glib::{self, clone, closure_local},
+    gio::{self, ListStore},
+    glib::{self, clone},
     prelude::*,
 };
 
 use crate::{
-    data::show::object::ShowObject,
-    discover::{card::DiscoverCard, view::DiscoverView},
+    data::{episode::object::EpisodeObject, show::object::ShowObject},
+    discover::view::DiscoverView,
     empty_view::EmptyView,
     episodes::view::EpisodesView,
     podcasts,
@@ -106,6 +106,7 @@ impl BoltWindow {
         window.connect_signals();
         window.load_shows();
         window.setup_discover();
+        window.setup_episodes();
 
         window
     }
@@ -148,6 +149,9 @@ impl BoltWindow {
         self.imp().discover_view.get().setup_model(&model);
     }
 
+    fn setup_episodes(&self) {
+        let model = ListStore::new::<EpisodeObject>();
+        self.imp().episodes_view.get().setup_model(&model);
     }
 
     fn connect_signals(&self) {

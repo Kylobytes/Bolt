@@ -22,7 +22,7 @@
 use std::cell::RefCell;
 
 use gtk::{
-    gio,
+    gio::{self, ListStore},
     glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
@@ -41,7 +41,7 @@ mod imp {
     pub struct EpisodesView {
         #[template_child]
         pub episodes: TemplateChild<gtk::ListBox>,
-        pub model: RefCell<Option<gio::ListStore>>,
+        pub model: RefCell<Option<ListStore>>,
     }
 
     #[glib::object_subclass]
@@ -59,25 +59,7 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for EpisodesView {
-        fn constructed(&self) {
-            self.parent_constructed();
-            self.model
-                .replace(Some(gio::ListStore::new::<EpisodeObject>()));
-
-            let model_binding = self.model.borrow();
-            let model = model_binding.as_ref();
-
-            self.episodes.bind_model(model, move |item: &glib::Object| {
-                let episode = item
-                    .downcast_ref::<EpisodeObject>()
-                    .expect("Item must be an episode");
-
-                EpisodeRow::from(episode.to_owned()).into()
-            });
-        }
-    }
-
+    impl ObjectImpl for EpisodesView {}
     impl WidgetImpl for EpisodesView {}
     impl BoxImpl for EpisodesView {}
 }
@@ -97,6 +79,20 @@ impl Default for EpisodesView {
 impl EpisodesView {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn setup_model(&self, model: &ListStore) {
+        self.imp().model.replace(Some(model.clone()));
+        self.imp().episodes.get().bind_model(
+            Some(model),
+            move |item: &glib::Object| {
+                let episode = item
+                    .downcast_ref::<EpisodeObject>()
+                    .expect("Item must be an episode");
+
+                EpisodeRow::from(episode.to_owned()).into()
+            },
+        );
     }
 
     pub fn load_episodes(&self) {
