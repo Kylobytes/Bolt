@@ -21,6 +21,7 @@
 use r2d2::PooledConnection;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::params;
+use sqlx::SqlitePool;
 
 use crate::{api::podcast::response::PodcastResponse, data::show::Show};
 
@@ -107,14 +108,11 @@ pub fn check_subscribed(
     count == 1
 }
 
-pub fn load_show_count(
-    database: &PooledConnection<SqliteConnectionManager>,
-) -> u8 {
-    let mut statement = database
-        .prepare("SELECT COUNT(*) FROM shows")
-        .expect("Failed to prepare load shows statement");
+pub async fn load_show_count(pool: &SqlitePool) -> i32 {
+    let result = sqlx::query!("SELECT COUNT(id) AS count FROM shows")
+        .fetch_one(pool)
+        .await
+        .expect("Failed to query show count");
 
-    statement
-        .query_row([], |row| Ok(row.get::<usize, u8>(0)?))
-        .expect("Failed to load show count")
+    result.count
 }

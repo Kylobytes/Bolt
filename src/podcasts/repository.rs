@@ -20,9 +20,8 @@
 
 use crate::data::{database, show};
 
-pub fn load_show_count() -> u8 {
-    let pool = database::connect();
-    let connection = pool.get().expect("Failed to connect to database");
+pub async fn load_show_count() -> i32 {
+    let pool = database::connect_async().await;
 
-    show::model::load_show_count(&connection)
+    show::model::load_show_count(&pool).await
 }

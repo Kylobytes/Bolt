@@ -32,6 +32,7 @@ use crate::{
     episodes::view::EpisodesView,
     podcasts,
     queue_view::QueueView,
+    runtime,
     show_details::view::ShowDetails,
 };
 
@@ -118,9 +119,7 @@ impl BoltWindow {
             View::Empty => stack.set_visible_child_name("empty-view"),
             View::Loading => stack.set_visible_child_name("loading-view"),
             View::Podcasts => stack.set_visible_child_name("podcasts-view"),
-            View::Discover => {
-                stack.set_visible_child_name("discover-view");
-            }
+            View::Discover => stack.set_visible_child_name("discover-view"),
             View::ShowDetails => {
                 stack.set_visible_child_name("show-details-view")
             }
@@ -130,18 +129,25 @@ impl BoltWindow {
     fn load_shows(&self) {
         self.show_view(View::Loading);
 
-        glib::spawn_future_local(clone!(@weak self as window => async move {
-            let shows = gio::spawn_blocking(move || podcasts::repository::load_show_count())
-                .await
-                .expect("Failed to load all shows");
+        let (sender, receiver) = async_channel::bounded(1);
 
-            if shows > 0 {
-                window.imp().episodes_view.get().load_episodes();
-                window.show_view(View::Podcasts);
-            } else {
-                window.show_view(View::Empty);
-            }
+        runtime().spawn(clone!(@strong sender => async move {
+            let shows = podcasts::repository::load_show_count().await;
+            sender.send(shows).await.expect("The channel needs to be open");
         }));
+
+        glib::spawn_future_local(
+            clone!(@weak self as window, @strong receiver => async move {
+                if let Ok(shows) = receiver.recv().await {
+                    if shows > 0 {
+                        window.imp().episodes_view.get().load_episodes();
+                        window.show_view(View::Podcasts);
+                    } else {
+                        window.show_view(View::Empty);
+                    }
+                }
+            }),
+        );
     }
 
     fn setup_discover(&self) {
