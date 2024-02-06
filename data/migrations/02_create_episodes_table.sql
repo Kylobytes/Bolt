@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS episodes (
        description TEXT,
        url TEXT,
        image_url TEXT,
-       date_published INTEGER,
-       show_id INTEGER,
+       date_published INTEGER NOT NULL,
+       show_id INTEGER NOT NULL,
        FOREIGN KEY (show_id) REFERENCES shows(id)
 );
