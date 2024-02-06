@@ -105,9 +105,9 @@ impl BoltWindow {
             .build();
 
         window.connect_signals();
-        window.load_shows();
         window.setup_discover();
         window.setup_episodes();
+        window.load_shows();
 
         window
     }

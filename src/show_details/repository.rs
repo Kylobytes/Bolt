@@ -18,17 +18,19 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use reqwest::header::{self, AUTHORIZATION};
+
 use crate::{
     api::{
         connection::ApiConnection,
         episode::{response::EpisodeResponse, Episode},
-        AGENT,
+        CLIENT,
     },
     config::{API_KEY, USER_AGENT},
     data::{database, show},
 };
 
-pub fn load_show_episodes(show_id: i64) -> Vec<Episode> {
+pub async fn load_show_episodes(show_id: i64) -> Vec<Episode> {
     let endpoint = format!("/episodes/byfeedid?id={show_id}&max=100&pretty");
 
     let api_connection = ApiConnection::builder()
@@ -36,22 +38,24 @@ pub fn load_show_episodes(show_id: i64) -> Vec<Episode> {
         .build_authentication_headers()
         .build();
 
-    let response: EpisodeResponse = AGENT
+    let response: EpisodeResponse = CLIENT
         .get(&api_connection.url)
-        .set("User-Agent", USER_AGENT)
-        .set("X-Auth-Key", API_KEY)
-        .set("X-Auth-Date", &api_connection.auth_date)
-        .set("Authorization", &api_connection.authorization)
-        .call()
-        .expect("Failed to download show's episodes")
-        .into_json()
-        .expect("Failed to parse show's episode response");
+        .header(header::USER_AGENT, USER_AGENT)
+        .header(AUTHORIZATION, &api_connection.authorization)
+        .header("X-Auth-Key", API_KEY)
+        .header("X-Auth-Date", &api_connection.auth_date)
+        .send()
+        .await
+        .expect("Failed to download episodes")
+        .json()
+        .await
+        .expect("Failed to parse episodes");
 
     response.items
 }
 
 pub async fn check_subscribed(show_id: &i64) -> bool {
-    let pool = database::connect_async().await;
+    let pool = database::connect().await;
 
     show::model::subscribed(&pool, show_id).await
 }

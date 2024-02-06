@@ -29,8 +29,9 @@ use gtk::{
 };
 
 use crate::{
-    data::episode::object::EpisodeObject,
+    data::episode::{object::EpisodeObject, Episode},
     episodes::{repository, row::EpisodeRow},
+    runtime,
 };
 
 mod imp {
@@ -96,23 +97,30 @@ impl EpisodesView {
     }
 
     pub fn load_episodes(&self) {
-        glib::spawn_future_local(clone!(@weak self as view => async move {
-            let model_binding = view.imp().model.borrow();
+        let (sender, receiver) = async_channel::bounded::<Vec<Episode>>(1);
 
-            let Some(model) = model_binding.as_ref() else {
-                return;
-            };
+        runtime().spawn(clone!(@strong sender => async move {
+            let episodes = repository::load_episodes().await;
 
-            let episodes: Vec<EpisodeObject> = gio::spawn_blocking(|| { repository::load_episodes() })
-                .await
-                .expect("Failed to execute load episodes task")
-                .into_iter()
-                .map(EpisodeObject::from)
-                .collect();
-
-
-            model.remove_all();
-            model.extend_from_slice(&episodes);
+            sender.send(episodes).await.expect("The channel needs to be open");
         }));
+
+        glib::spawn_future_local(
+            clone!(@weak self as view, @strong receiver => async move {
+                if let Ok(episodes) = receiver.recv().await {
+                    let Some(ref model) = *view.imp().model.borrow() else {
+                        return;
+                    };
+
+                    let episode_objects: Vec<EpisodeObject> = episodes
+                        .into_iter()
+                        .map(EpisodeObject::from)
+                        .collect();
+
+                    model.remove_all();
+                    model.extend_from_slice(&episode_objects);
+                }
+            }),
+        );
     }
 }

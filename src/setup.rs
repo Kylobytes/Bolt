@@ -87,7 +87,7 @@ fn setup_directories() {
 }
 
 async fn initialize_database() {
-    let pool = database::connect_async().await;
+    let pool = database::connect().await;
     let path: PathBuf = [PKGDATADIR, "migrations"].iter().collect();
     let files = std::fs::read_dir(path).expect("Failed to acquire migrations");
 

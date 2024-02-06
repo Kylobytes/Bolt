@@ -19,11 +19,11 @@
  *
  */
 
-use std::{io::Read, path::PathBuf};
+use std::{io::Cursor, path::PathBuf};
 
 use gtk::glib;
 
-use crate::{api::AGENT, config::GETTEXT_PACKAGE};
+use crate::{api::CLIENT, config::GETTEXT_PACKAGE};
 
 pub fn episode_image_path(filename: &str) -> PathBuf {
     let mut image_path = glib::user_data_dir();
@@ -45,28 +45,21 @@ pub fn show_image_path(filename: &str) -> PathBuf {
     image_path
 }
 
-pub fn fetch_image(url: &str) -> Result<Vec<u8>, ureq::Error> {
-    let response = AGENT.get(url).call()?;
-
-    let length: usize =
-        response.header("Content-Length").unwrap().parse().unwrap();
-    let mut bytes: Vec<u8> = Vec::with_capacity(length);
-
-    let _ = response
-        .into_reader()
-        .take(10_000_000)
-        .read_to_end(&mut bytes);
-
-    Ok(bytes)
+pub async fn fetch_image(url: &str) -> Result<Vec<u8>, reqwest::Error> {
+    Ok(CLIENT.get(url).send().await?.bytes().await?.to_vec())
 }
 
-pub fn save_image(url: &str, path: &PathBuf) -> Result<(), ureq::Error> {
-    let mut response = AGENT.get(url).call()?.into_reader();
+pub async fn save_image(
+    url: &str,
+    path: &PathBuf,
+) -> Result<(), reqwest::Error> {
+    let response = CLIENT.get(url).send().await?.bytes().await?;
 
     let mut image =
         std::fs::File::create(&path).expect("Failed to create image at path");
+    let mut content = Cursor::new(&response);
 
-    std::io::copy(&mut response, &mut std::io::BufWriter::new(&mut image))
+    std::io::copy(&mut content, &mut std::io::BufWriter::new(&mut image))
         .expect("Failed to save image");
 
     Ok(())

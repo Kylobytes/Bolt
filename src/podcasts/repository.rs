@@ -21,7 +21,7 @@
 use crate::data::{database, show};
 
 pub async fn load_show_count() -> i32 {
-    let pool = database::connect_async().await;
+    let pool = database::connect().await;
 
     show::model::load_show_count(&pool).await
 }

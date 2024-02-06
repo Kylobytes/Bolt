@@ -156,85 +156,96 @@ impl ShowDetails {
     }
 
     pub fn load_episodes(&self, show_id: &i64) {
-        glib::spawn_future_local(
-            clone!(@weak self as view, @strong show_id => async move {
-                let episodes: Vec<EpisodeObject> = gio::spawn_blocking(move || {
-                    show_details::repository::load_show_episodes(show_id)
-                }).await.expect("Failed to load episodes")
-                    .into_iter()
-                    .map(EpisodeObject::from)
-                    .collect();
+        let (sender, receiver) = async_channel::bounded(1);
 
-                if let Some(model) = view.imp().model.borrow().as_ref() {
-                    model.remove_all();
-                    model.extend_from_slice(&episodes);
-                };
+        runtime().spawn(clone!(@strong show_id => async move {
+            let episodes = show_details::repository::load_show_episodes(show_id).await;
+            sender.send(episodes).await.expect("The episodes channel should be open");
+        }));
+
+        glib::spawn_future_local(
+            clone!(@weak self as view, @strong show_id, @strong receiver => async move {
+                if let Ok(remote_episodes) = receiver.recv().await {
+                    let episodes: Vec<EpisodeObject> = remote_episodes
+                        .into_iter()
+                        .map(EpisodeObject::from)
+                        .collect();
+
+                    if let Some(model) = view.imp().model.borrow().as_ref() {
+                        model.remove_all();
+                        model.extend_from_slice(&episodes);
+                    };
+                }
             }),
         );
     }
 
     pub fn load_image(&self, image_url: &Option<String>) {
+        let Some(url) = image_url else {
+            self.imp().picture_container.get().set_visible(false);
+            self.imp().picture_spinner.get().stop();
+            self.imp().spinner_container.get().set_visible(false);
+            self.imp().image_missing_icon.get().set_visible(true);
+
+            return;
+        };
+
+        if url.is_empty() {
+            self.imp().picture_container.get().set_visible(false);
+            self.imp().picture_spinner.get().stop();
+            self.imp().spinner_container.get().set_visible(false);
+            self.imp().image_missing_icon.get().set_visible(true);
+
+            return;
+        }
+
+        let (sender, receiver) = async_channel::bounded(1);
+
+        runtime().spawn(clone!(@strong url, @strong sender => async move {
+            let image = utils::fetch_image(&url).await;
+            sender.send(image).await.expect("The image channel should be open");
+        }));
+
         glib::spawn_future_local(
-            clone!(@weak self as view, @strong image_url => async move {
+            clone!(@weak self as view, @strong receiver => async move {
                 let image_missing_icon = view.imp().image_missing_icon.get();
                 let spinner_container = view.imp().spinner_container.get();
                 let picture_container = view.imp().picture_container.get();
                 let picture_spinner = view.imp().picture_spinner.get();
                 let picture = view.imp().picture.get();
 
-                let Some(url) = image_url else {
-                    picture_spinner.stop();
-                    spinner_container.set_visible(false);
-                    picture_container.set_visible(false);
-                    image_missing_icon.set_visible(true);
+                if let Ok(result) = receiver.recv().await {
+                    if let Ok(content) = result {
+                        let image_bytes = glib::Bytes::from(&content);
+                        let stream = MemoryInputStream::from_bytes(&image_bytes);
+                        let pixbuf = gdk_pixbuf::Pixbuf::from_stream_at_scale(
+                            &stream,
+                            328,
+                            328,
+                            true,
+                            gio::Cancellable::NONE
+                        );
 
-                    return
-                };
+                        if let Ok(pixbuf) = pixbuf {
+                            let texture = gdk::Texture::for_pixbuf(&pixbuf);
 
-                if url.is_empty() {
-                    picture_spinner.stop();
-                    spinner_container.set_visible(false);
-                    picture_container.set_visible(false);
-                    image_missing_icon.set_visible(true);
-
-                    return
-                };
-
-                let fetch_async_result = gio::spawn_blocking(move || {
-                    utils::fetch_image(&url)
-                }).await;
-
-                let Ok(fetch_result) = fetch_async_result else {
-                    picture_spinner.stop();
-                    spinner_container.set_visible(false);
-                    picture_container.set_visible(false);
-                    image_missing_icon.set_visible(true);
-
-                    return
-                };
-
-                if let Ok(content) = fetch_result {
-                    let image_bytes = glib::Bytes::from(&content);
-                    let stream = MemoryInputStream::from_bytes(&image_bytes);
-                    let pixbuf = gdk_pixbuf::Pixbuf::from_stream_at_scale(
-                        &stream,
-                        328,
-                        328,
-                        true,
-                        gio::Cancellable::NONE
-                    ).unwrap();
-                    let texture = gdk::Texture::for_pixbuf(&pixbuf);
-
-                    picture.set_paintable(Some(&texture));
-                    picture_spinner.stop();
-                    spinner_container.set_visible(false);
-                    picture_container.set_visible(true);
+                            picture.set_paintable(Some(&texture));
+                            picture_container.set_visible(true);
+                        } else {
+                            picture_container.set_visible(false);
+                            image_missing_icon.set_visible(true);
+                        }
+                    } else {
+                        picture_container.set_visible(false);
+                        image_missing_icon.set_visible(true);
+                    }
                 } else {
-                    picture_spinner.stop();
-                    spinner_container.set_visible(false);
-                    picture_container.set_visible(false);
-                    image_missing_icon.set_visible(true);
+                        picture_container.set_visible(false);
+                        image_missing_icon.set_visible(true);
                 }
+
+                picture_spinner.stop();
+                spinner_container.set_visible(false);
             }),
         );
     }

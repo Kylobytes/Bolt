@@ -23,7 +23,7 @@ use reqwest::header::{self, AUTHORIZATION};
 use crate::{
     api::{
         connection::ApiConnection,
-        episode::response::EpisodeResponse,
+        episode::{response::EpisodeResponse, Episode},
         podcast::response::PodcastResponse,
         search::{response::SearchResponse, result::SearchResult},
         CLIENT,
@@ -33,7 +33,7 @@ use crate::{
         database, episode,
         show::{self, Show},
     },
-    utils,
+    utils::{self, episode_image_path},
 };
 
 pub async fn search_shows(query: &str) -> Vec<SearchResult> {
@@ -62,9 +62,9 @@ pub async fn search_shows(query: &str) -> Vec<SearchResult> {
 }
 
 pub async fn load_subscribed_show_ids() -> Vec<i64> {
-    let database = database::connect_async().await;
+    let pool = database::connect().await;
 
-    let show_ids: Vec<i64> = show::model::load_shows(&database)
+    let show_ids: Vec<i64> = show::model::load_shows(&pool)
         .await
         .into_iter()
         .map(|show: Show| show.id)
@@ -94,11 +94,7 @@ pub async fn subscribe(show_id: &i64) {
         .await
         .expect("Failed to parse podcast");
 
-    let pool = database::connect_async().await;
-
-    let mut database = database::connect()
-        .get()
-        .expect("Failed to connect to database");
+    let pool = database::connect().await;
 
     show::model::save_subscription(&pool, &response).await;
 
@@ -128,8 +124,21 @@ pub async fn subscribe(show_id: &i64) {
         .expect("Failed to parse episodes");
 
     episode::model::save_episodes_for_show(
-        &mut database,
+        &pool,
         &episode_response.items,
         &show_id,
-    );
+    )
+    .await;
+
+    let episodes_with_image: Vec<Episode> = episode_response
+        .items
+        .into_iter()
+        .filter(|episode| !episode.image.is_empty())
+        .collect();
+
+    for episode in episodes_with_image.into_iter() {
+        let path = episode_image_path(&episode.id.to_string());
+
+        let _ = utils::save_image(&episode.image, &path).await;
+    }
 }

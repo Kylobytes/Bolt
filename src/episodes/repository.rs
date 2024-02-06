@@ -19,21 +19,13 @@
  *
  */
 
-use r2d2::PooledConnection;
-use r2d2_sqlite::SqliteConnectionManager;
-
 use crate::data::{
     database,
     episode::{self, Episode},
 };
 
-pub fn load_episodes() -> Vec<Episode> {
-    let database: PooledConnection<SqliteConnectionManager> =
-        database::connect()
-            .get()
-            .expect("Failed to connect to database pool");
+pub async fn load_episodes() -> Vec<Episode> {
+    let pool = database::connect().await;
 
-    let episodes = episode::model::load_episodes(&database);
-
-    episodes
+    episode::model::load_episodes(&pool).await
 }

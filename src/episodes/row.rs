@@ -21,13 +21,13 @@
 
 use std::cell::{Cell, RefCell};
 
-use chrono::DateTime;
 use gtk::{
     gdk, gdk_pixbuf, gio,
     glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
 };
+use time::{macros::format_description, OffsetDateTime};
 
 use crate::{data::episode::object::EpisodeObject, utils};
 
@@ -99,10 +99,16 @@ impl From<EpisodeObject> for EpisodeRow {
             row.imp().title.get().set_label(&title);
         }
 
-        if let Some(date) =
-            DateTime::from_timestamp(episode.date_published(), 0)
-        {
-            let formatted_date = format!("{}", date.format("%b %d, %Y"));
+        let timestamp_format = format_description!("[unix_timestamp]");
+        let datetime = OffsetDateTime::parse(
+            &episode.date_published().to_string(),
+            &timestamp_format,
+        );
+
+        if let Ok(date) = datetime {
+            let date_format =
+                format_description!("[month repr:short] [day], [year]");
+            let formatted_date = date.format(&date_format).unwrap();
             row.imp().date.get().set_label(&formatted_date);
         }
 
@@ -130,7 +136,7 @@ impl EpisodeRow {
                     if url.is_empty() {
                         view.load_show_image(&show_id);
                     } else {
-                        view.load_episode_image(&url, &episode_id).await;
+                        view.load_episode_image(&episode_id);
                     }
                 }
                 None => view.load_show_image(&show_id),
@@ -138,18 +144,8 @@ impl EpisodeRow {
         }));
     }
 
-    async fn load_episode_image(&self, url: &String, episode_id: &i64) {
+    fn load_episode_image(&self, episode_id: &i64) {
         let image_path = utils::episode_image_path(&episode_id.to_string());
-
-        if !image_path.as_path().exists() {
-            let destination = image_path.clone();
-            let image_url = url.clone();
-
-            let _ = gio::spawn_blocking(move || {
-                utils::save_image(&image_url, &destination)
-            })
-            .await;
-        }
 
         let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
             &image_path.as_path(),
@@ -183,8 +179,6 @@ impl EpisodeRow {
             self.imp().picture.get().set_paintable(Some(&texture));
             picture_container.set_visible(true);
         } else {
-            println!("artwork doesn't exist");
-
             picture_container.set_visible(false);
             self.imp().image_missing_icon.get().set_visible(true);
         }

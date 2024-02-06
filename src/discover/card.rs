@@ -67,15 +67,7 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for DiscoverCard {
-        fn constructed(&self) {
-            self.parent_constructed();
-
-            self.obj().connect_signals();
-            self.obj().load_image();
-        }
-    }
-
+    impl ObjectImpl for DiscoverCard {}
     impl WidgetImpl for DiscoverCard {}
     impl BoxImpl for DiscoverCard {}
 }
@@ -110,7 +102,55 @@ impl From<ShowObject> for DiscoverCard {
         }
 
         imp.show_id.set(show.id());
-        imp.image_url.replace(show.image_url());
+        card.connect_signals();
+
+        if let Some(image_url) = show.image_url() {
+            if image_url.is_empty() {
+                imp.picture_spinner.get().stop();
+                imp.picture_spinner.get().set_visible(false);
+                imp.image_missing_icon.get().set_visible(true);
+            } else {
+                let (sender, receiver) = async_channel::bounded(1);
+
+                runtime().spawn(clone!(@strong image_url => async move {
+                    let image = utils::fetch_image(&image_url).await;
+                    sender.send(image).await.expect("The image channel should be open");
+                }));
+
+                glib::spawn_future_local(clone!(@weak card => async move {
+                    if let Ok(result) = receiver.recv().await {
+                        let picture_spinner = card.imp().picture_spinner.get();
+
+                        if let Ok(content) = result {
+                            let image_bytes = glib::Bytes::from(&content);
+                            let stream = MemoryInputStream::from_bytes(&image_bytes);
+                            let pixbuf = gdk_pixbuf::Pixbuf::from_stream_at_scale(
+                                &stream,
+                                328,
+                                328,
+                                true,
+                                gio::Cancellable::NONE
+                            );
+
+                            if let Ok(pixbuf) = pixbuf {
+                                let texture = gdk::Texture::for_pixbuf(&pixbuf);
+                                let picture = card.imp().picture.get();
+
+                                picture.set_paintable(Some(&texture));
+                                picture.set_visible(true);
+                            } else {
+                                card.imp().image_missing_icon.get().set_visible(true);
+                            }
+                        } else {
+                            card.imp().image_missing_icon.get().set_visible(true);
+                        }
+
+                        picture_spinner.stop();
+                        picture_spinner.set_visible(false);
+                    }
+                }));
+            }
+        }
 
         card
     }
@@ -119,64 +159,6 @@ impl From<ShowObject> for DiscoverCard {
 impl DiscoverCard {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    pub fn load_image(&self) {
-        glib::spawn_future_local(clone!(@weak self as view => async move {
-            let image_missing_icon = view.imp().image_missing_icon.get();
-            let picture_spinner = view.imp().picture_spinner.get();
-            let picture = view.imp().picture.get();
-
-            let Some(url) = view.imp().image_url.clone().into_inner() else {
-                picture_spinner.stop();
-                picture_spinner.set_visible(false);
-                image_missing_icon.set_visible(true);
-
-                return
-            };
-
-            if url.is_empty() {
-                picture_spinner.stop();
-                picture_spinner.set_visible(false);
-                image_missing_icon.set_visible(true);
-
-                return
-            }
-
-            let fetch_async_result = gio::spawn_blocking(move || {
-                utils::fetch_image(&url)
-            }).await;
-
-            let Ok(fetch_result) = fetch_async_result else {
-                picture_spinner.stop();
-                picture_spinner.set_visible(false);
-                image_missing_icon.set_visible(true);
-
-                return
-            };
-
-            if let Ok(content) = fetch_result {
-                let image_bytes = glib::Bytes::from(&content);
-                let stream = MemoryInputStream::from_bytes(&image_bytes);
-                let pixbuf = gdk_pixbuf::Pixbuf::from_stream_at_scale(
-                    &stream,
-                    328,
-                    328,
-                    true,
-                    gio::Cancellable::NONE
-                ).unwrap();
-                let texture = gdk::Texture::for_pixbuf(&pixbuf);
-
-                picture.set_paintable(Some(&texture));
-                picture_spinner.stop();
-                picture_spinner.set_visible(false);
-                picture.set_visible(true);
-            } else {
-                picture_spinner.stop();
-                picture_spinner.set_visible(false);
-                image_missing_icon.set_visible(true);
-            }
-        }));
     }
 
     pub fn connect_signals(&self) {

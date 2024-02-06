@@ -19,8 +19,8 @@
  *
  */
 
-use chrono::DateTime;
 use gtk::{gio, glib, subclass::prelude::*};
+use time::{macros::format_description, OffsetDateTime};
 
 use crate::data::episode::object::EpisodeObject;
 
@@ -78,10 +78,16 @@ impl From<EpisodeObject> for DiscoverEpisodeRow {
             row.imp().episode_title.get().set_label(&title);
         };
 
-        if let Some(date) =
-            DateTime::from_timestamp(episode.date_published(), 0)
-        {
-            let formatted_date = format!("{}", date.format("%b %d, %Y"));
+        let timestamp_format = format_description!("[unix_timestamp]");
+        let datetime = OffsetDateTime::parse(
+            &episode.date_published().to_string(),
+            &timestamp_format,
+        );
+
+        if let Ok(date) = datetime {
+            let date_format =
+                format_description!("[month repr:short] [day], [year]");
+            let formatted_date = date.format(&date_format).unwrap();
             row.imp().episode_date.get().set_label(&formatted_date);
         };
 

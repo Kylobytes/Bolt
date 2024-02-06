@@ -19,30 +19,21 @@
  *
  */
 
-use r2d2::PooledConnection;
-use r2d2_sqlite::SqliteConnectionManager;
-use rusqlite::params;
+use sqlx::{query, Executor, SqlitePool};
 
 use crate::{api::episode::Episode as ApiEpisode, data::episode::Episode};
 
-pub fn save_episodes_for_show(
-    database: &mut PooledConnection<SqliteConnectionManager>,
+pub async fn save_episodes_for_show(
+    pool: &SqlitePool,
     episodes: &Vec<ApiEpisode>,
     show_id: &i64,
 ) {
-    let transaction = database
-        .transaction()
-        .expect("Failed to start transaction to save episodes");
+    let mut transaction =
+        pool.begin().await.expect("Failed to begin transaction");
 
     for episode in episodes.iter() {
-        let image: Option<String> = if episode.image.is_empty() {
-            None
-        } else {
-            Some(episode.image.clone())
-        };
-
         transaction
-            .execute(
+            .execute(query!(
                 "INSERT INTO episodes (\
              id, \
              title, \
@@ -52,28 +43,25 @@ pub fn save_episodes_for_show(
              date_published, \
              show_id\
              ) VALUES (?,?,?,?,?,?,?)",
-                params![
-                    episode.id,
-                    episode.title,
-                    episode.description,
-                    episode.link,
-                    image,
-                    episode.date_published,
-                    show_id
-                ],
-            )
+                episode.id,
+                episode.title,
+                episode.description,
+                episode.link,
+                episode.image,
+                episode.date_published,
+                show_id
+            ))
+            .await
             .expect("Failed to save episode");
     }
 
-    let _ = transaction.commit();
+    let _ = transaction.commit().await.expect("Failed to save episodes");
 }
 
-pub fn load_episodes(
-    database: &PooledConnection<SqliteConnectionManager>,
-) -> Vec<Episode> {
-    let mut statement = database
-        .prepare(
-            "SELECT \
+pub async fn load_episodes(pool: &SqlitePool) -> Vec<Episode> {
+    let episodes = sqlx::query_as!(
+        Episode,
+        "SELECT \
          id, \
          title, \
          description, \
@@ -81,31 +69,11 @@ pub fn load_episodes(
          image_url, \
          date_published, \
          show_id \
-         FROM episodes ORDER BY date_published DESC LIMIT 100",
-        )
-        .expect("Failed to prepare select episodes statement");
-
-    let rows = statement
-        .query_map([], |row| {
-            Ok(Episode {
-                id: row.get::<usize, i64>(0)?,
-                title: row.get::<usize, Option<String>>(1)?,
-                description: row.get::<usize, Option<String>>(2)?,
-                url: row.get::<usize, Option<String>>(3)?,
-                image_url: row.get::<usize, Option<String>>(4)?,
-                date_published: row.get::<usize, i64>(5)?,
-                show_id: row.get::<usize, i64>(6)?,
-            })
-        })
-        .expect("Failed to load episodes");
-
-    let mut episodes: Vec<Episode> = vec![];
-
-    for row in rows {
-        if let Ok(episode) = row {
-            episodes.push(episode);
-        }
-    }
+         FROM episodes ORDER BY date_published DESC LIMIT 100"
+    )
+    .fetch_all(pool)
+    .await
+    .expect("Failed to load episodes");
 
     episodes
 }
