@@ -29,8 +29,10 @@ use gtk::{
 };
 
 use crate::{
+    api::search::result::SearchResult,
     data::show::object::ShowObject,
     discover::{self, card::DiscoverCard},
+    runtime,
 };
 
 mod imp {
@@ -124,54 +126,53 @@ impl DiscoverView {
 
         self.imp().discover_results_empty.set_visible(false);
 
+        let (sender, receiver) =
+            async_channel::bounded::<(Vec<SearchResult>, Vec<i64>)>(1);
+
+        runtime().spawn(clone!(@strong query => async move {
+            let search_results: Vec<SearchResult> = discover::repository::search_shows(&query).await;
+            let subscribed_shows: Vec<i64> = discover::repository::load_subscribed_show_ids().await;
+
+            sender.send((search_results, subscribed_shows)).await.expect("The channel must be open");
+        }));
+
         glib::spawn_future_local(
-            clone!(@weak self as view, @strong query => async move {
-                view.imp().discover_welcome.get().set_visible(false);
+            clone!(@weak self as view, @strong query, @strong receiver => async move {
+                let Some(ref model) = *view.imp().model.borrow() else {
+                    return
+                };
 
-                let model_binding = view.imp().model.borrow();
-                let model = model_binding.as_ref();
+                if let Ok(response) = receiver.recv().await {
+                    view.imp().discover_welcome.get().set_visible(false);
 
-                if let Some(model) = model {
+                    let spinner = view.imp().discover_spinner.get();
+                    spinner.start();
+                    spinner.set_visible(true);
+
+                    let (search_results, subscribed_shows) = response;
+                    let shows: Vec<ShowObject> = search_results
+                        .into_iter()
+                        .map(|search_result| {
+                            let show = ShowObject::from(search_result);
+
+                            if subscribed_shows.contains(&show.id()) {
+                                show.mark_subscribed();
+                            }
+
+                            show
+                        }).collect();
+
                     model.remove_all();
-                }
+                    model.extend_from_slice(&shows);
 
-                let spinner = view.imp().discover_spinner.get();
-                spinner.start();
-                spinner.set_visible(true);
+                    spinner.stop();
+                    spinner.set_visible(false);
 
-                let search_results = gio::spawn_blocking(move || {
-                    discover::repository::search_shows(&query)
-                }).await.expect("Failed to complete show search");
-
-                let subscribed_shows = gio::spawn_blocking(move || {
-                    discover::repository::load_subscribed_show_ids()
-                }).await.expect("Failed to complete show loading task");
-
-                let discover_shows: Vec<ShowObject> = search_results
-                    .into_iter()
-                    .map(|search_result| {
-                        let show = ShowObject::from(search_result);
-
-                        if subscribed_shows.contains(&show.id()) {
-                            show.mark_subscribed();
-                        }
-
-                        show
-                    })
-                    .collect();
-
-
-                if let Some(model) = model {
-                    model.extend_from_slice(&discover_shows);
-                }
-
-                spinner.stop();
-                spinner.set_visible(false);
-
-                if discover_shows.len() > 0 {
-                    view.imp().search_results.get().set_visible(true);
-                } else {
-                    view.imp().discover_results_empty.get().set_visible(true);
+                    if shows.len() > 0 {
+                        view.imp().search_results.get().set_visible(true);
+                    } else {
+                        view.imp().discover_results_empty.get().set_visible(true);
+                    }
                 }
             }),
         );

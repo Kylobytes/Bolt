@@ -54,40 +54,20 @@ pub fn save_subscription(
         .expect("Failed to save subscription");
 }
 
-pub fn load_shows(
-    database: &PooledConnection<SqliteConnectionManager>,
-) -> Vec<Show> {
-    let mut statement = database
-        .prepare(
-            "SELECT \
-             id, \
-             name, \
-             description, \
-             url, \
-             image_url \
-             FROM shows",
-        )
-        .expect("Failed to prepare select statement (shows)");
-
-    let rows = statement
-        .query_map([], |row| {
-            Ok(Show {
-                id: row.get(0)?,
-                name: row.get(1)?,
-                description: row.get(2)?,
-                url: row.get(3)?,
-                image_url: row.get(4)?,
-            })
-        })
-        .expect("Failed to load show ids");
-
-    let mut shows: Vec<Show> = vec![];
-
-    for row in rows {
-        if let Ok(show) = row {
-            shows.push(show);
-        }
-    }
+pub async fn load_shows(pool: &SqlitePool) -> Vec<Show> {
+    let shows = sqlx::query_as!(
+        Show,
+        "SELECT \
+         id, \
+         name, \
+         description, \
+         url, \
+         image_url \
+         FROM shows",
+    )
+    .fetch_all(pool)
+    .await
+    .expect("Failed to load shows");
 
     shows
 }

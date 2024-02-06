@@ -18,13 +18,15 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use reqwest::header::{self, AUTHORIZATION};
+
 use crate::{
     api::{
         connection::ApiConnection,
         episode::response::EpisodeResponse,
         podcast::response::PodcastResponse,
         search::{response::SearchResponse, result::SearchResult},
-        AGENT,
+        AGENT, CLIENT,
     },
     config::{API_KEY, USER_AGENT},
     data::{
@@ -34,7 +36,7 @@ use crate::{
     utils,
 };
 
-pub fn search_shows(query: &str) -> Vec<SearchResult> {
+pub async fn search_shows(query: &str) -> Vec<SearchResult> {
     let endpoint =
         format!("/search/byterm?q={}", &query.to_string().replace(" ", "+"));
 
@@ -43,26 +45,27 @@ pub fn search_shows(query: &str) -> Vec<SearchResult> {
         .build_authentication_headers()
         .build();
 
-    let response: SearchResponse = AGENT
+    let response: SearchResponse = CLIENT
         .get(&api_connection.url)
-        .set("User-Agent", USER_AGENT)
-        .set("X-Auth-Key", API_KEY)
-        .set("X-Auth-Date", &api_connection.auth_date)
-        .set("Authorization", &api_connection.authorization)
-        .call()
-        .expect("Failed to download shows from api")
-        .into_json()
-        .expect("Failed to parse response");
+        .header(header::USER_AGENT, USER_AGENT)
+        .header(AUTHORIZATION, &api_connection.authorization)
+        .header("X-Auth-Key", API_KEY)
+        .header("X-Auth-Date", &api_connection.auth_date)
+        .send()
+        .await
+        .expect("Failed to search podcasts")
+        .json()
+        .await
+        .expect("Failed to parse search results");
 
     response.feeds
 }
 
-pub fn load_subscribed_show_ids() -> Vec<i64> {
-    let database = database::connect()
-        .get()
-        .expect("Failed to connect to database");
+pub async fn load_subscribed_show_ids() -> Vec<i64> {
+    let database = database::connect_async().await;
 
     let show_ids: Vec<i64> = show::model::load_shows(&database)
+        .await
         .into_iter()
         .map(|show: Show| show.id)
         .collect();
