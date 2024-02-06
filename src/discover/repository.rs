@@ -26,7 +26,7 @@ use crate::{
         episode::response::EpisodeResponse,
         podcast::response::PodcastResponse,
         search::{response::SearchResponse, result::SearchResult},
-        AGENT, CLIENT,
+        CLIENT,
     },
     config::{API_KEY, USER_AGENT},
     data::{
@@ -73,7 +73,7 @@ pub async fn load_subscribed_show_ids() -> Vec<i64> {
     show_ids
 }
 
-pub fn subscribe(show_id: &i64) {
+pub async fn subscribe(show_id: &i64) {
     let endpoint = format!("/podcasts/byfeedid?id={show_id}");
 
     let api_connection = ApiConnection::builder()
@@ -81,22 +81,26 @@ pub fn subscribe(show_id: &i64) {
         .build_authentication_headers()
         .build();
 
-    let response: PodcastResponse = AGENT
+    let response: PodcastResponse = CLIENT
         .get(&api_connection.url)
-        .set("User-Agent", USER_AGENT)
-        .set("X-Auth-Key", API_KEY)
-        .set("X-Auth-Date", &api_connection.auth_date)
-        .set("Authorization", &api_connection.authorization)
-        .call()
-        .expect("Failed to subscribe to podcast")
-        .into_json()
-        .expect("Failed to parse search results");
+        .header(header::USER_AGENT, USER_AGENT)
+        .header(AUTHORIZATION, &api_connection.authorization)
+        .header("X-Auth-Key", API_KEY)
+        .header("X-Auth-Date", &api_connection.auth_date)
+        .send()
+        .await
+        .expect("Failed to request podcast")
+        .json()
+        .await
+        .expect("Failed to parse podcast");
+
+    let pool = database::connect_async().await;
 
     let mut database = database::connect()
         .get()
         .expect("Failed to connect to database");
 
-    show::model::save_subscription(&database, &response);
+    show::model::save_subscription(&pool, &response).await;
 
     if !response.feed.image.is_empty() {
         let image_path = utils::show_image_path(&show_id.to_string());
@@ -110,16 +114,18 @@ pub fn subscribe(show_id: &i64) {
         .build_authentication_headers()
         .build();
 
-    let episode_response: EpisodeResponse = AGENT
+    let episode_response: EpisodeResponse = CLIENT
         .get(&episodes_connection.url)
-        .set("User-Agent", USER_AGENT)
-        .set("X-Auth-Key", API_KEY)
-        .set("X-Auth-Date", &api_connection.auth_date)
-        .set("Authorization", &api_connection.authorization)
-        .call()
-        .expect("Failed to subscribe to podcast")
-        .into_json()
-        .expect("Failed to parse search results");
+        .header(header::USER_AGENT, USER_AGENT)
+        .header(AUTHORIZATION, &api_connection.authorization)
+        .header("X-Auth-Key", API_KEY)
+        .header("X-Auth-Date", &api_connection.auth_date)
+        .send()
+        .await
+        .expect("Failed to load episodes")
+        .json()
+        .await
+        .expect("Failed to parse episodes");
 
     episode::model::save_episodes_for_show(
         &mut database,

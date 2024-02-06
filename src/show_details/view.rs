@@ -30,6 +30,7 @@ use gtk::{
 
 use crate::{
     data::{episode::object::EpisodeObject, show::object::ShowObject},
+    runtime,
     show_details::{self, episode_row::DiscoverEpisodeRow},
     utils,
 };
@@ -133,15 +134,19 @@ impl ShowDetails {
         }
 
         let show_id = show.id().clone();
+        let (sender, receiver) = async_channel::bounded::<bool>(1);
+
+        runtime().spawn(clone!(@strong show_id => async move {
+            let subscribed = show_details::repository::check_subscribed(&show_id).await;
+            sender.send(subscribed).await.expect("The channel should be open");
+        }));
 
         glib::spawn_future_local(
-            clone!(@weak self as view, @strong show_id => async move {
-                let subscribed = gio::spawn_blocking(move || {
-                    show_details::repository::check_subscribed(&show_id)}
-                ).await.expect("Failed to check whether show exists");
-
-                if !subscribed {
-                    view.imp().subscribe_button.get().set_visible(true);
+            clone!(@weak self as view, @strong receiver => async move {
+                if let Ok(subscribed) = receiver.recv().await {
+                    if !subscribed {
+                        view.imp().subscribe_button.get().set_visible(true);
+                    }
                 }
             }),
         );

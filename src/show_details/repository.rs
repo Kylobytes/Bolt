@@ -50,10 +50,8 @@ pub fn load_show_episodes(show_id: i64) -> Vec<Episode> {
     response.items
 }
 
-pub fn check_subscribed(show_id: &i64) -> bool {
-    let database = database::connect()
-        .get()
-        .expect("Failed to connect to database");
+pub async fn check_subscribed(show_id: &i64) -> bool {
+    let pool = database::connect_async().await;
 
-    show::model::check_subscribed(&database, show_id)
+    show::model::subscribed(&pool, show_id).await
 }

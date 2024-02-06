@@ -28,7 +28,7 @@ use gtk::{
 };
 use std::cell::{Cell, RefCell};
 
-use crate::{data::show::object::ShowObject, discover, utils};
+use crate::{data::show::object::ShowObject, discover, runtime, utils};
 
 mod imp {
     use super::*;
@@ -71,8 +71,8 @@ mod imp {
         fn constructed(&self) {
             self.parent_constructed();
 
-            self.obj().load_image();
             self.obj().connect_signals();
+            self.obj().load_image();
         }
     }
 
@@ -180,21 +180,29 @@ impl DiscoverCard {
     }
 
     pub fn connect_signals(&self) {
-        self.imp().subscribe_button.get().connect_clicked(
-            clone!(@weak self as view => move |button: &gtk::Button| {
+        let (sender, receiver) = async_channel::bounded::<bool>(1);
+        let button = self.imp().subscribe_button.get();
+
+        button.connect_clicked(
+            clone!(@weak self as view, @strong sender => move |button: &gtk::Button| {
                 button.set_label("Subscribing...");
                 button.set_sensitive(false);
                 let show_id = view.imp().show_id.get();
 
-                glib::spawn_future_local(
-                    clone!(@weak button, @strong show_id => async move {
-                        gio::spawn_blocking(move || {
-                            discover::repository::subscribe(&show_id);
-                        }).await.expect("Failed to finish subscribe task");
+                runtime().spawn(clone!(@strong show_id, @strong sender => async move {
+                    discover::repository::subscribe(&show_id).await;
+                    sender.send(true).await.expect("The channel should be open");
+                }));
+            }),
+        );
 
+        glib::spawn_future_local(
+            clone!(@weak button, @strong receiver => async move {
+                if let Ok(save_successful) = receiver.recv().await {
+                    if save_successful {
                         button.set_label("Subscribed");
-                    })
-                );
+                    }
+                }
             }),
         );
     }

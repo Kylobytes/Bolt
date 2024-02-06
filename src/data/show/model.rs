@@ -18,40 +18,30 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use r2d2::PooledConnection;
-use r2d2_sqlite::SqliteConnectionManager;
-use rusqlite::params;
 use sqlx::SqlitePool;
 
 use crate::{api::podcast::response::PodcastResponse, data::show::Show};
 
-pub fn save_subscription(
-    database: &PooledConnection<SqliteConnectionManager>,
-    podcast: &PodcastResponse,
-) {
+pub async fn save_subscription(pool: &SqlitePool, podcast: &PodcastResponse) {
     let feed = &podcast.feed;
 
-    let mut statement = database
-        .prepare(
-            "INSERT INTO shows (\
+    sqlx::query!(
+        "INSERT INTO shows (\
              id, \
              name, \
              description, \
              url, \
              image_url \
              ) VALUES (?,?,?,?,?)",
-        )
-        .expect("Failed to prepare save subscription statement");
-
-    statement
-        .execute(params![
-            feed.id,
-            feed.title,
-            feed.description,
-            feed.url,
-            feed.image,
-        ])
-        .expect("Failed to save subscription");
+        feed.id,
+        feed.title,
+        feed.description,
+        feed.url,
+        feed.image
+    )
+    .execute(pool)
+    .await
+    .expect("Failed to save subscription");
 }
 
 pub async fn load_shows(pool: &SqlitePool) -> Vec<Show> {
@@ -72,20 +62,14 @@ pub async fn load_shows(pool: &SqlitePool) -> Vec<Show> {
     shows
 }
 
-pub fn check_subscribed(
-    database: &PooledConnection<SqliteConnectionManager>,
-    id: &i64,
-) -> bool {
-    let mut statement = database
-        .prepare("SELECT COUNT(id) FROM shows WHERE id = ?")
-        .unwrap();
-    let count = statement
-        .query_row(params![id], |row| {
-            Ok(row.get::<usize, i64>(0).expect("Failed to get count"))
-        })
-        .expect("Failed to check if show id exists");
+pub async fn subscribed(pool: &SqlitePool, id: &i64) -> bool {
+    let show =
+        sqlx::query!("SELECT COUNT(id) AS count FROM shows WHERE id = ?", id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to check if subscribed to show");
 
-    count == 1
+    show.count == 1
 }
 
 pub async fn load_show_count(pool: &SqlitePool) -> i32 {
