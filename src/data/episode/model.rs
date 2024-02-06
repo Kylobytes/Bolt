@@ -69,7 +69,7 @@ pub async fn load_episodes(pool: &SqlitePool) -> Vec<Episode> {
          image_url, \
          date_published, \
          show_id \
-         FROM episodes ORDER BY date_published DESC LIMIT 100"
+         FROM episodes ORDER BY date_published DESC LIMIT 20"
     )
     .fetch_all(pool)
     .await
