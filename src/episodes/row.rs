@@ -19,14 +19,9 @@
  *
  */
 
-use std::cell::{Cell, RefCell};
+use std::cell::Cell;
 
-use gtk::{
-    gdk, gdk_pixbuf, gio,
-    glib::{self, clone},
-    prelude::*,
-    subclass::prelude::*,
-};
+use gtk::{gdk, gdk_pixbuf, gio, glib, prelude::*, subclass::prelude::*};
 use time::{macros::format_description, OffsetDateTime};
 
 use crate::{data::episode::object::EpisodeObject, utils};
@@ -47,7 +42,6 @@ mod imp {
         pub title: TemplateChild<gtk::Label>,
         #[template_child]
         pub date: TemplateChild<gtk::Label>,
-        pub image_url: RefCell<Option<String>>,
         pub episode_id: Cell<i64>,
         pub show_id: Cell<i64>,
     }
@@ -67,14 +61,7 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for EpisodeRow {
-        fn constructed(&self) {
-            self.parent_constructed();
-
-            self.obj().load_image();
-        }
-    }
-
+    impl ObjectImpl for EpisodeRow {}
     impl WidgetImpl for EpisodeRow {}
     impl BoxImpl for EpisodeRow {}
 }
@@ -112,9 +99,9 @@ impl From<EpisodeObject> for EpisodeRow {
             row.imp().date.get().set_label(&formatted_date);
         }
 
-        row.imp().image_url.replace(episode.image_url());
         row.imp().episode_id.replace(episode.id());
         row.imp().show_id.replace(episode.show_id());
+        row.load_image();
 
         row
     }
@@ -125,23 +112,24 @@ impl EpisodeRow {
         Self::default()
     }
 
-    pub fn load_image(&self) {
-        glib::spawn_future_local(clone!(@weak self as view => async move {
-            let image_url = view.imp().image_url.clone().into_inner();
-            let episode_id = view.imp().episode_id.get();
-            let show_id = view.imp().show_id.get();
+    fn load_image(&self) {
+        let episode_id = self.imp().episode_id.get();
+        let show_id = self.imp().show_id.get();
 
-            match image_url {
-                Some(url) => {
-                    if url.is_empty() {
-                        view.load_show_image(&show_id);
-                    } else {
-                        view.load_episode_image(&episode_id);
-                    }
-                }
-                None => view.load_show_image(&show_id),
+        let episode_image_path =
+            utils::episode_image_path(&episode_id.to_string());
+        let show_image_path = utils::show_image_path(&show_id.to_string());
+        let episode_image_exists = episode_image_path.as_path().exists();
+        let show_image_exists = show_image_path.as_path().exists();
+
+        match (episode_image_exists, show_image_exists) {
+            (true, _) => self.load_episode_image(&episode_id),
+            (false, true) => self.load_show_image(&show_id),
+            _ => {
+                self.imp().picture_container.get().set_visible(false);
+                self.imp().image_missing_icon.get().set_visible(true);
             }
-        }));
+        }
     }
 
     fn load_episode_image(&self, episode_id: &i64) {
@@ -152,30 +140,32 @@ impl EpisodeRow {
             48,
             48,
             true,
-        )
-        .unwrap();
+        );
 
-        let texture = gdk::Texture::for_pixbuf(&pixbuf);
+        if let Ok(pixbuf) = pixbuf {
+            let texture = gdk::Texture::for_pixbuf(&pixbuf);
 
-        self.imp().picture.get().set_paintable(Some(&texture));
-        self.imp().picture_container.get().set_visible(true);
+            self.imp().picture.get().set_paintable(Some(&texture));
+            self.imp().picture_container.get().set_visible(true);
+        } else {
+            self.imp().picture_container.get().set_visible(false);
+            self.imp().image_missing_icon.get().set_visible(true);
+        }
     }
 
     fn load_show_image(&self, show_id: &i64) {
         let picture_container = self.imp().picture_container.get();
         let show_image_path = utils::show_image_path(&show_id.to_string());
 
-        if show_image_path.as_path().exists() {
-            let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
-                &show_image_path.as_path(),
-                48,
-                48,
-                true,
-            )
-            .unwrap();
+        let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
+            &show_image_path.as_path(),
+            48,
+            48,
+            true,
+        );
 
+        if let Ok(pixbuf) = pixbuf {
             let texture = gdk::Texture::for_pixbuf(&pixbuf);
-
             self.imp().picture.get().set_paintable(Some(&texture));
             picture_container.set_visible(true);
         } else {
