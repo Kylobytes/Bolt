@@ -103,7 +103,8 @@ pub async fn subscribe(show_id: &i64) {
         let _ = utils::save_image(&response.feed.image, &image_path);
     }
 
-    let episodes_endpoint = format!("/episodes/byfeedid?id={show_id}");
+    let episodes_endpoint =
+        format!("/episodes/byfeedid?id={show_id}&max=1000&fulltext");
 
     let episodes_connection = ApiConnection::builder()
         .build_url(&episodes_endpoint)
