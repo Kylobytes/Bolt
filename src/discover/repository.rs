@@ -124,12 +124,14 @@ pub async fn subscribe(show_id: &i64) {
         .await
         .expect("Failed to parse episodes");
 
-    episode::model::save_episodes_for_show(
-        &pool,
-        &episode_response.items,
-        &show_id,
-    )
-    .await;
+    for episodes in episode_response.items.chunks(100) {
+        episode::model::save_episodes_for_show(
+            &pool,
+            &episodes.to_vec(),
+            &show_id,
+        )
+        .await;
+    }
 
     let episodes_with_image: Vec<Episode> = episode_response
         .items
