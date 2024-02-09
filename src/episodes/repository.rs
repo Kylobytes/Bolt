@@ -24,8 +24,14 @@ use crate::data::{
     episode::{self, Episode},
 };
 
-pub async fn load_episodes() -> Vec<Episode> {
+pub async fn load_episodes(offset: &i32) -> Vec<Episode> {
     let pool = database::connect().await;
 
-    episode::model::load_episodes(&pool).await
+    episode::model::load_episodes(&pool, offset).await
+}
+
+pub async fn load_episode_count() -> i32 {
+    let pool = database::connect().await;
+
+    episode::model::load_episode_count(&pool).await
 }

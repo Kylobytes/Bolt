@@ -19,7 +19,7 @@
  *
  */
 
-use sqlx::{query, Executor, SqlitePool};
+use sqlx::{Executor, SqlitePool};
 
 use crate::{api::episode::Episode as ApiEpisode, data::episode::Episode};
 
@@ -33,7 +33,7 @@ pub async fn save_episodes_for_show(
 
     for episode in episodes.iter() {
         transaction
-            .execute(query!(
+            .execute(sqlx::query!(
                 "INSERT INTO episodes (\
              id, \
              title, \
@@ -58,7 +58,7 @@ pub async fn save_episodes_for_show(
     let _ = transaction.commit().await.expect("Failed to save episodes");
 }
 
-pub async fn load_episodes(pool: &SqlitePool) -> Vec<Episode> {
+pub async fn load_episodes(pool: &SqlitePool, offset: &i32) -> Vec<Episode> {
     let episodes = sqlx::query_as!(
         Episode,
         "SELECT \
@@ -69,11 +69,21 @@ pub async fn load_episodes(pool: &SqlitePool) -> Vec<Episode> {
          image_url, \
          date_published, \
          show_id \
-         FROM episodes ORDER BY date_published DESC LIMIT 20"
+         FROM episodes ORDER BY date_published DESC LIMIT 20 OFFSET ?",
+        offset
     )
     .fetch_all(pool)
     .await
     .expect("Failed to load episodes");
 
     episodes
+}
+
+pub async fn load_episode_count(pool: &SqlitePool) -> i32 {
+    let result = sqlx::query!("SELECT COUNT(*) AS count FROM shows")
+        .fetch_one(pool)
+        .await
+        .expect("Failed to load episode count");
+
+    result.count
 }

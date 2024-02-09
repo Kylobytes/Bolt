@@ -140,7 +140,7 @@ impl BoltWindow {
             clone!(@weak self as window, @strong receiver => async move {
                 if let Ok(shows) = receiver.recv().await {
                     if shows > 0 {
-                        window.imp().episodes_view.get().load_episodes();
+                        window.imp().episodes_view.get().reload_episodes();
                         window.show_view(View::Podcasts);
                     } else {
                         window.show_view(View::Empty);
@@ -152,12 +152,16 @@ impl BoltWindow {
 
     fn setup_discover(&self) {
         let model = ListStore::new::<ShowObject>();
+
         self.imp().discover_view.get().setup_model(&model);
     }
 
     fn setup_episodes(&self) {
+        let episodes_view = self.imp().episodes_view.get();
+
         let model = ListStore::new::<EpisodeObject>();
-        self.imp().episodes_view.get().setup_model(&model);
+        episodes_view.setup_model(&model);
+        episodes_view.load_episode_count()
     }
 
     fn connect_signals(&self) {
@@ -203,7 +207,7 @@ impl BoltWindow {
         imp.btn_refresh
             .get()
             .connect_clicked(clone!(@weak imp => move |_| {
-                imp.episodes_view.get().load_episodes();
+                imp.episodes_view.get().reload_episodes();
             }));
 
         let discover_view = imp.discover_view.get();
@@ -235,5 +239,13 @@ impl BoltWindow {
             .connect_clicked(clone!(@weak self as window => move |_| {
                 window.show_view(View::Discover);
             }));
+
+        let episodes_view = self.imp().episodes_view.get();
+
+        episodes_view
+            .scrollbar()
+            .connect_edge_reached(move |_, something| {
+                episodes_view.load_episodes();
+            });
     }
 }
