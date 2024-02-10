@@ -242,10 +242,12 @@ impl BoltWindow {
 
         let episodes_view = self.imp().episodes_view.get();
 
-        episodes_view
-            .scrollbar()
-            .connect_edge_reached(move |_, something| {
-                episodes_view.load_episodes();
-            });
+        episodes_view.scrollbar().connect_edge_reached(
+            clone!(@weak episodes_view => move |_, position| {
+                if position == gtk::PositionType::Bottom {
+                    episodes_view.load_episodes();
+                }
+            }),
+        );
     }
 }
