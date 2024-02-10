@@ -100,7 +100,7 @@ pub async fn subscribe(show_id: &i64) {
 
     if !response.feed.image.is_empty() {
         let image_path = utils::show_image_path(&show_id.to_string());
-        let _ = utils::save_image(&response.feed.image, &image_path);
+        let _ = utils::save_image(&response.feed.image, &image_path).await;
     }
 
     let episodes_endpoint =
