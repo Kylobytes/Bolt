@@ -249,5 +249,13 @@ impl BoltWindow {
                 }
             }),
         );
+
+        episodes_view.scrollbar().connect_edge_overshot(
+            clone!(@weak episodes_view => move |_, position| {
+                if position == gtk::PositionType::Top {
+                    episodes_view.reload_episodes();
+                }
+            }),
+        );
     }
 }
