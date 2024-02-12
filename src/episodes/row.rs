@@ -116,14 +116,48 @@ impl EpisodeRow {
         let episode_id = self.imp().episode_id.get();
         let show_id = self.imp().show_id.get();
 
-        let episode_image_path =
-            utils::episode_image_path(&episode_id.to_string());
-        let show_image_path = utils::show_image_path(&show_id.to_string());
-        let episode_image_exists = episode_image_path.as_path().exists();
-        let show_image_exists = show_image_path.as_path().exists();
+        let episode_image_path = storage::episode_path(
+            &episode_id.to_string(),
+            &show_id.to_string(),
+        );
+
+        let show_image_path = storage::show_path(&show_id.to_string());
+        let episode_image_exists = episode_image_path.as_path().exists()
+            && std::fs::read_dir(&episode_image_path)
+                .expect(
+                    "Failed to read the contents of the episode's directory",
+                )
+                .filter_map(|file| file.ok())
+                .filter(|file| file.path().is_file())
+                .filter(|file| {
+                    let Ok(filename) = file.file_name().into_string() else {
+                        return false;
+                    };
+
+                    return filename == "cover.png"
+                        || filename == "conver.jpg";
+                })
+                .count()
+                > 0;
+
+        let show_image_exists = show_image_path.as_path().exists()
+            && std::fs::read_dir(&show_image_path)
+                .expect("Failed to read the contents of the show's directory")
+                .filter_map(|file| file.ok())
+                .filter(|file| file.path().is_file())
+                .filter(|file| {
+                    let Ok(filename) = file.file_name().into_string() else {
+                        return false;
+                    };
+
+                    return filename == "cover.png"
+                        || filename == "conver.jpg";
+                })
+                .count()
+                > 0;
 
         match (episode_image_exists, show_image_exists) {
-            (true, _) => self.load_episode_image(&episode_id),
+            (true, _) => self.load_episode_image(&episode_id, &show_id),
             (false, true) => self.load_show_image(&show_id),
             _ => {
                 self.imp().picture_container.get().set_visible(false);
@@ -132,15 +166,16 @@ impl EpisodeRow {
         }
     }
 
-    fn load_episode_image(&self, episode_id: &i64) {
-        let image_path = utils::episode_image_path(&episode_id.to_string());
+    fn load_episode_image(&self, episode_id: &i64, show_id: &i64) {
+        let Some(image_path) = storage::episode_image(
+            &episode_id.to_string(),
+            &show_id.to_string(),
+        ) else {
+            return;
+        };
 
-        let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
-            &image_path.as_path(),
-            48,
-            48,
-            true,
-        );
+        let pixbuf =
+            gdk_pixbuf::Pixbuf::from_file_at_scale(&image_path, 48, 48, true);
 
         if let Ok(pixbuf) = pixbuf {
             let texture = gdk::Texture::for_pixbuf(&pixbuf);
@@ -155,7 +190,10 @@ impl EpisodeRow {
 
     fn load_show_image(&self, show_id: &i64) {
         let picture_container = self.imp().picture_container.get();
-        let show_image_path = storage::show_image_path(&show_id.to_string());
+        let Some(show_image_path) = storage::show_image(&show_id.to_string())
+        else {
+            return;
+        };
 
         let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
             &show_image_path.as_path(),

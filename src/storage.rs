@@ -33,11 +33,27 @@ pub fn show_path(id: &str) -> PathBuf {
     path
 }
 
-pub fn show_image_path(id: &str) -> PathBuf {
-    let mut path = show_path(id);
-    path.push("cover");
+pub fn show_image(id: &str) -> Option<PathBuf> {
+    let directory = show_path(id);
 
-    path
+    let Ok(contents) = std::fs::read_dir(&directory) else {
+        return None;
+    };
+
+    contents
+        .filter_map(|file| file.ok())
+        .filter(|file| file.path().is_file())
+        .filter(|file| {
+            let Ok(filename) = file.file_name().into_string() else {
+                return false;
+            };
+
+            return filename == "cover.png" || filename == "conver.jpg";
+        })
+        .map(|file| file.path())
+        .collect::<Vec<PathBuf>>()
+        .first()
+        .cloned()
 }
 
 pub fn episode_path(id: &str, show_id: &str) -> PathBuf {
@@ -48,19 +64,31 @@ pub fn episode_path(id: &str, show_id: &str) -> PathBuf {
     path
 }
 
-pub fn episode_image_path(id: &str, show_id: &str) -> PathBuf {
-    let mut path = episode_path(id, show_id);
-    path.push("episodes");
-    path.push(id);
-    path.push("image");
+pub fn episode_image(id: &str, show_id: &str) -> Option<PathBuf> {
+    let directory = episode_path(id, show_id);
 
-    path
+    let Ok(contents) = std::fs::read_dir(&directory) else {
+        return None;
+    };
+
+    contents
+        .filter_map(|file| file.ok())
+        .filter(|file| file.path().is_file())
+        .filter(|file| {
+            let Ok(filename) = file.file_name().into_string() else {
+                return false;
+            };
+
+            return filename == "cover.png" || filename == "conver.jpg";
+        })
+        .map(|file| file.path())
+        .collect::<Vec<PathBuf>>()
+        .first()
+        .cloned()
 }
 
 pub fn episode_file_path(id: &str, show_id: &str, filename: &str) -> PathBuf {
     let mut path = episode_path(id, show_id);
-    path.push("episodes");
-    path.push(id);
     path.push(filename);
 
     path
