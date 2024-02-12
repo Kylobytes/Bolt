@@ -21,29 +21,9 @@
 
 use std::{io::Cursor, path::PathBuf};
 
-use gtk::glib;
+use reqwest::header::CONTENT_TYPE;
 
-use crate::{api::CLIENT, config::GETTEXT_PACKAGE};
-
-pub fn episode_image_path(filename: &str) -> PathBuf {
-    let mut image_path = glib::user_data_dir();
-    image_path.push(GETTEXT_PACKAGE);
-    image_path.push("images");
-    image_path.push("episodes");
-    image_path.push(filename);
-
-    image_path
-}
-
-pub fn show_image_path(filename: &str) -> PathBuf {
-    let mut image_path = glib::user_data_dir();
-    image_path.push(GETTEXT_PACKAGE);
-    image_path.push("images");
-    image_path.push("shows");
-    image_path.push(filename);
-
-    image_path
-}
+use crate::api::CLIENT;
 
 pub async fn fetch_image(url: &str) -> Result<Vec<u8>, reqwest::Error> {
     Ok(CLIENT.get(url).send().await?.bytes().await?.to_vec())
@@ -51,13 +31,35 @@ pub async fn fetch_image(url: &str) -> Result<Vec<u8>, reqwest::Error> {
 
 pub async fn save_image(
     url: &str,
-    path: &PathBuf,
+    directory: &PathBuf,
+    filename: &str,
 ) -> Result<(), reqwest::Error> {
-    let response = CLIENT.get(url).send().await?.bytes().await?;
+    let response = CLIENT.get(url).send().await?;
+    let content_type = response.headers()[CONTENT_TYPE].to_str().unwrap();
+    let extension = match content_type {
+        "image/jpg" => "jpg",
+        "image/jpeg" => "jpg",
+        "image/png" => "png",
+        _ => "png",
+    };
+
+    let image_bytes = response
+        .bytes()
+        .await
+        .expect("Failed to download image bytes");
+
+    if !directory.as_path().exists() {
+        std::fs::create_dir_all(directory)
+            .expect("Failed to create image directory");
+    }
+
+    let mut path: PathBuf =
+        [directory.to_str().unwrap(), filename].iter().collect();
+    path.set_extension(&extension);
 
     let mut image =
         std::fs::File::create(&path).expect("Failed to create image at path");
-    let mut content = Cursor::new(&response);
+    let mut content = Cursor::new(&image_bytes);
 
     std::io::copy(&mut content, &mut std::io::BufWriter::new(&mut image))
         .expect("Failed to save image");

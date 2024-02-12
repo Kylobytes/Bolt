@@ -24,7 +24,7 @@ use std::cell::Cell;
 use gtk::{gdk, gdk_pixbuf, gio, glib, prelude::*, subclass::prelude::*};
 use time::{macros::format_description, OffsetDateTime};
 
-use crate::{data::episode::object::EpisodeObject, utils};
+use crate::{data::episode::object::EpisodeObject, storage};
 
 mod imp {
     use super::*;
@@ -155,7 +155,7 @@ impl EpisodeRow {
 
     fn load_show_image(&self, show_id: &i64) {
         let picture_container = self.imp().picture_container.get();
-        let show_image_path = utils::show_image_path(&show_id.to_string());
+        let show_image_path = storage::show_image_path(&show_id.to_string());
 
         let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(
             &show_image_path.as_path(),

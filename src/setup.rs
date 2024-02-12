@@ -49,27 +49,8 @@ fn setup_directories() {
         };
     }
 
-    let mut episode_image_directory = glib::user_data_dir();
-    episode_image_directory.push(GETTEXT_PACKAGE);
-    episode_image_directory.push("images");
-    episode_image_directory.push("episodes");
-
-    if !episode_image_directory.as_path().exists() {
-        let path_created = std::fs::create_dir_all(&episode_image_directory);
-
-        match path_created {
-            Ok(_) => println!("Created Bolt episode image directory"),
-            Err(message) => {
-                println!(
-                    "Failed to create Bolt episode image directory: {message}"
-                );
-            }
-        }
-    }
-
     let mut show_image_directory = glib::user_data_dir();
     show_image_directory.push(GETTEXT_PACKAGE);
-    show_image_directory.push("images");
     show_image_directory.push("shows");
 
     if !show_image_directory.as_path().exists() {

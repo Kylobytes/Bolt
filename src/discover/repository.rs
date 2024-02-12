@@ -33,7 +33,7 @@ use crate::{
         database, episode,
         show::{self, Show},
     },
-    utils::{self, episode_image_path},
+    storage, utils,
 };
 
 pub async fn search_shows(query: &str) -> Vec<SearchResult> {
@@ -98,9 +98,19 @@ pub async fn subscribe(show_id: &i64) {
 
     show::model::save_subscription(&pool, &response).await;
 
+    let show_path = storage::show_path(&show_id.to_string());
+
+    if !show_path.as_path().exists() {
+        std::fs::create_dir_all(&show_path).expect(&format!(
+            "Failed to create data directory for {}",
+            &response.feed.title
+        ));
+    }
+
     if !response.feed.image.is_empty() {
-        let image_path = utils::show_image_path(&show_id.to_string());
-        let _ = utils::save_image(&response.feed.image, &image_path).await;
+        let directory = storage::show_path(&response.feed.id.to_string());
+        let _ =
+            utils::save_image(&response.feed.image, &directory, "cover").await;
     }
 
     let episodes_endpoint =
@@ -140,8 +150,12 @@ pub async fn subscribe(show_id: &i64) {
         .collect();
 
     for episode in episodes_with_image.into_iter() {
-        let path = episode_image_path(&episode.id.to_string());
+        let episode_directory = storage::episode_path(
+            &episode.id.to_string(),
+            &episode.feed_id.to_string(),
+        );
 
-        let _ = utils::save_image(&episode.image, &path).await;
+        let _ = utils::save_image(&episode.image, &episode_directory, "cover")
+            .await;
     }
 }

@@ -21,6 +21,7 @@
 mod application;
 mod config;
 mod setup;
+mod storage;
 mod utils;
 mod window;
 
