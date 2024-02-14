@@ -29,6 +29,8 @@ pub struct Episode {
     pub description: Option<String>,
     pub url: Option<String>,
     pub image_url: Option<String>,
+    pub media_url: String,
+    pub queued: i64,
     pub date_published: i64,
     pub show_id: i64,
 }

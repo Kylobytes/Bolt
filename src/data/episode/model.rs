@@ -35,19 +35,23 @@ pub async fn save_episodes_for_show(
         transaction
             .execute(sqlx::query!(
                 "INSERT INTO episodes (\
-             id, \
-             title, \
-             description, \
-             url, \
-             image_url, \
-             date_published, \
-             show_id\
-             ) VALUES (?,?,?,?,?,?,?)",
+                 id, \
+                 title, \
+                 description, \
+                 url, \
+                 image_url, \
+                 media_url, \
+                 queued, \
+                 date_published, \
+                 show_id\
+                 ) VALUES (?,?,?,?,?,?,?,?,?)",
                 episode.id,
                 episode.title,
                 episode.description,
                 episode.link,
                 episode.image,
+                episode.enclosure_url,
+                false,
                 episode.date_published,
                 show_id
             ))
@@ -67,6 +71,8 @@ pub async fn load_episodes(pool: &SqlitePool, offset: &i32) -> Vec<Episode> {
          description, \
          url, \
          image_url, \
+         media_url, \
+         queued, \
          date_published, \
          show_id \
          FROM episodes ORDER BY date_published DESC LIMIT 20 OFFSET ?",

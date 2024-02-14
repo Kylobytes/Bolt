@@ -37,6 +37,8 @@ mod imp {
         #[property(name = "description", get, construct_only, type = Option<String>, member = description)]
         #[property(name = "url", get, construct_only, type = Option<String>, member = url)]
         #[property(name = "image-url", get, construct_only, type = Option<String>, member = image_url)]
+        #[property(name = "media-url", get, construct_only, type = String, member = media_url)]
+        #[property(name = "queued", get, construct_only, type = i64, member = queued)]
         #[property(name = "date-published", get, construct_only, type = i64, member = date_published)]
         #[property(name = "show-id", get, construct_only, type = i64, member = show_id)]
         data: RefCell<Episode>,
