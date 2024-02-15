@@ -78,6 +78,8 @@ impl From<ApiEpisode> for EpisodeObject {
                 "image-url",
                 Some(episode.image).filter(|image| !image.is_empty()),
             )
+            .property("media-url", episode.enclosure_url)
+            .property("queued", 0)
             .property("date-published", episode.date_published)
             .property("show-id", episode.feed_id)
             .build()
@@ -92,6 +94,8 @@ impl From<Episode> for EpisodeObject {
             .property("description", episode.description)
             .property("url", episode.url)
             .property("image-url", episode.image_url)
+            .property("media-url", episode.media_url)
+            .property("queued", episode.queued)
             .property("date-published", episode.date_published)
             .property("show-id", episode.show_id)
             .build()
