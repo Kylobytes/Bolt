@@ -42,6 +42,10 @@ mod imp {
         pub title: TemplateChild<gtk::Label>,
         #[template_child]
         pub date: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub download_button: TemplateChild<gtk::Button>,
+        #[template_child]
+        pub progress_bar: TemplateChild<gtk::ProgressBar>,
         pub episode_id: Cell<i64>,
         pub show_id: Cell<i64>,
     }

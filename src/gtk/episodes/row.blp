@@ -2,66 +2,78 @@ using Gtk 4.0;
 using Adw 1;
 
 template $EpisodeRow : Gtk.Box {
-  orientation: horizontal;
+  orientation: vertical;
   hexpand: true;
   vexpand: true;
-  margin-top: 8;
-  margin-bottom: 8;
-  margin-start: 8;
-  margin-end: 8;
-  spacing: 12;
 
-  Adw.Clamp picture_container {
+  Gtk.Box {
     orientation: horizontal;
-    maximum-size: 48;
+    hexpand: true;
+    vexpand: true;
+    margin-top: 8;
+    margin-bottom: 8;
+    margin-start: 8;
+    margin-end: 8;
+    spacing: 12;
 
-    Adw.Clamp {
-      orientation: vertical;
+    Adw.Clamp picture_container {
+      orientation: horizontal;
       maximum-size: 48;
 
-      Gtk.Picture picture {
-        styles ["episode-row-image"]
-        can-shrink: true;
-        content-fit: cover;
+      Adw.Clamp {
+        orientation: vertical;
+        maximum-size: 48;
+
+        Gtk.Picture picture {
+          styles ["episode-row-image"]
+          can-shrink: true;
+          content-fit: cover;
+        }
+      }
+    }
+
+    Gtk.Image image_missing_icon {
+      visible: false;
+      icon-name: "image-missing-symbolic";
+      pixel-size: 48;
+    }
+
+    Gtk.Box {
+      orientation: vertical;
+      hexpand: true;
+      vexpand: true;
+      valign: center;
+      halign: start;
+
+      Gtk.Label title {
+        wrap: true;
+        xalign: 0;
+      }
+
+      Gtk.Label date {
+        styles ["dim-label"]
+        halign: start;
+      }
+    }
+
+    [end]
+    Gtk.Box {
+      orientation: vertical;
+      halign: end;
+      vexpand: true;
+      valign: center;
+
+      Gtk.Button download_button {
+        styles ["circular"]
+        icon-name: "folder-download-symbolic";
+        tooltip-text: _("Download and add to queue");
       }
     }
   }
 
-  Gtk.Image image_missing_icon {
-    visible: false;
-    icon-name: "image-missing-symbolic";
-    pixel-size: 48;
-  }
-
-  Gtk.Box {
-    orientation: vertical;
+  Gtk.ProgressBar progress_bar {
+    styles ["osd"]
     hexpand: true;
-    vexpand: true;
-    valign: center;
-    halign: start;
-
-    Gtk.Label title {
-      wrap: true;
-      xalign: 0;
-    }
-
-    Gtk.Label date {
-      styles ["dim-label"]
-      halign: start;
-    }
-  }
-
-  [end]
-  Gtk.Box {
-    orientation: vertical;
-    halign: end;
-    vexpand: true;
-    valign: center;
-
-    Gtk.Button {
-      styles ["circular"]
-      icon-name: "folder-download-symbolic";
-      tooltip-text: _("Download and add to queue");
-    }
+    visible: false;
   }
 }
