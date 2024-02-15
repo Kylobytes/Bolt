@@ -19,9 +19,14 @@
  *
  */
 
-use std::cell::Cell;
+use std::{cell::Cell, sync::OnceLock};
 
-use gtk::{gdk, gdk_pixbuf, gio, glib, prelude::*, subclass::prelude::*};
+use gtk::{
+    gdk, gdk_pixbuf, gio,
+    glib::{self, clone, subclass::Signal},
+    prelude::*,
+    subclass::prelude::*,
+};
 use time::{macros::format_description, OffsetDateTime};
 
 use crate::{data::episode::object::EpisodeObject, storage};
@@ -65,7 +70,16 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for EpisodeRow {}
+    impl ObjectImpl for EpisodeRow {
+        fn signals() -> &'static [Signal] {
+            static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();
+            SIGNALS.get_or_init(|| {
+                vec![Signal::builder("download-triggered")
+                    .param_types([i32::static_type()])
+                    .build()]
+            })
+        }
+    }
     impl WidgetImpl for EpisodeRow {}
     impl BoxImpl for EpisodeRow {}
 }
@@ -113,7 +127,21 @@ impl From<EpisodeObject> for EpisodeRow {
 
 impl EpisodeRow {
     pub fn new() -> Self {
-        Self::default()
+        let row = Self::default();
+        row.connect_signals();
+
+        row
+    }
+
+    fn connect_signals(&self) {
+        self.imp().download_button.get().connect_clicked(
+            clone!(@weak self as row => move |button| {
+                button.set_sensitive(false);
+                if let Some(parent) = row.parent().and_downcast::<gtk::ListBoxRow>() {
+                    row.emit_by_name::<()>("download-triggered", &[&parent.index()]);
+                }
+            }),
+        );
     }
 
     fn load_image(&self) {
