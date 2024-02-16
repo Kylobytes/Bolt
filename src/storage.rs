@@ -48,7 +48,7 @@ pub fn show_image(id: &str) -> Option<PathBuf> {
                 return false;
             };
 
-            return filename == "cover.png" || filename == "conver.jpg";
+            return filename == "cover.png" || filename == "cover.jpg";
         })
         .map(|file| file.path())
         .collect::<Vec<PathBuf>>()
@@ -79,17 +79,10 @@ pub fn episode_image(id: &str, show_id: &str) -> Option<PathBuf> {
                 return false;
             };
 
-            return filename == "cover.png" || filename == "conver.jpg";
+            return filename == "cover.png" || filename == "cover.jpg";
         })
         .map(|file| file.path())
         .collect::<Vec<PathBuf>>()
         .first()
         .cloned()
-}
-
-pub fn episode_file_path(id: &str, show_id: &str, filename: &str) -> PathBuf {
-    let mut path = episode_path(id, show_id);
-    path.push(filename);
-
-    path
 }

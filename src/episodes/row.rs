@@ -74,9 +74,7 @@ mod imp {
         fn signals() -> &'static [Signal] {
             static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();
             SIGNALS.get_or_init(|| {
-                vec![Signal::builder("download-triggered")
-                    .param_types([i32::static_type()])
-                    .build()]
+                vec![Signal::builder("download-triggered").build()]
             })
         }
     }
@@ -137,9 +135,7 @@ impl EpisodeRow {
         self.imp().download_button.get().connect_clicked(
             clone!(@weak self as row => move |button| {
                 button.set_sensitive(false);
-                if let Some(parent) = row.parent().and_downcast::<gtk::ListBoxRow>() {
-                    row.emit_by_name::<()>("download-triggered", &[&parent.index()]);
-                }
+                row.emit_by_name::<()>("download-triggered", &[]);
             }),
         );
     }

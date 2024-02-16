@@ -23,7 +23,7 @@ use std::cell::{Cell, RefCell};
 
 use gtk::{
     gio::{self, ListStore},
-    glib::{self, clone},
+    glib::{self, clone, closure_local},
     prelude::*,
     subclass::prelude::*,
 };
@@ -31,7 +31,7 @@ use gtk::{
 use crate::{
     data::episode::{object::EpisodeObject, Episode},
     episodes::{repository, row::EpisodeRow},
-    runtime,
+    runtime, storage, utils,
 };
 
 mod imp {
@@ -99,7 +99,36 @@ impl EpisodesView {
                     .downcast_ref::<EpisodeObject>()
                     .expect("Item must be an episode");
 
-                EpisodeRow::from(episode.to_owned()).into()
+                let row = EpisodeRow::from(episode.to_owned());
+                let media_url = &episode.media_url();
+                let id = &episode.id();
+                let show_id = &episode.show_id();
+
+                row.connect_closure(
+                    "download-triggered",
+                    false,
+                    closure_local!(
+                        @strong media_url,
+                        @strong id,
+                        @strong show_id
+                            => move |_row: EpisodeRow| {
+                                let directory = storage::episode_path(&id.to_string(), &show_id.to_string());
+                                runtime()
+                                    .spawn(
+                                        clone!(
+                                            @strong media_url,
+                                            @strong directory,
+                                            @strong id => async move {
+                                                utils::download_episode_media(
+                                                    &media_url,
+                                                    &directory,
+                                                    &id
+                                                ).await;
+                                            }));
+                            }),
+                );
+
+                row.into()
             },
         );
     }

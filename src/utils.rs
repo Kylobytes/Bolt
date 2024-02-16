@@ -66,3 +66,41 @@ pub async fn save_image(
 
     Ok(())
 }
+
+pub async fn download_episode_media(url: &str, directory: &PathBuf, id: &i64) {
+    let response = CLIENT
+        .get(url)
+        .send()
+        .await
+        .expect("Failed to download episode media");
+
+    let filetype = response.headers()[CONTENT_TYPE].to_str().unwrap();
+    let extension = match filetype {
+        "audio/mpeg" => "mp3",
+        "audio/ogg" => "ogg",
+        _ => "mp3",
+    };
+
+    let episode_bytes = response
+        .bytes()
+        .await
+        .expect("Failed to download episode_bytes");
+
+    let mut path: PathBuf = [directory.to_str().unwrap(), &id.to_string()]
+        .iter()
+        .collect();
+
+    if !path.exists() {
+        std::fs::create_dir_all(&path).expect("Failed to create episode path");
+    }
+
+    path.push(&id.to_string());
+    path.set_extension(&extension);
+
+    let mut media =
+        std::fs::File::create(&path).expect("Failed to create episode file");
+    let mut content = std::io::Cursor::new(&episode_bytes);
+
+    std::io::copy(&mut content, &mut std::io::BufWriter::new(&mut media))
+        .expect("Failed to save episode file");
+}
