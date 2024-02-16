@@ -1,5 +1,5 @@
 project('bolt', 'rust', 
-          version: '0.1.0',
+    version: '0.1.0',
     meson_version: '>= 1.1.0',
     default_options: [ 'warning_level=2', 'werror=false', ],
     license: 'gpl-3.0-or-later',
