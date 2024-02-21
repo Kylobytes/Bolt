@@ -162,8 +162,7 @@ impl EpisodeRow {
                         return false;
                     };
 
-                    return filename == "cover.png"
-                        || filename == "conver.jpg";
+                    return filename == "cover.png" || filename == "cover.jpg";
                 })
                 .count()
                 > 0;
@@ -178,8 +177,7 @@ impl EpisodeRow {
                         return false;
                     };
 
-                    return filename == "cover.png"
-                        || filename == "conver.jpg";
+                    return filename == "cover.png" || filename == "cover.jpg";
                 })
                 .count()
                 > 0;
