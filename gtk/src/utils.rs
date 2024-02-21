@@ -67,7 +67,7 @@ pub async fn save_image(
     Ok(())
 }
 
-pub async fn download_episode_media(url: &str, directory: &PathBuf, id: &i64) {
+pub async fn download_episode_media(url: &str, directory: &PathBuf) {
     let response = CLIENT
         .get(url)
         .send()
@@ -86,15 +86,13 @@ pub async fn download_episode_media(url: &str, directory: &PathBuf, id: &i64) {
         .await
         .expect("Failed to download episode_bytes");
 
-    let mut path: PathBuf = [directory.to_str().unwrap(), &id.to_string()]
-        .iter()
-        .collect();
+    let mut path: PathBuf = [directory.to_str().unwrap()].iter().collect();
 
     if !path.exists() {
         std::fs::create_dir_all(&path).expect("Failed to create episode path");
     }
 
-    path.push(&id.to_string());
+    path.push("media");
     path.set_extension(&extension);
 
     let mut media =

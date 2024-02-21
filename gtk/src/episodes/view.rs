@@ -121,8 +121,7 @@ impl EpisodesView {
                                             @strong id => async move {
                                                 utils::download_episode_media(
                                                     &media_url,
-                                                    &directory,
-                                                    &id
+                                                    &directory
                                                 ).await;
                                             }));
                             }),
