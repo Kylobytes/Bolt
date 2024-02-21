@@ -93,3 +93,12 @@ pub async fn load_episode_count(pool: &SqlitePool) -> i32 {
 
     result.count
 }
+
+pub async fn queue(pool: &SqlitePool, episode: &i64) {
+    pool.execute(sqlx::query!(
+        "UPDATE episodes SET queued = 1 WHERE id = ?",
+        episode
+    ))
+    .await
+    .expect("Failed to enqueue episode");
+}

@@ -123,6 +123,8 @@ impl EpisodesView {
                                                     &media_url,
                                                     &directory
                                                 ).await;
+
+                                                repository::queue(&id).await;
                                             }));
                             }),
                 );

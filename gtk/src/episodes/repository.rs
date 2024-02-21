@@ -35,3 +35,9 @@ pub async fn load_episode_count() -> i32 {
 
     episode::model::load_episode_count(&pool).await
 }
+
+pub async fn queue(episode: &i64) {
+    let pool = database::connect().await;
+
+    episode::model::queue(&pool, &episode).await;
+}
