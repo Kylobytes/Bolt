@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+        "bolt_core",
+        "bolt_gtk"
+]
