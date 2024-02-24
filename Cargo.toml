@@ -1,6 +1,8 @@
 [workspace]
-
+resolver = "2"
 members = [
         "bolt_core",
+        "bolt_entity"
         "bolt_gtk"
+        "bolt_migration",
 ]

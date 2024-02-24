@@ -1,5 +1,7 @@
 use sea_orm_migration::prelude::*;
 
+use crate::m20240223_123539_create_shows_table::Show;
+
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
