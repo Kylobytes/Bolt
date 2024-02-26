@@ -1,0 +1,13 @@
+[package]
+name = "bolt_entity"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "bolt_entity"
+path = "src/lib.rs"
+
+[dependencies]
+async-std = { version = "1", features = ["attributes", "tokio1"] }
+
