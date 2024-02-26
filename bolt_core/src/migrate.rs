@@ -1,4 +1,4 @@
-/* lib.rs
+/* setup.rs
  *
  * Copyright 2024 Kent Delante
  *
@@ -18,4 +18,15 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod migrate;
+use bolt_migration::{Migrator, MigratorTrait};
+use sea_orm::Database;
+
+pub async fn run(url: &str) {
+    let database = Database::connect(url)
+        .await
+        .expect("Failed to connect to database");
+
+    Migrator::up(&database, None)
+        .await
+        .expect("Failed to run migrations");
+}

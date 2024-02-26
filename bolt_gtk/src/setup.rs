@@ -21,13 +21,9 @@
 use std::path::PathBuf;
 
 use gtk::glib;
-use sqlx::{query, Executor};
 
-use crate::{
-    config::{GETTEXT_PACKAGE, PKGDATADIR},
-    data::database,
-    runtime,
-};
+use crate::{config::GETTEXT_PACKAGE, runtime};
+use bolt_core::migrate;
 
 pub fn run() {
     setup_directories();
@@ -68,21 +64,12 @@ fn setup_directories() {
 }
 
 async fn initialize_database() {
-    let pool = database::connect().await;
-    let path: PathBuf = [PKGDATADIR, "migrations"].iter().collect();
-    let files = std::fs::read_dir(path).expect("Failed to acquire migrations");
+    let mut data_dir: PathBuf = glib::user_data_dir();
+    data_dir.push(GETTEXT_PACKAGE);
+    data_dir.push(GETTEXT_PACKAGE);
+    data_dir.set_extension("db");
 
-    let mut transaction = pool
-        .begin()
-        .await
-        .expect("Failed to start transaction for migrations");
+    let url = format!("sqlite://{}?mode=rwc", data_dir.display());
 
-    for file in files {
-        let migration_path = file.unwrap().path();
-        let migration = std::fs::read_to_string(migration_path).unwrap();
-
-        let _ = transaction.execute(query(&migration)).await;
-    }
-
-    let _ = transaction.commit().await;
+    migrate::run(&url).await;
 }
