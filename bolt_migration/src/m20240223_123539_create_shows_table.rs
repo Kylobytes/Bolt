@@ -36,6 +36,7 @@ impl MigrationTrait for Migration {
 
 #[derive(DeriveIden)]
 pub enum Show {
+    #[sea_orm(iden = "shows")]
     Table,
     Id,
     Name,
