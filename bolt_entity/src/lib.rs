@@ -1,4 +1,4 @@
-/* prelude.rs
+/* lib.rs
  *
  * Copyright 2024 Kent Delante
  *
@@ -18,5 +18,7 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub use super::episode::Entity as Episode;
-pub use super::show::Entity as Show;
+pub mod prelude;
+
+pub mod episode;
+pub mod show;

@@ -1,4 +1,4 @@
-/* show.rs
+/* episode.rs
  *
  * Copyright 2024 Kent Delante
  *
@@ -21,25 +21,35 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "show")]
+#[sea_orm(table_name = "episodes")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub name: String,
+    pub title: String,
     pub description: Option<String>,
-    pub url: String,
-    pub image_url: String,
+    pub url: Option<String>,
+    pub image_url: Option<String>,
+    pub media_url: Option<String>,
+    pub queued: Option<bool>,
+    pub date_published: i32,
+    pub show_id: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::episode::Entity")]
-    Episode,
+    #[sea_orm(
+        belongs_to = "super::show::Entity",
+        from = "Column::ShowId",
+        to = "super::show::Column::Id",
+        on_update = "Cascade",
+        on_delete = "Cascade"
+    )]
+    Show,
 }
 
-impl Related<super::episode::Entity> for Entity {
+impl Related<super::show::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Episode.def()
+        Relation::Show.def()
     }
 }
 

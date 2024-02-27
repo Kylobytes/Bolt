@@ -1,4 +1,4 @@
-/* mod.rs
+/* show.rs
  *
  * Copyright 2024 Kent Delante
  *
@@ -18,7 +18,29 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod prelude;
+use sea_orm::entity::prelude::*;
 
-pub mod episode;
-pub mod show;
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
+#[sea_orm(table_name = "shows")]
+pub struct Model {
+    #[sea_orm(primary_key)]
+    pub id: i32,
+    pub name: String,
+    pub description: Option<String>,
+    pub url: String,
+    pub image_url: String,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(has_many = "super::episode::Entity")]
+    Episode,
+}
+
+impl Related<super::episode::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Episode.def()
+    }
+}
+
+impl ActiveModelBehavior for ActiveModel {}
