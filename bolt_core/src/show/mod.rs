@@ -1,4 +1,4 @@
-/* lib.rs
+/* mod.rs
  *
  * Copyright 2024 Kent Delante
  *
@@ -18,6 +18,4 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod database;
-pub mod migrate;
-pub mod show;
+pub mod repository;

@@ -21,9 +21,19 @@
 
 use std::{io::Cursor, path::PathBuf};
 
+use gtk::glib;
 use reqwest::header::CONTENT_TYPE;
 
-use crate::api::CLIENT;
+use crate::{api::CLIENT, config::GETTEXT_PACKAGE};
+
+pub fn database_url() -> String {
+    let mut data_dir = glib::user_data_dir();
+    data_dir.push(GETTEXT_PACKAGE);
+    data_dir.push(GETTEXT_PACKAGE);
+    data_dir.set_extension("db");
+
+    format!("sqlite://{}?mode=rwc", data_dir.display())
+}
 
 pub async fn fetch_image(url: &str) -> Result<Vec<u8>, reqwest::Error> {
     Ok(CLIENT.get(url).send().await?.bytes().await?.to_vec())

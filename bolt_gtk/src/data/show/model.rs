@@ -71,12 +71,3 @@ pub async fn subscribed(pool: &SqlitePool, id: &i64) -> bool {
 
     show.count == 1
 }
-
-pub async fn load_show_count(pool: &SqlitePool) -> i32 {
-    let result = sqlx::query!("SELECT COUNT(id) AS count FROM shows")
-        .fetch_one(pool)
-        .await
-        .expect("Failed to query show count");
-
-    result.count
-}

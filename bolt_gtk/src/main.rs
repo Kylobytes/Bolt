@@ -31,7 +31,6 @@ mod data;
 mod discover;
 mod empty;
 mod episodes;
-mod podcasts;
 mod show_details;
 
 mod queue_view;

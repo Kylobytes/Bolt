@@ -1,4 +1,4 @@
-/* lib.rs
+/* repository.rs
  *
  * Copyright 2024 Kent Delante
  *
@@ -18,6 +18,12 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod database;
-pub mod migrate;
-pub mod show;
+use bolt_entity::show;
+use sea_orm::{DatabaseConnection, EntityTrait, PaginatorTrait};
+
+pub async fn load_show_count(database: &DatabaseConnection) -> u64 {
+    show::Entity::find()
+        .count(database)
+        .await
+        .expect("Failed to get show count")
+}

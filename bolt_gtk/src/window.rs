@@ -25,15 +25,17 @@ use gtk::{
     prelude::*,
 };
 
+use bolt_core::{database, show};
+
 use crate::{
     data::{episode::object::EpisodeObject, show::object::ShowObject},
     discover::view::DiscoverView,
     empty::view::EmptyView,
     episodes::view::EpisodesView,
-    podcasts,
     queue_view::QueueView,
     runtime,
     show_details::view::ShowDetails,
+    utils,
 };
 
 pub enum View {
@@ -132,13 +134,16 @@ impl BoltWindow {
         let (sender, receiver) = async_channel::bounded(1);
 
         runtime().spawn(clone!(@strong sender => async move {
-            let shows = podcasts::repository::load_show_count().await;
+            let database_url = utils::database_url();
+            let connection = database::connect(&database_url).await;
+
+            let shows = show::repository::load_show_count(connection).await;
             sender.send(shows).await.expect("The channel needs to be open");
         }));
 
         glib::spawn_future_local(
             clone!(@weak self as window, @strong receiver => async move {
-                if let Ok(shows) = receiver.recv().await {
+                while let Ok(shows) = receiver.recv().await {
                     if shows > 0 {
                         window.imp().episodes_view.get().reload_episodes();
                         window.show_view(View::Podcasts);

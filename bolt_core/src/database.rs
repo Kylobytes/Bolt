@@ -1,6 +1,6 @@
-/* repository.rs
+/* database.rs
  *
- * Copyright 2023 Kent Delante
+ * Copyright 2024 Kent Delante
  *
  * This file is part of Bolt.
  *
@@ -18,10 +18,20 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::data::{database, show};
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
+use tokio::sync::OnceCell;
 
-pub async fn load_show_count() -> i32 {
-    let pool = database::connect().await;
+pub async fn connect(url: &str) -> &'static DatabaseConnection {
+    static CONNECTION: OnceCell<DatabaseConnection> = OnceCell::const_new();
 
-    show::model::load_show_count(&pool).await
+    CONNECTION
+        .get_or_init(|| async {
+            let mut options = ConnectOptions::new(url);
+            options.max_connections(5);
+
+            Database::connect(options)
+                .await
+                .expect("Failed to connect to database")
+        })
+        .await
 }
