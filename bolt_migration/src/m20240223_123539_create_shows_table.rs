@@ -13,6 +13,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(
                         ColumnDef::new(Show::Id)
+                            .big_integer()
                             .integer()
                             .not_null()
                             .auto_increment()

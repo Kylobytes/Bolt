@@ -15,27 +15,28 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(
                         ColumnDef::new(Episode::Id)
-                            .integer()
+                            .big_integer()
                             .not_null()
                             .auto_increment()
                             .primary_key(),
                     )
                     .col(ColumnDef::new(Episode::Title).string().not_null())
                     .col(ColumnDef::new(Episode::Description).string())
-                    .col(ColumnDef::new(Episode::Url).string())
+                    .col(ColumnDef::new(Episode::Url).string().not_null())
                     .col(ColumnDef::new(Episode::ImageUrl).string())
-                    .col(ColumnDef::new(Episode::MediaUrl).string())
+                    .col(ColumnDef::new(Episode::MediaUrl).string().not_null())
                     .col(
                         ColumnDef::new(Episode::Queued)
                             .boolean()
+                            .not_null()
                             .default(Value::Bool(Some(false))),
                     )
                     .col(
                         ColumnDef::new(Episode::DatePublished)
-                            .integer()
+                            .big_integer()
                             .not_null(),
                     )
-                    .col(ColumnDef::new(Episode::ShowId).integer())
+                    .col(ColumnDef::new(Episode::ShowId).big_integer())
                     .foreign_key(
                         ForeignKey::create()
                             .from(Episode::Table, Episode::ShowId)

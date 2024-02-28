@@ -24,15 +24,15 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "episodes")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: i32,
+    pub id: i64,
     pub title: String,
     pub description: Option<String>,
-    pub url: Option<String>,
+    pub url: String,
     pub image_url: Option<String>,
-    pub media_url: Option<String>,
-    pub queued: Option<bool>,
-    pub date_published: i32,
-    pub show_id: Option<i32>,
+    pub media_url: String,
+    pub queued: bool,
+    pub date_published: i64,
+    pub show_id: i64,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
