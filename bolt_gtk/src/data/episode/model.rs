@@ -85,15 +85,6 @@ pub async fn load_episodes(pool: &SqlitePool, offset: &i32) -> Vec<Episode> {
     episodes
 }
 
-pub async fn load_episode_count(pool: &SqlitePool) -> i32 {
-    let result = sqlx::query!("SELECT COUNT(*) AS count FROM shows")
-        .fetch_one(pool)
-        .await
-        .expect("Failed to load episode count");
-
-    result.count
-}
-
 pub async fn queue(pool: &SqlitePool, episode: &i64) {
     pool.execute(sqlx::query!(
         "UPDATE episodes SET queued = 1 WHERE id = ?",

@@ -28,6 +28,8 @@ use gtk::{
     subclass::prelude::*,
 };
 
+use bolt_core::{database, episode};
+
 use crate::{
     data::episode::{object::EpisodeObject, Episode},
     episodes::{repository, row::EpisodeRow},
@@ -45,7 +47,7 @@ mod imp {
         #[template_child]
         pub episodes: TemplateChild<gtk::ListBox>,
         pub model: RefCell<Option<ListStore>>,
-        pub episode_count: Cell<i32>,
+        pub episode_count: Cell<u64>,
         pub current_offset: Cell<i32>,
     }
 
@@ -175,8 +177,11 @@ impl EpisodesView {
 
     pub fn load_episode_count(&self) {
         let (sender, receiver) = async_channel::bounded(1);
+
         runtime().spawn(clone!(@strong sender => async move {
-            let episode_count = repository::load_episode_count().await;
+            let database_url = utils::database_url();
+            let connection = database::connect(&database_url).await;
+            let episode_count = episode::repository::load_episode_count(connection).await;
             sender.send(episode_count).await.expect("The channel needs to be open");
         }));
 
