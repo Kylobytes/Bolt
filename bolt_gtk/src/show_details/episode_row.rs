@@ -73,10 +73,7 @@ impl Default for DiscoverEpisodeRow {
 impl From<EpisodeObject> for DiscoverEpisodeRow {
     fn from(episode: EpisodeObject) -> Self {
         let row = DiscoverEpisodeRow::new();
-
-        if let Some(title) = episode.title() {
-            row.imp().episode_title.get().set_label(&title);
-        };
+        row.imp().episode_title.get().set_label(&episode.title());
 
         let timestamp_format = format_description!("[unix_timestamp]");
         let datetime = OffsetDateTime::parse(

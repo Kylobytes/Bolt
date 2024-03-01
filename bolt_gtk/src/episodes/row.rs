@@ -97,10 +97,7 @@ impl Default for EpisodeRow {
 impl From<EpisodeObject> for EpisodeRow {
     fn from(episode: EpisodeObject) -> Self {
         let row = EpisodeRow::new();
-
-        if let Some(title) = episode.title() {
-            row.imp().title.get().set_label(&title);
-        }
+        row.imp().title.get().set_label(&episode.title());
 
         let timestamp_format = format_description!("[unix_timestamp]");
         let datetime = OffsetDateTime::parse(

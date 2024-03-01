@@ -19,7 +19,7 @@
  *
  */
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 
 use adw::prelude::*;
 use gtk::glib::{self, subclass::prelude::*, Properties};
@@ -32,16 +32,24 @@ mod imp {
     #[derive(Debug, Default, Properties)]
     #[properties(wrapper_type = super::EpisodeObject)]
     pub struct EpisodeObject {
-        #[property(name = "id", get, construct_only, type = i64, member = id)]
-        #[property(name = "title", get, construct_only, type = Option<String>, member = title)]
-        #[property(name = "description", get, construct_only, type = Option<String>, member = description)]
-        #[property(name = "url", get, construct_only, type = Option<String>, member = url)]
-        #[property(name = "image-url", get, construct_only, type = Option<String>, member = image_url)]
-        #[property(name = "media-url", get, construct_only, type = String, member = media_url)]
-        #[property(name = "queued", get, construct_only, type = i64, member = queued)]
-        #[property(name = "date-published", get, construct_only, type = i64, member = date_published)]
-        #[property(name = "show-id", get, construct_only, type = i64, member = show_id)]
-        data: RefCell<Episode>,
+        #[property(get, construct_only)]
+        id: Cell<i64>,
+        #[property(get, construct_only)]
+        title: RefCell<String>,
+        #[property(get, construct_only)]
+        description: RefCell<Option<String>>,
+        #[property(get, construct_only)]
+        url: RefCell<Option<String>>,
+        #[property(get, construct_only)]
+        image_url: RefCell<Option<String>>,
+        #[property(get, construct_only)]
+        media_url: RefCell<String>,
+        #[property(get, construct_only)]
+        queued: Cell<i64>,
+        #[property(get, construct_only)]
+        date_published: Cell<i64>,
+        #[property(get, construct_only)]
+        show_id: Cell<i64>,
     }
 
     #[glib::object_subclass]
