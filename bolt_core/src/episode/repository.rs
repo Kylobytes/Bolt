@@ -19,13 +19,30 @@
  *
  */
 
-use sea_orm::{DatabaseConnection, EntityTrait, PaginatorTrait};
+use sea_orm::{DatabaseConnection, EntityTrait, PaginatorTrait, QuerySelect};
 
-use bolt_entity::episode;
+use bolt_entity::{
+    episode,
+    prelude::{Episode, Show},
+    show,
+};
 
-pub async fn load_episode_count(database: &DatabaseConnection) -> u64 {
-    episode::Entity::find()
-        .count(database)
+pub async fn load_episode_count(connection: &DatabaseConnection) -> u64 {
+    Episode::find()
+        .count(connection)
         .await
         .expect("Failed to get show count")
+}
+
+pub async fn load_episodes(
+    connection: &DatabaseConnection,
+    offset: &u64,
+) -> Vec<(episode::Model, Option<show::Model>)> {
+    Episode::find()
+        .find_also_related(Show)
+        .limit(20)
+        .offset(Some(offset.to_owned()))
+        .all(connection)
+        .await
+        .expect("Failed to load episodes")
 }

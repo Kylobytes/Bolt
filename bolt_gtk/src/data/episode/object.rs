@@ -24,6 +24,8 @@ use std::cell::{Cell, RefCell};
 use adw::prelude::*;
 use gtk::glib::{self, subclass::prelude::*, Properties};
 
+use bolt_entity::episode;
+
 use crate::{api::episode::Episode as ApiEpisode, data::episode::Episode};
 
 mod imp {
@@ -96,6 +98,22 @@ impl From<ApiEpisode> for EpisodeObject {
 
 impl From<Episode> for EpisodeObject {
     fn from(episode: Episode) -> Self {
+        glib::Object::builder::<Self>()
+            .property("id", episode.id)
+            .property("title", episode.title)
+            .property("description", episode.description)
+            .property("url", episode.url)
+            .property("image-url", episode.image_url)
+            .property("media-url", episode.media_url)
+            .property("queued", episode.queued)
+            .property("date-published", episode.date_published)
+            .property("show-id", episode.show_id)
+            .build()
+    }
+}
+
+impl From<episode::Model> for EpisodeObject {
+    fn from(episode: episode::Model) -> Self {
         glib::Object::builder::<Self>()
             .property("id", episode.id)
             .property("title", episode.title)

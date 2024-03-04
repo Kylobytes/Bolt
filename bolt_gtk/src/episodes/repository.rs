@@ -19,16 +19,7 @@
  *
  */
 
-use crate::data::{
-    database,
-    episode::{self, Episode},
-};
-
-pub async fn load_episodes(offset: &i32) -> Vec<Episode> {
-    let pool = database::connect().await;
-
-    episode::model::load_episodes(&pool, offset).await
-}
+use crate::data::{database, episode};
 
 pub async fn queue(episode: &i64) {
     let pool = database::connect().await;

@@ -294,6 +294,7 @@ version = "0.1.0"
 dependencies = [
  "async-channel",
  "bolt_core",
+ "bolt_entity",
  "gettext-rs",
  "gtk4",
  "libadwaita",

@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 bolt_core = { path = "../bolt_core" }
+bolt_entity = { path = "../bolt_entity" }
 
 async-channel = "2.1"
 gettext-rs = { version = "0.7", features = ["gettext-system"] }

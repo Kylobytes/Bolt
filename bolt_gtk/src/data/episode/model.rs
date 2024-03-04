@@ -21,7 +21,7 @@
 
 use sqlx::{Executor, SqlitePool};
 
-use crate::{api::episode::Episode as ApiEpisode, data::episode::Episode};
+use crate::api::episode::Episode as ApiEpisode;
 
 pub async fn save_episodes_for_show(
     pool: &SqlitePool,
@@ -60,29 +60,6 @@ pub async fn save_episodes_for_show(
     }
 
     let _ = transaction.commit().await.expect("Failed to save episodes");
-}
-
-pub async fn load_episodes(pool: &SqlitePool, offset: &i32) -> Vec<Episode> {
-    let episodes = sqlx::query_as!(
-        Episode,
-        "SELECT \
-         id, \
-         title, \
-         description, \
-         url, \
-         image_url, \
-         media_url, \
-         queued, \
-         date_published, \
-         show_id \
-         FROM episodes ORDER BY date_published DESC LIMIT 20 OFFSET ?",
-        offset
-    )
-    .fetch_all(pool)
-    .await
-    .expect("Failed to load episodes");
-
-    episodes
 }
 
 pub async fn queue(pool: &SqlitePool, episode: &i64) {

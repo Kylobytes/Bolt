@@ -31,7 +31,7 @@ use gtk::{
 use bolt_core::{database, episode};
 
 use crate::{
-    data::episode::{object::EpisodeObject, Episode},
+    data::episode::object::EpisodeObject,
     episodes::{repository, row::EpisodeRow},
     runtime, storage, utils,
 };
@@ -48,7 +48,7 @@ mod imp {
         pub episodes: TemplateChild<gtk::ListBox>,
         pub model: RefCell<Option<ListStore>>,
         pub episode_count: Cell<u64>,
-        pub current_offset: Cell<i32>,
+        pub current_offset: Cell<u64>,
     }
 
     #[glib::object_subclass]
@@ -146,27 +146,31 @@ impl EpisodesView {
 
     pub fn load_episodes(&self) {
         let offset = self.imp().current_offset.get();
-        let (sender, receiver) = async_channel::bounded::<Vec<Episode>>(1);
+        let (sender, receiver) = async_channel::bounded(1);
 
         runtime().spawn(clone!(@strong sender, @strong offset => async move {
-            let episodes = repository::load_episodes(&offset).await;
+            let database_url = utils::database_url();
+            let connection = database::connect(&database_url).await;
+            let episodes = episode::repository::load_episodes(&connection, &offset).await;
 
             sender.send(episodes).await.expect("The channel needs to be open");
         }));
 
         glib::spawn_future_local(
             clone!(@weak self as view, @strong receiver => async move {
-                if let Ok(episodes) = receiver.recv().await {
+                while let Ok(episodes) = receiver.recv().await {
                     let Some(ref model) = *view.imp().model.borrow() else {
                         return;
                     };
 
-                    let new_offset = i32::try_from(episodes.len()).unwrap() + view.imp().current_offset.get();
+                    let new_offset = u64::try_from(episodes.len()).unwrap() + view.imp().current_offset.get();
                     view.imp().current_offset.set(new_offset.into());
 
                     let episode_objects: Vec<EpisodeObject> = episodes
                         .into_iter()
-                        .map(EpisodeObject::from)
+                        .map(|episode| {
+                            EpisodeObject::from(episode.0)
+                        })
                         .collect();
 
                     model.extend_from_slice(&episode_objects);
