@@ -18,29 +18,30 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::path::PathBuf;
-
 use gtk::glib;
-use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
+use tokio::sync::OnceCell;
 
 use crate::config::GETTEXT_PACKAGE;
 
-pub async fn connect() -> SqlitePool {
-    let mut database_url: PathBuf = [
-        "sqlite://",
-        &glib::user_data_dir().display().to_string(),
-        GETTEXT_PACKAGE.into(),
-        GETTEXT_PACKAGE.into(),
-    ]
-    .iter()
-    .collect();
+pub async fn connect() -> &'static DatabaseConnection {
+    static CONNECTION: OnceCell<DatabaseConnection> = OnceCell::const_new();
 
-    database_url.set_extension("db");
-    database_url.push("?mode=rwc");
+    let path = format!(
+        "sqlite://{}/{}/{}.db?mode=rwc",
+        glib::user_data_dir().display(),
+        GETTEXT_PACKAGE,
+        GETTEXT_PACKAGE
+    );
 
-    SqlitePoolOptions::new()
-        .max_connections(5)
-        .connect(&database_url.display().to_string())
+    CONNECTION
+        .get_or_init(|| async {
+            let mut options = ConnectOptions::new(&path);
+            options.max_connections(5);
+
+            Database::connect(options)
+                .await
+                .expect("Failed to connect to database")
+        })
         .await
-        .expect("Failed to initialize database pool")
 }

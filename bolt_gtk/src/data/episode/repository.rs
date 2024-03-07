@@ -1,6 +1,6 @@
 /* repository.rs
  *
- * Copyright 2024 Kent Delante
+ * Copyright 2023 Kent Delante
  *
  * This file is part of Bolt.
  *
@@ -18,12 +18,35 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use bolt_entity::show;
-use sea_orm::{DatabaseConnection, EntityTrait, PaginatorTrait};
+use sea_orm::{EntityTrait, PaginatorTrait, QuerySelect};
 
-pub async fn load_show_count(database: &DatabaseConnection) -> u64 {
-    show::Entity::find()
-        .count(database)
+use bolt_entity::{
+    episode,
+    prelude::{Episode, Show},
+    show,
+};
+
+use crate::data::database;
+
+pub async fn load_episode_count() -> u64 {
+    let connection = database::connect().await;
+
+    Episode::find()
+        .count(connection)
         .await
         .expect("Failed to get show count")
+}
+
+pub async fn load_episodes(
+    offset: &u64,
+) -> Vec<(episode::Model, Option<show::Model>)> {
+    let connection = database::connect().await;
+
+    Episode::find()
+        .find_also_related(Show)
+        .limit(20)
+        .offset(Some(offset.to_owned()))
+        .all(connection)
+        .await
+        .expect("Failed to load episodes")
 }

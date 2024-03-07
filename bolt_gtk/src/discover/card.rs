@@ -22,14 +22,7 @@
 use std::cell::Cell;
 
 use adw::prelude::*;
-use gtk::{
-    gdk, gdk_pixbuf,
-    gio::{self, MemoryInputStream},
-    glib::{self, clone},
-    subclass::prelude::*,
-};
-
-use crate::{data::show::object::ShowObject, discover, runtime, utils};
+use gtk::{gio, glib, subclass::prelude::*};
 
 mod imp {
     use super::*;
@@ -84,122 +77,8 @@ impl Default for DiscoverCard {
     }
 }
 
-impl From<ShowObject> for DiscoverCard {
-    fn from(show: ShowObject) -> Self {
-        let card = Self::default();
-        let imp = card.imp();
-
-        if let Some(name) = show.name() {
-            imp.name.get().set_text(&name);
-        }
-
-        if let Some(description) = show.description() {
-            imp.description.get().set_text(&description);
-        }
-
-        if show.subscribed() {
-            card.mark_subscribed();
-        }
-
-        imp.show_id.set(show.id());
-        card.connect_signals();
-        card.load_image(&show.image_url());
-
-        card
-    }
-}
-
 impl DiscoverCard {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    pub fn connect_signals(&self) {
-        let (sender, receiver) = async_channel::bounded::<bool>(1);
-        let button = self.imp().subscribe_button.get();
-
-        button.connect_clicked(
-            clone!(@weak self as view, @strong sender => move |button: &gtk::Button| {
-                button.set_label("Subscribing...");
-                button.set_sensitive(false);
-                let show_id = view.imp().show_id.get();
-
-                runtime().spawn(clone!(@strong show_id, @strong sender => async move {
-                    discover::repository::subscribe(&show_id).await;
-                    sender.send(true).await.expect("The channel should be open");
-                }));
-            }),
-        );
-
-        glib::spawn_future_local(
-            clone!(@weak button, @strong receiver => async move {
-                if let Ok(save_successful) = receiver.recv().await {
-                    if save_successful {
-                        button.set_label("Subscribed");
-                    }
-                }
-            }),
-        );
-    }
-
-    pub fn mark_subscribed(&self) {
-        let subscribe_button: gtk::Button = self.imp().subscribe_button.get();
-
-        subscribe_button.set_sensitive(false);
-        subscribe_button.set_label("Subscribed");
-    }
-
-    fn load_image(&self, url: &Option<String>) {
-        let imp = self.imp();
-
-        if let Some(image_url) = url {
-            if image_url.is_empty() {
-                imp.picture_spinner.get().stop();
-                imp.picture_spinner.get().set_visible(false);
-                imp.image_missing_icon.get().set_visible(true);
-            } else {
-                let (sender, receiver) = async_channel::bounded(1);
-
-                runtime().spawn(clone!(@strong image_url => async move {
-                    let image = utils::fetch_image(&image_url).await;
-                    sender.send(image).await.expect("The image channel should be open");
-                }));
-
-                glib::spawn_future_local(
-                    clone!(@weak self as card => async move {
-                        if let Ok(result) = receiver.recv().await {
-                            let picture_spinner = card.imp().picture_spinner.get();
-
-                            if let Ok(content) = result {
-                                let image_bytes = glib::Bytes::from(&content);
-                                let stream = MemoryInputStream::from_bytes(&image_bytes);
-                                let pixbuf = gdk_pixbuf::Pixbuf::from_stream_at_scale(
-                                    &stream,
-                                    328,
-                                    328,
-                                    true,
-                                    gio::Cancellable::NONE
-                                );
-
-                                if let Ok(pixbuf) = pixbuf {
-                                    let texture = gdk::Texture::for_pixbuf(&pixbuf);
-                                    let picture = card.imp().picture.get();
-
-                                    picture.set_paintable(Some(&texture));
-                                    picture.set_visible(true);
-                                } else {
-                                    card.imp().image_missing_icon.get().set_visible(true);
-                                }
-                            } else {
-                                card.imp().image_missing_icon.get().set_visible(true);
-                            }
-
-                            picture_spinner.stop();
-                            picture_spinner.set_visible(false);
-                        }
-                    }),
-                );
-            }
-        }
     }
 }

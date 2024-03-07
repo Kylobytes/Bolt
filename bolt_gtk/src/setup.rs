@@ -22,8 +22,10 @@ use std::path::PathBuf;
 
 use gtk::glib;
 
+use bolt_migration::{Migrator, MigratorTrait};
+use sea_orm::Database;
+
 use crate::{config::GETTEXT_PACKAGE, runtime};
-use bolt_core::migrate;
 
 pub fn run() {
     setup_directories();
@@ -64,12 +66,25 @@ fn setup_directories() {
 }
 
 async fn initialize_database() {
-    let mut data_dir: PathBuf = glib::user_data_dir();
-    data_dir.push(GETTEXT_PACKAGE);
-    data_dir.push(GETTEXT_PACKAGE);
-    data_dir.set_extension("db");
+    let mut path: PathBuf = [
+        "sqlite://",
+        &glib::user_data_dir().display().to_string(),
+        GETTEXT_PACKAGE.into(),
+        GETTEXT_PACKAGE.into(),
+    ]
+    .iter()
+    .collect();
 
-    let url = format!("sqlite://{}?mode=rwc", data_dir.display());
+    path.set_extension("db");
+    path.push("?mode=rwc");
 
-    migrate::run(&url).await;
+    if let Some(path) = path.to_str() {
+        let connection = Database::connect(path)
+            .await
+            .expect("Failed to connect to database");
+
+        Migrator::up(&connection, None)
+            .await
+            .expect("Failed to run migrations");
+    }
 }

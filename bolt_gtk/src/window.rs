@@ -19,32 +19,13 @@
  */
 
 use adw::subclass::prelude::*;
-use gtk::{
-    gio::{self, ListStore},
-    glib::{self, clone},
-    prelude::*,
-};
-
-use bolt_core::{database, show};
+use gtk::{gio, glib, prelude::*};
 
 use crate::{
-    data::{episode::object::EpisodeObject, show::object::ShowObject},
-    discover::view::DiscoverView,
-    empty::view::EmptyView,
-    episodes::view::EpisodesView,
-    queue_view::QueueView,
-    runtime,
+    discover::view::DiscoverView, empty::view::EmptyView,
+    episodes::view::EpisodesView, queue_view::QueueView,
     show_details::view::ShowDetails,
-    utils,
 };
-
-pub enum View {
-    Discover,
-    Empty,
-    Loading,
-    Podcasts,
-    ShowDetails,
-}
 
 mod imp {
     use super::*;
@@ -102,165 +83,8 @@ glib::wrapper! {
 
 impl BoltWindow {
     pub fn new<P: glib::IsA<gtk::Application>>(application: &P) -> Self {
-        let window = glib::Object::builder::<BoltWindow>()
+        glib::Object::builder::<BoltWindow>()
             .property("application", application)
-            .build();
-
-        window.connect_signals();
-        window.setup_discover();
-        window.setup_episodes();
-        window.load_shows();
-
-        window
-    }
-
-    pub fn show_view(&self, view: View) {
-        let stack = self.imp().main_stack.get();
-
-        match view {
-            View::Empty => stack.set_visible_child_name("empty-view"),
-            View::Loading => stack.set_visible_child_name("loading-view"),
-            View::Podcasts => stack.set_visible_child_name("podcasts-view"),
-            View::Discover => stack.set_visible_child_name("discover-view"),
-            View::ShowDetails => {
-                stack.set_visible_child_name("show-details-view")
-            }
-        };
-    }
-
-    fn load_shows(&self) {
-        self.show_view(View::Loading);
-
-        let (sender, receiver) = async_channel::bounded(1);
-
-        runtime().spawn(clone!(@strong sender => async move {
-            let database_url = utils::database_url();
-            let connection = database::connect(&database_url).await;
-
-            let shows = show::repository::load_show_count(connection).await;
-            sender.send(shows).await.expect("The channel needs to be open");
-        }));
-
-        glib::spawn_future_local(
-            clone!(@weak self as window, @strong receiver => async move {
-                while let Ok(shows) = receiver.recv().await {
-                    if shows > 0 {
-                        window.imp().episodes_view.get().reload_episodes();
-                        window.show_view(View::Podcasts);
-                    } else {
-                        window.show_view(View::Empty);
-                    }
-                }
-            }),
-        );
-    }
-
-    fn setup_discover(&self) {
-        let model = ListStore::new::<ShowObject>();
-
-        self.imp().discover_view.get().setup_model(&model);
-    }
-
-    fn setup_episodes(&self) {
-        let episodes_view = self.imp().episodes_view.get();
-
-        let model = ListStore::new::<EpisodeObject>();
-        episodes_view.setup_model(&model);
-        episodes_view.load_episode_count()
-    }
-
-    fn connect_signals(&self) {
-        let imp = self.imp();
-
-        imp.empty_view.btn_discover().connect_clicked(
-            clone!(@weak self as window => move |_| {
-                window.show_view(View::Discover);
-            }),
-        );
-
-        imp.btn_discover.get().connect_clicked(
-            clone!(@weak self as window => move |_| {
-                window.show_view(View::Discover);
-            }),
-        );
-
-        let discover_view = imp.discover_view.get();
-        let discover_search_entry = discover_view.search_entry();
-
-        discover_search_entry.connect_search_changed(
-            move |entry: &gtk::SearchEntry| {
-                if entry.text().len() > 3 {
-                    discover_view.search_shows(&entry.text());
-                }
-            },
-        );
-
-        imp.podcasts_stack.get().connect_visible_child_notify(
-            clone!(@weak imp => move |stack| {
-                if let Some(name) = stack.visible_child_name() {
-                    let name = name.as_str();
-
-                    if name == "episodes" {
-                        imp.btn_refresh.get().set_visible(true);
-                    } else {
-                        imp.btn_refresh.get().set_visible(false);
-                    }
-                }
-            }),
-        );
-
-        imp.btn_refresh
-            .get()
-            .connect_clicked(clone!(@weak imp => move |_| {
-                imp.episodes_view.get().reload_episodes();
-            }));
-
-        let discover_view = imp.discover_view.get();
-
-        discover_view.search_results().connect_child_activated(
-            clone!(@weak self as window, @weak discover_view => move |_container, child| {
-                if let Some (ref model) = *discover_view.imp().model.borrow() {
-                    let index: u32 = child.index().try_into().expect("Index cannot be out of range");
-                    let show = model.item(index).and_downcast::<ShowObject>();
-
-                    if let Some(show) = show {
-                        window.imp().show_details_view.get().load_details(&show);
-                        window.show_view(View::ShowDetails);
-                    }
-                };
-            })
-        );
-
-        discover_view.back_button().connect_clicked(
-            clone!(@weak self as window => move |_| {
-                window.show_view(View::Podcasts);
-            }),
-        );
-
-        self.imp()
-            .show_details_view
-            .get()
-            .back_button()
-            .connect_clicked(clone!(@weak self as window => move |_| {
-                window.show_view(View::Discover);
-            }));
-
-        let episodes_view = self.imp().episodes_view.get();
-
-        episodes_view.scrollbar().connect_edge_reached(
-            clone!(@weak episodes_view => move |_, position| {
-                if position == gtk::PositionType::Bottom {
-                    episodes_view.load_episodes();
-                }
-            }),
-        );
-
-        episodes_view.scrollbar().connect_edge_overshot(
-            clone!(@weak episodes_view => move |_, position| {
-                if position == gtk::PositionType::Top {
-                    episodes_view.reload_episodes();
-                }
-            }),
-        );
+            .build()
     }
 }

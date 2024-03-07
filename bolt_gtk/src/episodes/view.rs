@@ -21,20 +21,7 @@
 
 use std::cell::{Cell, RefCell};
 
-use gtk::{
-    gio::{self, ListStore},
-    glib::{self, clone, closure_local},
-    prelude::*,
-    subclass::prelude::*,
-};
-
-use bolt_core::{database, episode};
-
-use crate::{
-    data::episode::object::EpisodeObject,
-    episodes::{repository, row::EpisodeRow},
-    runtime, storage, utils,
-};
+use gtk::{gio, glib, prelude::*, subclass::prelude::*, ListStore};
 
 mod imp {
     use super::*;
@@ -86,115 +73,5 @@ impl Default for EpisodesView {
 impl EpisodesView {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    pub fn scrollbar(&self) -> gtk::ScrolledWindow {
-        self.imp().scrollbar.get()
-    }
-
-    pub fn setup_model(&self, model: &ListStore) {
-        self.imp().model.replace(Some(model.clone()));
-        self.imp().episodes.get().bind_model(
-            Some(model),
-            move |item: &glib::Object| {
-                let episode = item
-                    .downcast_ref::<EpisodeObject>()
-                    .expect("Item must be an episode");
-
-                let row = EpisodeRow::from(episode.to_owned());
-                let media_url = &episode.media_url();
-                let id = &episode.id();
-                let show_id = &episode.show_id();
-
-                row.connect_closure(
-                    "download-triggered",
-                    false,
-                    closure_local!(
-                        @strong media_url,
-                        @strong id,
-                        @strong show_id
-                            => move |_row: EpisodeRow| {
-                                let directory = storage::episode_path(&id.to_string(), &show_id.to_string());
-                                runtime()
-                                    .spawn(
-                                        clone!(
-                                            @strong media_url,
-                                            @strong directory,
-                                            @strong id => async move {
-                                                utils::download_episode_media(
-                                                    &media_url,
-                                                    &directory
-                                                ).await;
-
-                                                repository::queue(&id).await;
-                                            }));
-                            }),
-                );
-
-                row.into()
-            },
-        );
-    }
-
-    pub fn reload_episodes(&self) {
-        if let Some(ref model) = *self.imp().model.borrow() {
-            self.imp().current_offset.set(0);
-            model.remove_all();
-            self.load_episodes();
-        }
-    }
-
-    pub fn load_episodes(&self) {
-        let offset = self.imp().current_offset.get();
-        let (sender, receiver) = async_channel::bounded(1);
-
-        runtime().spawn(clone!(@strong sender, @strong offset => async move {
-            let database_url = utils::database_url();
-            let connection = database::connect(&database_url).await;
-            let episodes = episode::repository::load_episodes(&connection, &offset).await;
-
-            sender.send(episodes).await.expect("The channel needs to be open");
-        }));
-
-        glib::spawn_future_local(
-            clone!(@weak self as view, @strong receiver => async move {
-                while let Ok(episodes) = receiver.recv().await {
-                    let Some(ref model) = *view.imp().model.borrow() else {
-                        return;
-                    };
-
-                    let new_offset = u64::try_from(episodes.len()).unwrap() + view.imp().current_offset.get();
-                    view.imp().current_offset.set(new_offset.into());
-
-                    let episode_objects: Vec<EpisodeObject> = episodes
-                        .into_iter()
-                        .map(|episode| {
-                            EpisodeObject::from(episode.0)
-                        })
-                        .collect();
-
-                    model.extend_from_slice(&episode_objects);
-                }
-            }),
-        );
-    }
-
-    pub fn load_episode_count(&self) {
-        let (sender, receiver) = async_channel::bounded(1);
-
-        runtime().spawn(clone!(@strong sender => async move {
-            let database_url = utils::database_url();
-            let connection = database::connect(&database_url).await;
-            let episode_count = episode::repository::load_episode_count(connection).await;
-            sender.send(episode_count).await.expect("The channel needs to be open");
-        }));
-
-        glib::spawn_future_local(
-            clone!(@weak self as view, @strong receiver => async move {
-                if let Ok(count) = receiver.recv().await {
-                    view.imp().episode_count.set(count);
-                }
-            }),
-        );
     }
 }

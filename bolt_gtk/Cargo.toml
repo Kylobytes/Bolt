@@ -4,18 +4,18 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bolt_core = { path = "../bolt_core" }
 bolt_entity = { path = "../bolt_entity" }
+bolt_migration = { path = "../bolt_migration" }
 
 async-channel = "2.1"
 gettext-rs = { version = "0.7", features = ["gettext-system"] }
 gtk = { version = "0.7", package = "gtk4" }
 once_cell = "1.19"
-reqwest = { version = "0.11", features = ["json"] }
-serde = { version = "1.0", features = ["derive"] }
+reqwest = { version = "0.11", features = [ "json" ] }
+sea-orm = { version = "0.12", features = [ "sqlx-sqlite", "runtime-tokio-native-tls" ]}
+serde = { version = "1.0", features = [ "derive" ] }
 serde_json = "1.0"
 sha1 = "0.10"
-sqlx = { version = "0.7", features = ["runtime-tokio", "sqlite", "macros", "time"] }
 time = { version = "0.3", features = ["formatting", "macros", "parsing"] }
 tokio = { version = "1.36", features = ["full"] }
 

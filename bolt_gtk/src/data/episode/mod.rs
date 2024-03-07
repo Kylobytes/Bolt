@@ -19,8 +19,8 @@
  *
  */
 
-pub mod model;
 pub mod object;
+pub mod repository;
 
 #[derive(Default, Debug)]
 pub struct Episode {

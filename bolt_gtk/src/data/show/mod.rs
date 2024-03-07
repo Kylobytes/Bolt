@@ -18,8 +18,8 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod model;
 pub mod object;
+pub mod repository;
 
 #[derive(Clone, Debug, Default)]
 pub struct Show {
