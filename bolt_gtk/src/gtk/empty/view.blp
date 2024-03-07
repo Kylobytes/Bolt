@@ -17,16 +17,16 @@ template $EmptyView : Adw.Bin {
     content: Adw.StatusPage {
       icon-name: "edit-find";
       title: _("No podcasts found");
-      description: _("It seems you haven't subscribed to any shows yet");
+      description: _("You aren't subscribed to any shows");
       vexpand: true;
       hexpand: true;
 
-      Gtk.Button btn_discover {
+      Gtk.Button btn_explore {
         styles ["pill"]
         halign: center;
 
         Gtk.Label {
-          label: _("Discover Podcasts");
+          label: _("Search Podcasts");
         }
       }
     };

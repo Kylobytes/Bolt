@@ -3,8 +3,8 @@ gnome = import('gnome')
 
 blueprints = custom_target('blueprints',
   input: files (
-    'gtk/discover/card.blp',
-    'gtk/discover/view.blp',
+    'gtk/explore/card.blp',
+    'gtk/explore/view.blp',
     'gtk/empty/view.blp',
     'gtk/episodes/row.blp',
     'gtk/episodes/view.blp',

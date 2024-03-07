@@ -26,9 +26,9 @@ template $BoltWindow : Adw.ApplicationWindow {
     }
 
     Gtk.StackPage {
-      name: "discover-view";
-      title: _("Discover View");
-      child: $DiscoverView discover_view {};
+      name: "explore-view";
+      title: _("Explore View");
+      child: $ExploreView explore_view {};
     }
 
     Gtk.StackPage {
@@ -49,9 +49,9 @@ template $BoltWindow : Adw.ApplicationWindow {
             policy: wide;
           };
 
-          Gtk.Button btn_discover {
+          Gtk.Button btn_explore {
             icon-name: "compass-symbolic";
-            tooltip-text: _("Discover Podcasts");
+            tooltip-text: _("Search Podcasts");
           }
 
           [end]

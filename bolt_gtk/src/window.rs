@@ -22,8 +22,8 @@ use adw::subclass::prelude::*;
 use gtk::{gio, glib, prelude::*};
 
 use crate::{
-    discover::view::DiscoverView, empty::view::EmptyView,
-    episodes::view::EpisodesView, queue_view::QueueView,
+    empty::view::EmptyView, episodes::view::EpisodesView,
+    explore::view::ExploreView, queue_view::QueueView,
     show_details::view::ShowDetails,
 };
 
@@ -36,11 +36,11 @@ mod imp {
         #[template_child]
         pub main_stack: TemplateChild<gtk::Stack>,
         #[template_child]
-        pub btn_discover: TemplateChild<gtk::Button>,
+        pub btn_explore: TemplateChild<gtk::Button>,
         #[template_child]
         pub btn_refresh: TemplateChild<gtk::Button>,
         #[template_child]
-        pub discover_view: TemplateChild<DiscoverView>,
+        pub explore_view: TemplateChild<ExploreView>,
         #[template_child]
         pub empty_view: TemplateChild<EmptyView>,
         #[template_child]

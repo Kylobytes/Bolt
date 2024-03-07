@@ -1,7 +1,7 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $DiscoverView : Adw.Bin {
+template $ExploreView : Adw.Bin {
   hexpand: true;
   vexpand: true;
 
@@ -47,19 +47,19 @@ template $DiscoverView : Adw.Bin {
           margin-start: 16;
           margin-end: 16;
 
-          Adw.StatusPage discover_welcome {
+          Adw.StatusPage explore_welcome {
             hexpand: true;
             vexpand: true;
             icon-name: "compass-symbolic";
-            title: _("Discover Podcasts");
+            title: _("Search Podcasts");
             description: _("Start searching to discover shows");
           }
 
-          Adw.StatusPage discover_results_empty {
+          Adw.StatusPage explore_results_empty {
             hexpand: true;
             vexpand: true;
             icon-name: "system-search-symbolic";
-            title: _("No shows found");
+            title: _("No podcasts found");
             description: _("Try a different search");
             visible: false;
           }
@@ -74,7 +74,7 @@ template $DiscoverView : Adw.Bin {
             visible: false;
           }
 
-          Gtk.Spinner discover_spinner {
+          Gtk.Spinner explore_spinner {
             spinning: true;
             vexpand: true;
             hexpand: true;

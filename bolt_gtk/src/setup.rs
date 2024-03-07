@@ -18,8 +18,6 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::path::PathBuf;
-
 use gtk::glib;
 
 use bolt_migration::{Migrator, MigratorTrait};

@@ -1,4 +1,4 @@
-/* empty_view.rs
+/* view.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -13,29 +13,48 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ *https://api.podcastindex.org/api/1.0/recent/feeds?pretty
  * You should have received a copy of the GNU General Public License
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
+use std::cell::RefCell;
+
 use adw::subclass::prelude::*;
-use gtk::{gio, glib};
+use gtk::{
+    gio::{self, ListStore},
+    glib::{self, clone},
+    prelude::*,
+};
 
 mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
-    #[template(resource = "/com/kylobytes/Bolt/gtk/empty-view.ui")]
-    pub struct EmptyView {
+    #[template(resource = "/com/kylobytes/Bolt/gtk/explore/view.ui")]
+    pub struct ExploreView {
         #[template_child]
-        pub btn_discover: TemplateChild<gtk::Button>,
+        pub back_button: TemplateChild<gtk::Button>,
+        #[template_child]
+        pub search_entry: TemplateChild<gtk::SearchEntry>,
+        #[template_child]
+        pub explore_welcome: TemplateChild<adw::StatusPage>,
+        #[template_child]
+        pub search_results: TemplateChild<gtk::FlowBox>,
+        #[template_child]
+        pub categories: TemplateChild<gtk::FlowBox>,
+        #[template_child]
+        pub explore_results_empty: TemplateChild<adw::StatusPage>,
+        #[template_child]
+        pub explore_spinner: TemplateChild<gtk::Spinner>,
+        pub model: RefCell<Option<ListStore>>,
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for EmptyView {
-        const NAME: &'static str = "EmptyView";
-        type Type = super::EmptyView;
+    impl ObjectSubclass for ExploreView {
+        const NAME: &'static str = "ExploreView";
+        type Type = super::ExploreView;
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
@@ -47,29 +66,25 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for EmptyView {}
-    impl WidgetImpl for EmptyView {}
-    impl BinImpl for EmptyView {}
+    impl ObjectImpl for ExploreView {}
+    impl WidgetImpl for ExploreView {}
+    impl BinImpl for ExploreView {}
 }
 
 glib::wrapper! {
-    pub struct EmptyView(ObjectSubclass<imp::EmptyView>)
+    pub struct ExploreView(ObjectSubclass<imp::ExploreView>)
         @extends gtk::Widget, adw::Bin,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 
-impl Default for EmptyView {
+impl Default for ExploreView {
     fn default() -> Self {
         glib::Object::new()
     }
 }
 
-impl EmptyView {
+impl ExploreView {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    pub fn btn_discover(&self) -> gtk::Button {
-        self.imp().btn_discover.get()
     }
 }

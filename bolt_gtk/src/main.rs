@@ -28,9 +28,9 @@ mod window;
 mod api;
 mod data;
 
-mod discover;
 mod empty;
 mod episodes;
+mod explore;
 mod show_details;
 
 mod queue_view;

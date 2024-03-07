@@ -28,8 +28,8 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
-    #[template(resource = "/com/kylobytes/Bolt/gtk/discover/card.ui")]
-    pub struct DiscoverCard {
+    #[template(resource = "/com/kylobytes/Bolt/gtk/explore/card.ui")]
+    pub struct ExploreCard {
         #[template_child]
         pub picture_spinner: TemplateChild<gtk::Spinner>,
         #[template_child]
@@ -46,9 +46,9 @@ mod imp {
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for DiscoverCard {
-        const NAME: &'static str = "DiscoverCard";
-        type Type = super::DiscoverCard;
+    impl ObjectSubclass for ExploreCard {
+        const NAME: &'static str = "ExploreCard";
+        type Type = super::ExploreCard;
         type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
@@ -60,24 +60,24 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for DiscoverCard {}
-    impl WidgetImpl for DiscoverCard {}
-    impl BoxImpl for DiscoverCard {}
+    impl ObjectImpl for ExploreCard {}
+    impl WidgetImpl for ExploreCard {}
+    impl BoxImpl for ExploreCard {}
 }
 
 glib::wrapper! {
-    pub struct DiscoverCard(ObjectSubclass<imp::DiscoverCard>)
+    pub struct ExploreCard(ObjectSubclass<imp::ExploreCard>)
         @extends gtk::Widget, gtk::Box,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 
-impl Default for DiscoverCard {
+impl Default for ExploreCard {
     fn default() -> Self {
         glib::Object::new()
     }
 }
 
-impl DiscoverCard {
+impl ExploreCard {
     pub fn new() -> Self {
         Self::default()
     }

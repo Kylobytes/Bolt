@@ -12,18 +12,18 @@
   min-width: 48px;
 }
 
-.discover-card {
+.explore-card {
   min-height: 360px;
   margin-top: 4px;
   margin-bottom: 4px;
   padding-bottom: 4px;
 }
 
-.discover-card .card-title {
+.explore-card .card-title {
   margin-top: 8px;
 }
 
-.discover-card .card-image {
+.explore-card .card-image {
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
 }
