@@ -66,25 +66,18 @@ fn setup_directories() {
 }
 
 async fn initialize_database() {
-    let mut path: PathBuf = [
-        "sqlite://",
-        &glib::user_data_dir().display().to_string(),
-        GETTEXT_PACKAGE.into(),
-        GETTEXT_PACKAGE.into(),
-    ]
-    .iter()
-    .collect();
+    let path = format!(
+        "sqlite://{}/{}/{}.db?mode=rwc",
+        glib::user_data_dir().display(),
+        GETTEXT_PACKAGE,
+        GETTEXT_PACKAGE
+    );
 
-    path.set_extension("db");
-    path.push("?mode=rwc");
+    let connection = Database::connect(path)
+        .await
+        .expect("Failed to connect to database");
 
-    if let Some(path) = path.to_str() {
-        let connection = Database::connect(path)
-            .await
-            .expect("Failed to connect to database");
-
-        Migrator::up(&connection, None)
-            .await
-            .expect("Failed to run migrations");
-    }
+    Migrator::up(&connection, None)
+        .await
+        .expect("Failed to run migrations");
 }
