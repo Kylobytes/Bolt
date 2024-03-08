@@ -19,13 +19,25 @@
  */
 
 use adw::subclass::prelude::*;
-use gtk::{gio, glib, prelude::*};
+use gtk::{
+    gio,
+    glib::{self, clone},
+    prelude::*,
+};
 
 use crate::{
     empty::view::EmptyView, episodes::view::EpisodesView,
     explore::view::ExploreView, queue_view::QueueView,
     show_details::view::ShowDetails,
 };
+
+enum View {
+    Loading,
+    Empty,
+    Explore,
+    Podcasts,
+    ShowDetails,
+}
 
 mod imp {
     use super::*;
@@ -83,8 +95,38 @@ glib::wrapper! {
 
 impl BoltWindow {
     pub fn new<P: glib::IsA<gtk::Application>>(application: &P) -> Self {
-        glib::Object::builder::<BoltWindow>()
+        let window = glib::Object::builder::<BoltWindow>()
             .property("application", application)
-            .build()
+            .build();
+
+        window.connect_signals();
+
+        window
+    }
+
+    fn switch_view(&self, view: View) {
+        let stack = self.imp().main_stack.get();
+
+        match view {
+            View::Loading => stack.set_visible_child_name("loading-view"),
+            View::Empty => stack.set_visible_child_name("empty-view"),
+            View::Explore => stack.set_visible_child_name("explore-view"),
+            View::Podcasts => stack.set_visible_child_name("podcasts-view"),
+            View::ShowDetails => {
+                stack.set_visible_child_name("show-details-view")
+            }
+            _ => unimplemented!(),
+        }
+        // let imp = self.imp();
+
+        // imp.
+    }
+
+    fn connect_signals(&self) {
+        self.imp()
+            .empty_view
+            .get()
+            .btn_explore()
+            .connect_clicked(clone!(@strong self as win => move |_button| {win.switch_view(View::Explore)}));
     }
 }
