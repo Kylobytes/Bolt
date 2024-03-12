@@ -24,7 +24,7 @@ use std::cell::RefCell;
 use adw::subclass::prelude::*;
 use gtk::{
     gio::{self, ListStore},
-    glib::{self, clone},
+    glib,
     prelude::*,
 };
 
@@ -86,5 +86,9 @@ impl Default for ExploreView {
 impl ExploreView {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn back_button(&self) -> gtk::Button {
+        self.imp().back_button.get()
     }
 }

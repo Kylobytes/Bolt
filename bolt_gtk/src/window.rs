@@ -18,6 +18,8 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use std::cell::RefCell;
+
 use adw::subclass::prelude::*;
 use gtk::{
     gio,
@@ -31,6 +33,7 @@ use crate::{
     show_details::view::ShowDetails,
 };
 
+#[derive(Clone, Debug)]
 enum View {
     Loading,
     Empty,
@@ -63,6 +66,7 @@ mod imp {
         pub show_details_view: TemplateChild<ShowDetails>,
         #[template_child]
         pub podcasts_stack: TemplateChild<adw::ViewStack>,
+        pub previous_view: RefCell<Option<View>>,
     }
 
     #[glib::object_subclass]
@@ -117,16 +121,26 @@ impl BoltWindow {
             }
             _ => unimplemented!(),
         }
-        // let imp = self.imp();
-
-        // imp.
     }
 
     fn connect_signals(&self) {
-        self.imp()
-            .empty_view
-            .get()
-            .btn_explore()
-            .connect_clicked(clone!(@strong self as win => move |_button| {win.switch_view(View::Explore)}));
+        let imp = self.imp();
+
+        imp.empty_view.get().btn_explore().connect_clicked(
+            clone!(@weak self as win => move |_button| {
+                win.imp().previous_view.replace(Some(View::Empty));
+                win.switch_view(View::Explore);
+            }),
+        );
+
+        imp.explore_view.get().back_button().connect_clicked(
+            clone!(@weak self as win => move |_button| {
+                if let Some(ref previous_view) = *win.imp().previous_view.borrow() {
+                    win.switch_view(previous_view.clone());
+                } else {
+                    win.switch_view(View::Podcasts);
+                };
+            }),
+        );
     }
 }
