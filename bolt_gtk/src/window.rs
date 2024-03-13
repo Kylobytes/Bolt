@@ -104,6 +104,7 @@ impl BoltWindow {
             .build();
 
         window.connect_signals();
+        window.setup_explore();
 
         window
     }
@@ -124,22 +125,32 @@ impl BoltWindow {
     }
 
     fn connect_signals(&self) {
-        let imp = self.imp();
-
-        imp.empty_view.get().btn_explore().connect_clicked(
+        self.imp().empty_view.get().btn_explore().connect_clicked(
             clone!(@weak self as win => move |_button| {
                 win.imp().previous_view.replace(Some(View::Empty));
                 win.switch_view(View::Explore);
             }),
         );
+    }
 
-        imp.explore_view.get().back_button().connect_clicked(
+    fn setup_explore(&self) {
+        let explore_view = self.imp().explore_view.get();
+
+        explore_view.back_button().connect_clicked(
             clone!(@weak self as win => move |_button| {
                 if let Some(ref previous_view) = *win.imp().previous_view.borrow() {
                     win.switch_view(previous_view.clone());
                 } else {
                     win.switch_view(View::Podcasts);
                 };
+            }),
+        );
+
+        explore_view.search_entry().connect_search_changed(
+            clone!(@weak explore_view => move |entry| {
+                if entry.text().len() > 0 {
+                    explore_view.load_search_results(&entry.text().to_string());
+                }
             }),
         );
     }

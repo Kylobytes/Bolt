@@ -13,10 +13,9 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *https://api.podcastindex.org/api/1.0/recent/feeds?pretty
+ *
  * You should have received a copy of the GNU General Public License
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 use std::cell::RefCell;
@@ -24,9 +23,11 @@ use std::cell::RefCell;
 use adw::subclass::prelude::*;
 use gtk::{
     gio::{self, ListStore},
-    glib,
+    glib::{self, clone},
     prelude::*,
 };
+
+use crate::{api::podcasts, runtime};
 
 mod imp {
     use super::*;
@@ -90,5 +91,17 @@ impl ExploreView {
 
     pub fn back_button(&self) -> gtk::Button {
         self.imp().back_button.get()
+    }
+
+    pub fn search_entry(&self) -> gtk::SearchEntry {
+        self.imp().search_entry.get()
+    }
+
+    pub fn load_search_results(&self, query: &str) {
+        let query = query.to_string();
+
+        runtime().spawn(clone!(@strong query => async move {
+            let response = podcasts::search(&query).await;
+        }));
     }
 }

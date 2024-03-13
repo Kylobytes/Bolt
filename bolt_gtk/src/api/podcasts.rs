@@ -1,4 +1,4 @@
-/* mod.rs
+/* podcasts.rs
  *
  * Copyright 2024 Kent Delante
  *
@@ -16,21 +16,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
-pub mod object;
-pub mod repository;
+use super::{build_url, initiate_request, search::response::SearchResponse};
 
-#[derive(Default, Debug)]
-pub struct Episode {
-    pub id: i64,
-    pub title: Option<String>,
-    pub description: Option<String>,
-    pub url: Option<String>,
-    pub image_url: Option<String>,
-    pub media_url: String,
-    pub queued: i64,
-    pub date_published: i64,
-    pub show_id: i64,
+pub async fn search(query: &str) -> SearchResponse {
+    let endpoint = format!("/search/byterm?q={query}");
+    let url = build_url(&endpoint);
+    let client = initiate_request(&url);
+
+    client
+        .send()
+        .await
+        .unwrap()
+        .json::<SearchResponse>()
+        .await
+        .unwrap()
 }
