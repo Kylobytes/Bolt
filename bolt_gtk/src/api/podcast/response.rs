@@ -22,40 +22,7 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
-#[derive(Default, Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Feed {
-    pub id: i64,
-    pub podcast_guid: String,
-    pub title: String,
-    pub url: String,
-    pub original_url: String,
-    pub link: String,
-    pub description: String,
-    pub author: String,
-    pub owner_name: String,
-    pub image: String,
-    pub artwork: String,
-    pub last_update_time: i64,
-    pub last_crawl_time: i64,
-    pub last_parse_time: i64,
-    pub last_good_http_status_time: i64,
-    pub last_http_status: i64,
-    pub content_type: String,
-    pub itunes_id: Option<i64>,
-    pub generator: String,
-    pub language: String,
-    pub explicit: bool,
-    pub medium: String,
-    pub dead: i64,
-    pub chash: String,
-    pub episode_count: i64,
-    pub crawl_errors: i64,
-    pub parse_errors: i64,
-    pub categories: HashMap<String, String>,
-    pub locked: u8,
-    pub image_url_hash: i64,
-}
+use super::Feed;
 
 #[derive(Default, Debug, Deserialize)]
 pub struct PodcastResponse {

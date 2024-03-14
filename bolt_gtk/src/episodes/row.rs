@@ -146,7 +146,7 @@ impl EpisodeRow {
             &show_id.to_string(),
         );
 
-        let show_image_path = storage::show_path(&show_id.to_string());
+        let show_image_path = storage::podcast_path(&show_id.to_string());
         let episode_image_exists = episode_image_path.as_path().exists()
             && std::fs::read_dir(&episode_image_path)
                 .expect(
@@ -213,7 +213,8 @@ impl EpisodeRow {
 
     fn load_show_image(&self, show_id: &i64) {
         let picture_container = self.imp().picture_container.get();
-        let Some(show_image_path) = storage::show_image(&show_id.to_string())
+        let Some(show_image_path) =
+            storage::podcast_image(&show_id.to_string())
         else {
             return;
         };

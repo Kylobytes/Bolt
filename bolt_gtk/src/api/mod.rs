@@ -1,5 +1,4 @@
 pub mod authentication;
-pub mod connection;
 pub mod episode;
 pub mod podcast;
 pub mod podcasts;

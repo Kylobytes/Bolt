@@ -21,7 +21,7 @@
 use sha1::{Digest, Sha1};
 use time::OffsetDateTime;
 
-use crate::config::{API_KEY, API_SECRET, BASE_URL, USER_AGENT};
+use crate::config::{API_KEY, API_SECRET, USER_AGENT};
 
 #[derive(Debug)]
 pub struct RequestHeaders {

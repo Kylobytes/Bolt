@@ -120,7 +120,6 @@ impl BoltWindow {
             View::ShowDetails => {
                 stack.set_visible_child_name("show-details-view")
             }
-            _ => unimplemented!(),
         }
     }
 
