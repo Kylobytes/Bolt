@@ -1,4 +1,4 @@
-/* show.rs
+/* podcast.rs
  *
  * Copyright 2024 Kent Delante
  *
@@ -21,7 +21,7 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "shows")]
+#[sea_orm(table_name = "podcasts")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i64,

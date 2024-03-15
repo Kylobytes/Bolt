@@ -21,9 +21,8 @@
 use sea_orm::{EntityTrait, PaginatorTrait, QuerySelect};
 
 use bolt_entity::{
-    episode,
-    prelude::{Episode, Show},
-    show,
+    episode, podcast,
+    prelude::{Episode, Podcast},
 };
 
 use crate::data::database;
@@ -34,16 +33,16 @@ pub async fn load_episode_count() -> u64 {
     Episode::find()
         .count(connection)
         .await
-        .expect("Failed to get show count")
+        .expect("Failed to get podcast count")
 }
 
 pub async fn load_episodes(
     offset: &u64,
-) -> Vec<(episode::Model, Option<show::Model>)> {
+) -> Vec<(episode::Model, Option<podcast::Model>)> {
     let connection = database::connect().await;
 
     Episode::find()
-        .find_also_related(Show)
+        .find_also_related(Podcast)
         .limit(20)
         .offset(Some(offset.to_owned()))
         .all(connection)

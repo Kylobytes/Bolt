@@ -1,6 +1,6 @@
 use sea_orm_migration::prelude::*;
 
-use crate::m20240223_123539_create_shows_table::Show;
+use crate::m20240223_123539_create_podcasts_table::Podcast;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -36,11 +36,11 @@ impl MigrationTrait for Migration {
                             .big_integer()
                             .not_null(),
                     )
-                    .col(ColumnDef::new(Episode::ShowId).big_integer())
+                    .col(ColumnDef::new(Episode::PodcastId).big_integer())
                     .foreign_key(
                         ForeignKey::create()
-                            .from(Episode::Table, Episode::ShowId)
-                            .to(Show::Table, Show::Id)
+                            .from(Episode::Table, Episode::PodcastId)
+                            .to(Podcast::Table, Podcast::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
@@ -68,5 +68,5 @@ enum Episode {
     MediaUrl,
     Queued,
     DatePublished,
-    ShowId,
+    PodcastId,
 }

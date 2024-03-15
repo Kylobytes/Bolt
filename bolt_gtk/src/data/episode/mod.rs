@@ -32,5 +32,5 @@ pub struct Episode {
     pub media_url: String,
     pub queued: i64,
     pub date_published: i64,
-    pub show_id: i64,
+    pub podcast_id: i64,
 }

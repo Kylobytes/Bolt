@@ -32,24 +32,24 @@ pub struct Model {
     pub media_url: String,
     pub queued: bool,
     pub date_published: i64,
-    pub show_id: i64,
+    pub podcast_id: i64,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::show::Entity",
-        from = "Column::ShowId",
-        to = "super::show::Column::Id",
+        belongs_to = "super::podcast::Entity",
+        from = "Column::PodcastId",
+        to = "super::podcast::Column::Id",
         on_update = "Cascade",
         on_delete = "Cascade"
     )]
-    Show,
+    Podcast,
 }
 
-impl Related<super::show::Entity> for Entity {
+impl Related<super::podcast::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Show.def()
+        Relation::Podcast.def()
     }
 }
 

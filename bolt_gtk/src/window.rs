@@ -34,7 +34,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-enum View {
+pub enum View {
     Loading,
     Empty,
     Explore,

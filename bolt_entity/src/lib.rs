@@ -21,4 +21,4 @@
 pub mod prelude;
 
 pub mod episode;
-pub mod show;
+pub mod podcast;

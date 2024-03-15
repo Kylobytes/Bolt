@@ -51,7 +51,7 @@ mod imp {
         #[property(get, construct_only)]
         date_published: Cell<i64>,
         #[property(get, construct_only)]
-        show_id: Cell<i64>,
+        podcast_id: Cell<i64>,
     }
 
     #[glib::object_subclass]
@@ -91,7 +91,7 @@ impl From<ApiEpisode> for EpisodeObject {
             .property("media-url", episode.enclosure_url)
             .property("queued", 0)
             .property("date-published", episode.date_published)
-            .property("show-id", episode.feed_id)
+            .property("podcast-id", episode.feed_id)
             .build()
     }
 }
@@ -107,7 +107,7 @@ impl From<Episode> for EpisodeObject {
             .property("media-url", episode.media_url)
             .property("queued", episode.queued)
             .property("date-published", episode.date_published)
-            .property("show-id", episode.show_id)
+            .property("podcast-id", episode.podcast_id)
             .build()
     }
 }
@@ -123,7 +123,7 @@ impl From<episode::Model> for EpisodeObject {
             .property("media-url", episode.media_url)
             .property("queued", episode.queued)
             .property("date-published", episode.date_published)
-            .property("show-id", episode.show_id)
+            .property("podcast-id", episode.podcast_id)
             .build()
     }
 }

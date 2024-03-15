@@ -1,4 +1,4 @@
-/* mod.rs
+/* repository.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -18,14 +18,28 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod object;
-pub mod repository;
+use bolt_entity::podcast::{Entity, Model};
+use sea_orm::{EntityTrait, PaginatorTrait};
 
-#[derive(Clone, Debug, Default)]
-pub struct Show {
-    pub id: i64,
-    pub name: String,
-    pub description: Option<String>,
-    pub url: Option<String>,
-    pub image_url: Option<String>,
+use crate::data::database;
+
+pub async fn load_show_count() -> u64 {
+    let connection = database::connect().await;
+
+    Entity::find()
+        .count(connection)
+        .await
+        .expect("Failed to get show count")
+}
+
+pub async fn load_subscribed_ids() -> Vec<i64> {
+    let connection = database::connect().await;
+
+    Entity::find()
+        .all(connection)
+        .await
+        .expect("Failed to load shows")
+        .into_iter()
+        .map(|show: Model| show.id)
+        .collect()
 }

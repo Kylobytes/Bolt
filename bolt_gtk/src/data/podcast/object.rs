@@ -1,4 +1,4 @@
-/* show.rs
+/* object.rs
  *
  * Copyright 2023 Kent Delante
  *
@@ -23,45 +23,45 @@ use std::cell::RefCell;
 use adw::prelude::*;
 use gtk::glib::{self, subclass::prelude::*, Properties};
 
-use crate::{api::search::result::SearchResult, data::show::Show};
+use crate::{api::search::result::SearchResult, data::podcast::Podcast};
 
 mod imp {
     use super::*;
 
     #[derive(Debug, Default, Properties)]
-    #[properties(wrapper_type = super::ShowObject)]
-    pub struct ShowObject {
+    #[properties(wrapper_type = super::PodcastObject)]
+    pub struct PodcastObject {
         #[property(name = "id", get, construct_only, type = i64, member = id)]
         #[property(name = "name", get, construct_only, type = Option<String>, member = name)]
         #[property(name = "description", get, construct_only, type = Option<String>, member = description)]
         #[property(name = "url", get, construct_only, type = Option<String>, member = url)]
         #[property(name = "image-url", get, construct_only, type = Option<String>, member = image_url)]
-        data: RefCell<Show>,
+        data: RefCell<Podcast>,
         #[property(get, set)]
         subscribed: RefCell<bool>,
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for ShowObject {
-        const NAME: &'static str = "ShowObject";
-        type Type = super::ShowObject;
+    impl ObjectSubclass for PodcastObject {
+        const NAME: &'static str = "PodcastObject";
+        type Type = super::PodcastObject;
     }
 
     #[glib::derived_properties]
-    impl ObjectImpl for ShowObject {}
+    impl ObjectImpl for PodcastObject {}
 }
 
 glib::wrapper! {
-    pub struct ShowObject(ObjectSubclass<imp::ShowObject>);
+    pub struct PodcastObject(ObjectSubclass<imp::PodcastObject>);
 }
 
-impl Default for ShowObject {
+impl Default for PodcastObject {
     fn default() -> Self {
         glib::Object::builder::<Self>().build()
     }
 }
 
-impl From<SearchResult> for ShowObject {
+impl From<SearchResult> for PodcastObject {
     fn from(show: SearchResult) -> Self {
         glib::Object::builder::<Self>()
             .property("id", show.id)
@@ -80,7 +80,7 @@ impl From<SearchResult> for ShowObject {
     }
 }
 
-impl ShowObject {
+impl PodcastObject {
     pub fn mark_subscribed(&self) {
         self.set_property("subscribed", true);
     }

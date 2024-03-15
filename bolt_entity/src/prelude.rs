@@ -19,4 +19,4 @@
  */
 
 pub use crate::episode::Entity as Episode;
-pub use crate::show::Entity as Show;
+pub use crate::podcast::Entity as Podcast;

@@ -9,20 +9,20 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Show::Table)
+                    .table(Podcast::Table)
                     .if_not_exists()
                     .col(
-                        ColumnDef::new(Show::Id)
+                        ColumnDef::new(Podcast::Id)
                             .big_integer()
                             .integer()
                             .not_null()
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Show::Name).string().not_null())
-                    .col(ColumnDef::new(Show::Description).string())
-                    .col(ColumnDef::new(Show::Url).string().not_null())
-                    .col(ColumnDef::new(Show::ImageUrl).string().not_null())
+                    .col(ColumnDef::new(Podcast::Name).string().not_null())
+                    .col(ColumnDef::new(Podcast::Description).string())
+                    .col(ColumnDef::new(Podcast::Url).string().not_null())
+                    .col(ColumnDef::new(Podcast::ImageUrl).string().not_null())
                     .to_owned(),
             )
             .await
@@ -30,14 +30,14 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(Show::Table).to_owned())
+            .drop_table(Table::drop().table(Podcast::Table).to_owned())
             .await
     }
 }
 
 #[derive(DeriveIden)]
-pub enum Show {
-    #[sea_orm(iden = "shows")]
+pub enum Podcast {
+    #[sea_orm(iden = "podcasts")]
     Table,
     Id,
     Name,

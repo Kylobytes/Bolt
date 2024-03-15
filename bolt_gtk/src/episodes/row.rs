@@ -113,7 +113,7 @@ impl From<EpisodeObject> for EpisodeRow {
         }
 
         row.imp().episode_id.replace(episode.id());
-        row.imp().show_id.replace(episode.show_id());
+        row.imp().show_id.replace(episode.podcast_id());
         row.load_image();
 
         row
