@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <template class="BoltWindow" parent="AdwApplicationWindow">
+    <style>
+      <class name="main-window"/>
+    </style>
+    <property name="default-width">800</property>
+    <property name="default-height">600</property>
+    <property name="height-request">400</property>
+    <property name="width-request">300</property>
+    <property name="handle-menubar-accel">true</property>
+    <property name="resizable">true</property>
+    <child>
+      <object class="AdwBreakpoint">
+        <condition>max-width: 500sp</condition>
+        <setter object="podcasts_header_bar" property="title-widget"></setter>
+        <setter object="podcasts_switcher_bar" property="reveal">true</setter>
+      </object>
+    </child>
+    <child>
+      <object class="GtkStack" id="main_stack">
+        <child>
+          <object class="GtkStackPage">
+            <property name="name">empty-view</property>
+            <property name="title" translatable="true">Empty</property>
+            <property name="child">
+              <object class="EmptyView" id="empty_view"></object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkStackPage">
+            <property name="name">explore-view</property>
+            <property name="title" translatable="true">Explore View</property>
+            <property name="child">
+              <object class="ExploreView" id="explore_view"></object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkStackPage">
+            <property name="name">show-details-view</property>
+            <property name="title" translatable="true">Show Details View</property>
+            <property name="child">
+              <object class="ShowDetails" id="show_details_view"></object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkStackPage">
+            <property name="name">podcasts-view</property>
+            <property name="title" translatable="true">Podcasts View</property>
+            <property name="child">
+              <object class="AdwToolbarView" id="podcasts_view_stack">
+                <child type="top">
+                  <object class="AdwHeaderBar" id="podcasts_header_bar">
+                    <property name="centering-policy">1</property>
+                    <property name="title-widget">
+                      <object class="AdwViewSwitcher" id="podcasts_view_switcher">
+                        <property name="stack">podcasts_stack</property>
+                        <property name="policy">1</property>
+                      </object>
+                    </property>
+                    <child>
+                      <object class="GtkButton" id="btn_explore">
+                        <property name="icon-name">system-search-symbolic</property>
+                        <property name="tooltip-text" translatable="true">Search Podcasts</property>
+                      </object>
+                    </child>
+                    <child type="end">
+                      <object class="GtkButton" id="btn_refresh">
+                        <property name="icon-name">view-refresh-symbolic</property>
+                        <property name="tooltip-text" translatable="true">Refresh Episodes</property>
+                        <property name="visible">false</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <property name="content">
+                  <object class="AdwViewStack" id="podcasts_stack">
+                    <property name="vexpand">true</property>
+                    <property name="hexpand">true</property>
+                    <child>
+                      <object class="AdwViewStackPage" id="podcasts_queue">
+                        <property name="name">queue</property>
+                        <property name="title" translatable="true">Queue</property>
+                        <property name="icon-name">view-list-symbolic</property>
+                        <property name="child">
+                          <object class="QueueView" id="queue_view"></object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwViewStackPage">
+                        <property name="name">episodes</property>
+                        <property name="title" translatable="true">Episodes</property>
+                        <property name="icon-name">headphones-symbolic</property>
+                        <property name="child">
+                          <object class="EpisodesView" id="episodes_view"></object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwViewStackPage">
+                        <property name="name">shows</property>
+                        <property name="title" translatable="true">Shows</property>
+                        <property name="icon-name">microphone-symbolic</property>
+                        <property name="child">
+                          <object class="AdwStatusPage">
+                            <property name="title" translatable="true">Shows</property>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                  </object>
+                </property>
+                <child type="bottom">
+                  <object class="AdwViewSwitcherBar" id="podcasts_switcher_bar">
+                    <property name="stack">podcasts_stack</property>
+                  </object>
+                </child>
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkStackPage">
+            <property name="name">loading-view</property>
+            <property name="title" translatable="true">Loading</property>
+            <property name="child">
+              <object class="GtkBox" id="loading_view">
+                <property name="orientation">1</property>
+                <property name="hexpand">true</property>
+                <property name="vexpand">true</property>
+                <property name="halign">3</property>
+                <property name="valign">3</property>
+                <child>
+                  <object class="GtkSpinner">
+                    <property name="spinning">true</property>
+                  </object>
+                </child>
+              </object>
+            </property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+  <menu id="primary_menu">
+    <section>
+      <item>
+        <attribute name="label" translatable="true">Preferences</attribute>
+        <attribute name="action">app.preferences</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="true">Keyboard Shortcuts</attribute>
+        <attribute name="action">win.show-help-overlay</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="true">About Bolt</attribute>
+        <attribute name="action">app.about</attribute>
+      </item>
+    </section>
+  </menu>
+</interface>

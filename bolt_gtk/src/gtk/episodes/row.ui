@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <template class="EpisodeRow" parent="GtkBox">
+    <property name="orientation">1</property>
+    <property name="hexpand">true</property>
+    <property name="vexpand">true</property>
+    <child>
+      <object class="GtkBox">
+        <property name="orientation">0</property>
+        <property name="hexpand">true</property>
+        <property name="vexpand">true</property>
+        <property name="margin-top">8</property>
+        <property name="margin-bottom">8</property>
+        <property name="margin-start">8</property>
+        <property name="margin-end">8</property>
+        <property name="spacing">12</property>
+        <child>
+          <object class="AdwClamp" id="picture_container">
+            <property name="orientation">0</property>
+            <property name="maximum-size">48</property>
+            <child>
+              <object class="AdwClamp">
+                <property name="orientation">1</property>
+                <property name="maximum-size">48</property>
+                <child>
+                  <object class="GtkPicture" id="picture">
+                    <style>
+                      <class name="episode-row-image"/>
+                    </style>
+                    <property name="can-shrink">true</property>
+                    <property name="content-fit">2</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkImage" id="image_missing_icon">
+            <property name="visible">false</property>
+            <property name="icon-name">image-missing-symbolic</property>
+            <property name="pixel-size">48</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="orientation">1</property>
+            <property name="hexpand">true</property>
+            <property name="vexpand">true</property>
+            <property name="valign">3</property>
+            <property name="halign">1</property>
+            <child>
+              <object class="GtkLabel" id="title">
+                <property name="wrap">true</property>
+                <property name="xalign">0</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="date">
+                <style>
+                  <class name="dim-label"/>
+                </style>
+                <property name="halign">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child type="end">
+          <object class="GtkBox">
+            <property name="orientation">1</property>
+            <property name="halign">2</property>
+            <property name="vexpand">true</property>
+            <property name="valign">3</property>
+            <child>
+              <object class="GtkButton" id="download_button">
+                <style>
+                  <class name="circular"/>
+                </style>
+                <property name="icon-name">folder-download-symbolic</property>
+                <property name="tooltip-text" translatable="true">Download and add to queue</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkProgressBar" id="progress_bar">
+        <style>
+          <class name="osd"/>
+        </style>
+        <property name="hexpand">true</property>
+        <property name="visible">false</property>
+      </object>
+    </child>
+  </template>
+</interface>

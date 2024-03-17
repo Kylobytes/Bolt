@@ -67,7 +67,6 @@
           rustfmt
 
           # glib/gtk deps
-          blueprint-compiler
           cairo
           gtk4
           libadwaita
