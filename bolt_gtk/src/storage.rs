@@ -34,8 +34,18 @@ pub fn podcast_path(id: &str) -> PathBuf {
     path
 }
 
+pub fn podcast_image_cache(id: &str) -> PathBuf {
+    let mut path = glib::user_cache_dir();
+    path.push(GETTEXT_PACKAGE);
+    path.push("images");
+    path.push("podcasts");
+    path.push(id);
+
+    path
+}
+
 pub fn podcast_image(id: &str) -> Option<PathBuf> {
-    let directory = podcast_path(id);
+    let directory = podcast_image_cache(id);
 
     let Ok(contents) = std::fs::read_dir(&directory) else {
         return None;

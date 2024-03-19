@@ -16,10 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-
-use std::cell::{Cell, RefCell};
 
 use gtk::{
     gio,
@@ -31,6 +28,7 @@ use gtk::{
 use crate::{runtime, storage};
 
 mod imp {
+
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
@@ -48,8 +46,6 @@ mod imp {
         pub description: TemplateChild<gtk::Label>,
         #[template_child]
         pub subscribe_button: TemplateChild<gtk::Button>,
-        pub podcast_id: Cell<u64>,
-        pub image_url: RefCell<Option<String>>,
     }
 
     #[glib::object_subclass]
@@ -89,6 +85,10 @@ impl ExploreCard {
         Self::default()
     }
 
+    pub fn subscribe_button(&self) -> gtk::Button {
+        self.imp().subscribe_button.get()
+    }
+
     pub fn set_name(&self, name: &str) {
         self.imp().name.set_text(name);
     }
@@ -97,64 +97,68 @@ impl ExploreCard {
         self.imp().description.set_text(content);
     }
 
-    pub fn set_podcast_id(&self, id: &u64) {
-        self.imp().podcast_id.set(id.to_owned());
-    }
-
-    pub fn set_image_url(&self, url: &str) {
-        self.imp().image_url.replace(Some(url.to_string()));
-    }
-
-    pub fn load_image(&self) {
-        let id = self.imp().podcast_id.get();
+    pub fn load_image(&self, id: &u64, image_url: &str) {
+        self.imp().picture.get().set_visible(false);
+        self.imp().image_missing_icon.get().set_visible(false);
+        self.imp().picture_spinner.get().set_visible(true);
 
         if let Some(image) = storage::podcast_image(&id.to_string()) {
             self.imp().picture.get().set_filename(Some(&image));
-            self.imp().picture_spinner.get().set_visible(false);
             self.imp().picture.get().set_visible(true);
+            self.imp().image_missing_icon.get().set_visible(false);
+            self.imp().picture_spinner.get().set_visible(false);
 
             return;
         }
 
-        let image_path = storage::podcast_path(&id.to_string());
-
-        let Some(ref image_url) = *self.imp().image_url.borrow() else {
-            self.imp().picture_spinner.get().set_visible(false);
-            self.imp().image_missing_icon.set_visible(true);
-
-            return;
-        };
-
+        let image_path = storage::podcast_image_cache(&id.to_string());
+        let image_link = image_url.to_string();
         let (sender, receiver) = async_channel::bounded(1);
 
-        runtime()
-            .spawn(clone!(@strong sender, @strong image_path, @strong image_url => async move {
-                let result = storage::save_image(&image_url, &image_path, "cover").await;
+        runtime().spawn(clone!(
+            @strong sender,
+            @strong image_path,
+            @strong image_link as image_url,
+            @strong id => async move {
+                let result = storage::save_image(
+                    &image_url,
+                    &image_path,
+                    "cover"
+                ).await;
 
                 let saved = match result {
                     Ok(_) => true,
                     _ => false
                 };
 
-                sender.send(saved).await.unwrap();
-            }));
+                sender.send(saved).await.unwrap()
+        }));
 
         glib::spawn_future_local(
             clone!(@weak self as view, @strong id => async move {
+                let picture_spinner = view.imp().picture_spinner.get();
+                let picture = view.imp().picture.get();
+                let image_missing_icon = view.imp().image_missing_icon.get();
+
                 while let Ok(saved) = receiver.recv().await {
-                    view.imp().picture_spinner.get().set_visible(false);
+                    picture_spinner.set_visible(false);
 
                     if saved {
-                        let Some(image) = storage::podcast_image(&id.to_string()) else {
-                            view.imp().image_missing_icon.set_visible(true);
+                        let Some(image) = storage::podcast_image(
+                            &id.to_string()
+                        ) else {
+                            image_missing_icon.set_visible(true);
+                            picture.set_visible(false);
 
                             return;
                         };
 
-                        view.imp().picture.get().set_filename(Some(&image));
-                        view.imp().picture.get().set_visible(true);
+                        picture.set_filename(Some(&image));
+                        picture.set_visible(true);
+                        image_missing_icon.set_visible(false);
                     } else {
-                        view.imp().image_missing_icon.set_visible(true);
+                        image_missing_icon.set_visible(true);
+                        picture.set_visible(false);
                     }
                 }
             }),

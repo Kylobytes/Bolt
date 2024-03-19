@@ -86,9 +86,10 @@ mod imp {
                     let card = ExploreCard::new();
                     card.set_name(&data.name());
                     card.set_description(&data.description());
-                    card.set_podcast_id(&data.id());
-                    card.set_image_url(&data.image_url());
-                    card.load_image();
+
+                    if !data.image_url().is_empty() {
+                        card.load_image(&data.id(), &data.image_url());
+                    }
 
                     card.into()
                 });
