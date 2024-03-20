@@ -45,6 +45,8 @@ mod imp {
         #[template_child]
         pub description: TemplateChild<gtk::Label>,
         #[template_child]
+        pub unsubscribe_button: TemplateChild<gtk::Button>,
+        #[template_child]
         pub subscribe_button: TemplateChild<gtk::Button>,
     }
 

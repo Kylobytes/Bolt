@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <interface>
-  <requires lib="gtk" version="4.0"/>
+  <requires lib="gtk" version="4.0" />
   <template class="ExploreCard" parent="GtkBox">
     <style>
-      <class name="explore-card"/>
-      <class name="card"/>
+      <class name="explore-card" />
+      <class name="card" />
     </style>
     <property name="orientation">1</property>
     <property name="vexpand">false</property>
@@ -36,7 +36,7 @@
                 <child>
                   <object class="GtkPicture" id="picture">
                     <style>
-                      <class name="card-image"/>
+                      <class name="card-image" />
                     </style>
                     <property name="vexpand">true</property>
                     <property name="hexpand">true</property>
@@ -56,8 +56,8 @@
                 <child>
                   <object class="GtkLabel" id="name">
                     <style>
-                      <class name="caption-heading"/>
-                      <class name="card-title"/>
+                      <class name="caption-heading" />
+                      <class name="card-title" />
                     </style>
                     <property name="wrap">true</property>
                     <property name="max-width-chars">80</property>
@@ -69,8 +69,8 @@
                 <child>
                   <object class="GtkLabel" id="description">
                     <style>
-                      <class name="caption"/>
-                      <class name="dim-label"/>
+                      <class name="caption" />
+                      <class name="dim-label" />
                     </style>
                     <property name="wrap">true</property>
                     <property name="max-width-chars">80</property>
@@ -81,9 +81,23 @@
                   </object>
                 </child>
                 <child>
+                  <object class="GtkButton" id="unsubscribe_button">
+                    <style>
+                      <class name="pill" />
+                      <class name="destructive-action" />
+                    </style>
+                    <property name="label" translatable="true">Unsubscribe</property>
+                    <property name="halign">2</property>
+                    <property name="margin-end">16</property>
+                    <property name="margin-top">16</property>
+                    <property name="margin-bottom">8</property>
+                    <property name="visible">false</property>
+                  </object>
+                </child>
+                <child>
                   <object class="GtkButton" id="subscribe_button">
                     <style>
-                      <class name="pill"/>
+                      <class name="pill" />
                     </style>
                     <property name="label" translatable="true">Subscribe</property>
                     <property name="halign">2</property>
