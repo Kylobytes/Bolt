@@ -21,7 +21,7 @@
 
 use std::cell::RefCell;
 
-use adw::{prelude::*, subclass::prelude::*};
+use adw::subclass::prelude::*;
 use gtk::{gio, glib};
 
 mod imp {

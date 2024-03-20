@@ -21,7 +21,7 @@
 
 use std::cell::{Cell, RefCell};
 
-use gtk::{gio, glib, prelude::*, subclass::prelude::*, ListStore};
+use gtk::{gio, glib, subclass::prelude::*, ListStore};
 
 mod imp {
     use super::*;
