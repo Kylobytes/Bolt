@@ -186,11 +186,14 @@ impl ExploreCard {
             sender.send(saved).await.unwrap()
         }));
 
+        let unsubscribe_button = self.imp().unsubscribe_button.get();
+
         glib::spawn_future_local(
-            clone!(@weak subscribe_button, @strong receiver => async move {
+            clone!(@weak subscribe_button, @weak unsubscribe_button, @strong receiver => async move {
                 while let Ok(saved) = receiver.recv().await {
                     if saved {
-                        subscribe_button.set_label("Subscribed");
+                        subscribe_button.set_visible(false);
+                        unsubscribe_button.set_visible(true);
                     } else {
                         subscribe_button.set_label("Subscribe");
                         subscribe_button.set_sensitive(true);
