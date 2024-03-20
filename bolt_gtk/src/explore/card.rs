@@ -25,7 +25,7 @@ use gtk::{
     subclass::prelude::*,
 };
 
-use crate::{runtime, storage};
+use crate::{data::podcast, runtime, storage};
 
 mod imp {
 
@@ -97,7 +97,7 @@ impl ExploreCard {
         self.imp().description.set_text(content);
     }
 
-    pub fn load_image(&self, id: &u64, image_url: &str) {
+    pub fn load_image(&self, id: &i64, image_url: &str) {
         self.imp().picture.get().set_visible(false);
         self.imp().image_missing_icon.get().set_visible(false);
         self.imp().picture_spinner.get().set_visible(true);
@@ -159,6 +159,39 @@ impl ExploreCard {
                     } else {
                         image_missing_icon.set_visible(true);
                         picture.set_visible(false);
+                    }
+                }
+            }),
+        );
+    }
+
+    pub fn subscribe(&self, id: &i64) {
+        let subscribe_button = self.subscribe_button();
+
+        subscribe_button.set_sensitive(false);
+        subscribe_button.set_label("Subscribing...");
+
+        let (sender, receiver) = async_channel::bounded::<bool>(1);
+
+        runtime().spawn(clone!(@strong id, @strong sender => async move {
+            let response = podcast::repository::subscribe(&id).await;
+
+            let saved = match response {
+                Ok(_) => true,
+                _ => false
+            };
+
+            sender.send(saved).await.unwrap()
+        }));
+
+        glib::spawn_future_local(
+            clone!(@weak subscribe_button, @strong receiver => async move {
+                while let Ok(saved) = receiver.recv().await {
+                    if saved {
+                        subscribe_button.set_label("Subscribed");
+                    } else {
+                        subscribe_button.set_label("Subscribe");
+                        subscribe_button.set_sensitive(true);
                     }
                 }
             }),

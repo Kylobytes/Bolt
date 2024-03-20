@@ -91,6 +91,14 @@ mod imp {
                         card.load_image(&data.id(), &data.image_url());
                     }
 
+                    let id = data.id().clone();
+
+                    card.subscribe_button().connect_clicked(
+                        clone!(@weak card, @strong id => move |_| {
+                            card.subscribe(&id);
+                        }),
+                    );
+
                     card.into()
                 });
             }

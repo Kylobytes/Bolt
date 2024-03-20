@@ -31,7 +31,7 @@ mod imp {
     #[properties(wrapper_type = super::CardData)]
     pub struct CardData {
         #[property(name = "id", get, construct_only)]
-        pub id: Cell<u64>,
+        pub id: Cell<i64>,
         #[property(get, construct_only)]
         pub name: RefCell<String>,
         #[property(get, construct_only)]

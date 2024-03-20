@@ -25,7 +25,7 @@ use serde::Deserialize;
 #[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchResult {
-    pub id: u64,
+    pub id: i64,
     pub podcast_guid: String,
     pub title: String,
     pub url: String,
@@ -36,23 +36,23 @@ pub struct SearchResult {
     pub owner_name: String,
     pub image: String,
     pub artwork: String,
-    pub last_update_time: u64,
-    pub last_crawl_time: u64,
-    pub last_parse_time: u64,
-    pub last_good_http_status_time: u64,
+    pub last_update_time: i64,
+    pub last_crawl_time: i64,
+    pub last_parse_time: i64,
+    pub last_good_http_status_time: i64,
     pub content_type: String,
-    pub itunes_id: Option<u64>,
+    pub itunes_id: Option<i64>,
     pub language: String,
     pub explicit: bool,
     #[serde(alias = "type")]
     pub show_type: u8,
     pub medium: String,
     pub dead: u8,
-    pub episode_count: u64,
-    pub crawl_errors: u64,
-    pub parse_errors: u64,
+    pub episode_count: i64,
+    pub crawl_errors: i64,
+    pub parse_errors: i64,
     pub categories: Option<HashMap<String, String>>,
-    pub image_url_hash: u64,
+    pub image_url_hash: i64,
     #[serde(alias = "newestItemPubdate")]
     pub newest_item_pub_date: i64,
 }

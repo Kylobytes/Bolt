@@ -18,10 +18,29 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use bolt_entity::podcast::{Entity, Model};
-use sea_orm::{EntityTrait, PaginatorTrait};
+use bolt_entity::podcast::{ActiveModel, Entity, Model};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue::Set, DbErr, EntityTrait, PaginatorTrait,
+};
 
-use crate::data::database;
+use crate::{api::podcasts, data::database};
+
+pub async fn subscribe(id: &i64) -> Result<Model, DbErr> {
+    let response = podcasts::by_feed_id(id).await;
+    let feed = response.feed;
+
+    let podcast = ActiveModel {
+        id: Set(feed.id),
+        name: Set(feed.title),
+        description: Set(Some(feed.description)
+            .filter(|description| !description.is_empty())),
+        url: Set(feed.url),
+        image_url: Set(feed.image),
+    };
+
+    let connection = database::connect().await;
+    podcast.insert(connection).await
+}
 
 pub async fn load_show_count() -> u64 {
     let connection = database::connect().await;

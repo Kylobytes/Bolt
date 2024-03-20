@@ -18,7 +18,10 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use super::{build_url, initiate_request, search::response::SearchResponse};
+use super::{
+    build_url, initiate_request, podcast::response::PodcastResponse,
+    search::response::SearchResponse,
+};
 
 pub async fn search(query: &str) -> SearchResponse {
     let endpoint = format!("/search/byterm?q={query}");
@@ -30,6 +33,20 @@ pub async fn search(query: &str) -> SearchResponse {
         .await
         .unwrap()
         .json::<SearchResponse>()
+        .await
+        .unwrap()
+}
+
+pub async fn by_feed_id(id: &i64) -> PodcastResponse {
+    let endpoint = format!("/podcasts/byfeedid?id={id}");
+    let url = build_url(&endpoint);
+    let client = initiate_request(&url);
+
+    client
+        .send()
+        .await
+        .unwrap()
+        .json::<PodcastResponse>()
         .await
         .unwrap()
 }
