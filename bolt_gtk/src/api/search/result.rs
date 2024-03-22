@@ -22,7 +22,7 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchResult {
     pub id: i64,

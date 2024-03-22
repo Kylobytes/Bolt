@@ -38,6 +38,8 @@ mod imp {
         pub description: RefCell<String>,
         #[property(get, construct_only)]
         pub image_url: RefCell<String>,
+        #[property(get, set)]
+        pub subscribed: Cell<bool>,
     }
 
     #[glib::object_subclass]
@@ -67,6 +69,7 @@ impl From<SearchResult> for CardData {
             .property("name", search_result.title)
             .property("description", search_result.description)
             .property("image-url", search_result.image)
+            .property("subscribed", false)
             .build()
     }
 }

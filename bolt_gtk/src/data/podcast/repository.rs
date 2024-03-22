@@ -18,9 +18,11 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use bolt_entity::podcast::{ActiveModel, Entity, Model};
+use bolt_entity::podcast::{ActiveModel, Column, Entity, Model};
+use bolt_migration::Expr;
 use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, DbErr, EntityTrait, PaginatorTrait,
+    QueryFilter,
 };
 
 use crate::{api::podcasts, data::database};
@@ -51,10 +53,11 @@ pub async fn load_show_count() -> u64 {
         .expect("Failed to get show count")
 }
 
-pub async fn load_subscribed_ids() -> Vec<i64> {
+pub async fn load_subscribed_ids(remote_ids: &Vec<i64>) -> Vec<i64> {
     let connection = database::connect().await;
 
     Entity::find()
+        .filter(Expr::col(Column::Id).is_in(remote_ids.clone()))
         .all(connection)
         .await
         .expect("Failed to load shows")

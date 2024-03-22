@@ -29,6 +29,7 @@ use gtk::{
 
 use crate::{
     api::{podcasts, search::response::SearchResponse},
+    data::podcast,
     runtime,
 };
 
@@ -91,6 +92,11 @@ mod imp {
                         card.load_image(&data.id(), &data.image_url());
                     }
 
+                    if data.subscribed() {
+                        card.subscribe_button().set_visible(false);
+                        card.unsubscribe_button().set_visible(true);
+                    }
+
                     let id = data.id().clone();
 
                     card.subscribe_button().connect_clicked(
@@ -145,18 +151,22 @@ impl ExploreView {
 
         runtime().spawn(clone!(@strong query, @strong sender => async move {
             let response: SearchResponse = podcasts::search(&query).await;
+            let remote_ids = response.feeds.clone().into_iter().map(|feed| feed.id).collect();
+            let subscribed_ids = podcast::repository::load_subscribed_ids(&remote_ids).await;
 
-            sender.send(response.feeds).await.unwrap();
+            sender.send((response.feeds, subscribed_ids)).await.unwrap();
         }));
 
         glib::spawn_future_local(
             clone!(@weak self as view, @strong receiver => async move {
-                while let Ok(search_results) = receiver.recv().await {
+                while let Ok(results_and_ids) = receiver.recv().await {
+                    let (search_results, subscribed_ids) = results_and_ids;
                     view.imp().explore_spinner.get().set_visible(false);
 
                     if search_results.is_empty() {
                         view.imp().search_results.set_visible(false);
                         view.imp().results_empty.get().set_visible(true);
+
 
                         return;
                     }
@@ -164,7 +174,16 @@ impl ExploreView {
                     if let Some(ref model) = *view.imp().model.borrow() {
                         let card_data: Vec<CardData> = search_results
                             .into_iter()
-                            .map(CardData::from)
+                            .map(|result| {
+                                let id = result.id;
+                                let data = CardData::from(result);
+
+                                if subscribed_ids.contains(&id) {
+                                    data.set_subscribed(true);
+                                }
+
+                                data
+                            })
                             .collect();
 
                         model.remove_all();

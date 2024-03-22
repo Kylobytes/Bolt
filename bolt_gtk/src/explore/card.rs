@@ -91,6 +91,10 @@ impl ExploreCard {
         self.imp().subscribe_button.get()
     }
 
+    pub fn unsubscribe_button(&self) -> gtk::Button {
+        self.imp().unsubscribe_button.get()
+    }
+
     pub fn set_name(&self, name: &str) {
         self.imp().name.set_text(name);
     }
