@@ -197,10 +197,45 @@ impl ExploreCard {
                 while let Ok(saved) = receiver.recv().await {
                     if saved {
                         subscribe_button.set_visible(false);
+                        unsubscribe_button.set_sensitive(true);
                         unsubscribe_button.set_visible(true);
                     } else {
                         subscribe_button.set_label("Subscribe");
                         subscribe_button.set_sensitive(true);
+                    }
+                }
+            }),
+        );
+    }
+
+    pub fn unsubscribe(&self, id: &i64) {
+        let (sender, receiver) = async_channel::bounded(1);
+        let unsubscribe_button = self.unsubscribe_button();
+
+        unsubscribe_button.set_sensitive(false);
+        unsubscribe_button.set_label("Unsubscribing...");
+
+        runtime().spawn(clone!(@strong id, @strong sender => async move {
+            podcast::repository::delete(&id).await;
+
+            sender.send(true).await.unwrap();
+        }));
+
+        glib::spawn_future_local(
+            clone!(@weak self as view, @strong receiver => async move {
+                while let Ok(success) = receiver.recv().await {
+                    if success {
+                        let subscribe_button = view.subscribe_button();
+                        let unsubscribe_button = view.unsubscribe_button();
+
+                        subscribe_button.set_visible(true);
+                        subscribe_button.set_sensitive(true);
+                        subscribe_button.set_label("Subscribe");
+                        unsubscribe_button.set_visible(false);
+                    } else {
+                        unsubscribe_button.set_label("Unsubscribe");
+                        unsubscribe_button.set_sensitive(true);
+                        unsubscribe_button.set_visible(true);
                     }
                 }
             }),

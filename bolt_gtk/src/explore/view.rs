@@ -105,6 +105,12 @@ mod imp {
                         }),
                     );
 
+                    card.unsubscribe_button().connect_clicked(
+                        clone!(@weak card, @strong id => move |_| {
+                            card.unsubscribe(&id);
+                        })
+                    );
+
                     card.into()
                 });
             }

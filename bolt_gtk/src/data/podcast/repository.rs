@@ -50,7 +50,7 @@ pub async fn load_show_count() -> u64 {
     Entity::find()
         .count(connection)
         .await
-        .expect("Failed to get show count")
+        .expect("Failed to get podcast count")
 }
 
 pub async fn load_subscribed_ids(remote_ids: &Vec<i64>) -> Vec<i64> {
@@ -60,8 +60,17 @@ pub async fn load_subscribed_ids(remote_ids: &Vec<i64>) -> Vec<i64> {
         .filter(Expr::col(Column::Id).is_in(remote_ids.clone()))
         .all(connection)
         .await
-        .expect("Failed to load shows")
+        .expect("Failed to load podcast")
         .into_iter()
         .map(|show: Model| show.id)
         .collect()
+}
+
+pub async fn delete(id: &i64) {
+    let connection = database::connect().await;
+
+    Entity::delete_by_id(id.clone())
+        .exec(connection)
+        .await
+        .expect("Failed to delete podcast");
 }
