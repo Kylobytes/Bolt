@@ -105,8 +105,15 @@ impl BoltWindow {
 
         window.connect_signals();
         window.setup_explore();
+        window.initialize();
 
         window
+    }
+
+    fn initialize(&self) {
+        let stack = self.imp().main_stack.get();
+
+        self.switch_view(View::Loading);
     }
 
     fn switch_view(&self, view: View) {

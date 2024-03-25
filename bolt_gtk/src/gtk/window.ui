@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <interface>
-  <requires lib="gtk" version="4.0"/>
+  <requires lib="gtk" version="4.0" />
   <template class="BoltWindow" parent="AdwApplicationWindow">
     <style>
-      <class name="main-window"/>
+      <class name="main-window" />
     </style>
     <property name="default-width">800</property>
     <property name="default-height">600</property>
@@ -129,17 +129,12 @@
             <property name="name">loading-view</property>
             <property name="title" translatable="true">Loading</property>
             <property name="child">
-              <object class="GtkBox" id="loading_view">
-                <property name="orientation">1</property>
+              <object class="AdwStatusPage">
                 <property name="hexpand">true</property>
                 <property name="vexpand">true</property>
-                <property name="halign">3</property>
-                <property name="valign">3</property>
-                <child>
-                  <object class="GtkSpinner">
-                    <property name="spinning">true</property>
-                  </object>
-                </child>
+                <property name="name">Loading</property>
+                <property name="title">Loading podcasts...</property>
+                <property name="icon-name">audio-input-microphone-symbolic</property>
               </object>
             </property>
           </object>
