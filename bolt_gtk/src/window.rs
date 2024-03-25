@@ -155,6 +155,13 @@ impl BoltWindow {
                 window.switch_view(View::Explore);
             }),
         );
+
+        self.imp().btn_explore.get().connect_clicked(
+            clone!(@weak self as window => move |_button| {
+                window.imp().previous_view.replace(Some(View::Podcasts));
+                window.switch_view(View::Explore);
+            }),
+        );
     }
 
     fn setup_explore(&self) {
