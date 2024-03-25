@@ -44,7 +44,7 @@ pub async fn subscribe(id: &i64) -> Result<Model, DbErr> {
     podcast.insert(connection).await
 }
 
-pub async fn load_show_count() -> u64 {
+pub async fn load_count() -> u64 {
     let connection = database::connect().await;
 
     Entity::find()

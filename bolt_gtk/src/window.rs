@@ -28,8 +28,8 @@ use gtk::{
 };
 
 use crate::{
-    empty::view::EmptyView, episodes::view::EpisodesView,
-    explore::view::ExploreView, queue_view::QueueView,
+    data::podcast, empty::view::EmptyView, episodes::view::EpisodesView,
+    explore::view::ExploreView, queue_view::QueueView, runtime,
     show_details::view::ShowDetails,
 };
 
@@ -111,9 +111,27 @@ impl BoltWindow {
     }
 
     fn initialize(&self) {
-        let stack = self.imp().main_stack.get();
-
         self.switch_view(View::Loading);
+
+        let (sender, receiver) = async_channel::bounded(1);
+
+        runtime().spawn(clone!(@strong sender => async move {
+            let count = podcast::repository::load_count().await;
+
+            sender.send(count).await.unwrap();
+        }));
+
+        glib::spawn_future_local(
+            clone!(@weak self as window, @strong receiver => async move {
+                while let Ok(count) = receiver.recv().await {
+                    if count > 0 {
+                        window.switch_view(View::Podcasts);
+                    } else {
+                        window.switch_view(View::Empty);
+                    }
+                }
+            }),
+        );
     }
 
     fn switch_view(&self, view: View) {
@@ -132,9 +150,9 @@ impl BoltWindow {
 
     fn connect_signals(&self) {
         self.imp().empty_view.get().btn_explore().connect_clicked(
-            clone!(@weak self as win => move |_button| {
-                win.imp().previous_view.replace(Some(View::Empty));
-                win.switch_view(View::Explore);
+            clone!(@weak self as window => move |_button| {
+                window.imp().previous_view.replace(Some(View::Empty));
+                window.switch_view(View::Explore);
             }),
         );
     }
@@ -143,11 +161,11 @@ impl BoltWindow {
         let explore_view = self.imp().explore_view.get();
 
         explore_view.back_button().connect_clicked(
-            clone!(@weak self as win => move |_button| {
-                if let Some(ref previous_view) = *win.imp().previous_view.borrow() {
-                    win.switch_view(previous_view.clone());
+            clone!(@weak self as window => move |_button| {
+                if let Some(ref previous_view) = *window.imp().previous_view.borrow() {
+                    window.switch_view(previous_view.clone());
                 } else {
-                    win.switch_view(View::Podcasts);
+                    window.switch_view(View::Podcasts);
                 };
             }),
         );
