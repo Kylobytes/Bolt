@@ -18,7 +18,10 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use bolt_entity::podcast::{ActiveModel, Column, Entity, Model};
+use bolt_entity::{
+    episode,
+    podcast::{ActiveModel, Column, Entity, Model},
+};
 use bolt_migration::Expr;
 use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, DbErr, EntityTrait, PaginatorTrait,
@@ -68,6 +71,12 @@ pub async fn load_subscribed_ids(remote_ids: &Vec<i64>) -> Vec<i64> {
 
 pub async fn delete(id: &i64) {
     let connection = database::connect().await;
+
+    episode::Entity::delete_many()
+        .filter(Expr::col(episode::Column::PodcastId).eq(id.clone()))
+        .exec(connection)
+        .await
+        .expect("Failed to delete related episodes");
 
     Entity::delete_by_id(id.clone())
         .exec(connection)
