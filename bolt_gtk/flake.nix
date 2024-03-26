@@ -33,7 +33,6 @@
             rustc
 
             appstream-glib
-            blueprint-compiler
             desktop-file-utils
             gtk4
             libadwaita
