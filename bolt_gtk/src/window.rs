@@ -18,8 +18,6 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::cell::RefCell;
-
 use adw::subclass::prelude::*;
 use gtk::{
     gio,
@@ -66,7 +64,6 @@ mod imp {
         pub show_details_view: TemplateChild<ShowDetails>,
         #[template_child]
         pub podcasts_stack: TemplateChild<adw::ViewStack>,
-        pub previous_view: RefCell<Option<View>>,
     }
 
     #[glib::object_subclass]
@@ -151,14 +148,12 @@ impl BoltWindow {
     fn connect_signals(&self) {
         self.imp().empty_view.get().btn_explore().connect_clicked(
             clone!(@weak self as window => move |_button| {
-                window.imp().previous_view.replace(Some(View::Empty));
                 window.switch_view(View::Explore);
             }),
         );
 
         self.imp().btn_explore.get().connect_clicked(
             clone!(@weak self as window => move |_button| {
-                window.imp().previous_view.replace(Some(View::Podcasts));
                 window.switch_view(View::Explore);
             }),
         );
@@ -169,11 +164,7 @@ impl BoltWindow {
 
         explore_view.back_button().connect_clicked(
             clone!(@weak self as window => move |_button| {
-                if let Some(ref previous_view) = *window.imp().previous_view.borrow() {
-                    window.switch_view(previous_view.clone());
-                } else {
-                    window.switch_view(View::Podcasts);
-                };
+                window.return_from_explore();
             }),
         );
 
@@ -181,6 +172,28 @@ impl BoltWindow {
             clone!(@weak explore_view => move |entry| {
                 if entry.text().len() > 0 {
                     explore_view.load_search_results(&entry.text().to_string());
+                }
+            }),
+        );
+    }
+
+    fn return_from_explore(&self) {
+        let (sender, receiver) = async_channel::bounded(1);
+
+        runtime().spawn(clone!(@strong sender => async move {
+            let podcast_count = podcast::repository::load_count().await;
+
+            sender.send(podcast_count).await.unwrap();
+        }));
+
+        glib::spawn_future_local(
+            clone!(@weak self as window, @strong receiver => async move {
+                while let Ok(podcast_count) = receiver.recv().await {
+                    if podcast_count > 0 {
+                        window.switch_view(View::Podcasts);
+                    } else {
+                        window.switch_view(View::Empty);
+                    }
                 }
             }),
         );

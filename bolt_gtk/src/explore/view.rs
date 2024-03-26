@@ -108,7 +108,7 @@ mod imp {
                     card.unsubscribe_button().connect_clicked(
                         clone!(@weak card, @strong id => move |_| {
                             card.unsubscribe(&id);
-                        })
+                        }),
                     );
 
                     card.into()
@@ -172,7 +172,6 @@ impl ExploreView {
                     if search_results.is_empty() {
                         view.imp().search_results.set_visible(false);
                         view.imp().results_empty.get().set_visible(true);
-
 
                         return;
                     }
