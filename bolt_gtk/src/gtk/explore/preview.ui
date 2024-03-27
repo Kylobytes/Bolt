@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <interface>
   <requires lib="gtk" version="4.0" />
-  <template class="ShowDetails" parent="AdwBin">
+  <template class="Preview" parent="AdwBin">
     <property name="hexpand">true</property>
     <property name="vexpand">true</property>
     <child>
@@ -118,10 +118,10 @@
                     </child>
                     <child>
                       <object class="AdwClamp">
-                        <property name="orientation">horizontal</property>
+                        <property name="orientation">vertical</property>
                         <property name="maximum-size">800</property>
                         <child>
-                          <object class="GtkListBox" id="podcasts">
+                          <object class="GtkListBox" id="episodes">
                             <style>
                               <class name="boxed-list" />
                             </style>

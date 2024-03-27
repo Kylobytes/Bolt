@@ -10,14 +10,15 @@
     <file preprocess="xml-stripblanks" alias="microphone-symbolic.svg">assets/icons/microphone-symbolic.svg</file>
   </gresource>
   <gresource prefix="/com/kylobytes/Bolt">
+    <file preprocess="xml-stripblanks">gtk/empty/view.ui</file>
     <file preprocess="xml-stripblanks">gtk/episodes/row.ui</file>
     <file preprocess="xml-stripblanks">gtk/episodes/view.ui</file>
-    <file preprocess="xml-stripblanks">gtk/explore/view.ui</file>
     <file preprocess="xml-stripblanks">gtk/explore/card.ui</file>
-    <file preprocess="xml-stripblanks">gtk/show-details/view.ui</file>
-    <file preprocess="xml-stripblanks">gtk/show-details/episode-row.ui</file>
-    <file preprocess="xml-stripblanks">gtk/empty/view.ui</file>
+    <file preprocess="xml-stripblanks">gtk/explore/preview.ui</file>
+    <file preprocess="xml-stripblanks">gtk/explore/view.ui</file>
     <file preprocess="xml-stripblanks">gtk/help-overlay.ui</file>
+    <file preprocess="xml-stripblanks">gtk/show-details/episode-row.ui</file>
+    <file preprocess="xml-stripblanks">gtk/show-details/view.ui</file>
     <file preprocess="xml-stripblanks">gtk/queue-view.ui</file>
     <file preprocess="xml-stripblanks">gtk/window.ui</file>
     <file alias="style.css">gtk/style.css</file>
