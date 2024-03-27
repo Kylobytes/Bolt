@@ -149,7 +149,7 @@ impl ExploreView {
     pub fn load_search_results(&self, query: &str) {
         self.imp().results_empty.get().set_visible(false);
         self.imp().welcome.get().set_visible(false);
-        self.imp().explore_spinner.get().set_visible(false);
+        self.imp().explore_spinner.get().set_visible(true);
 
         let query = query.to_string();
 
