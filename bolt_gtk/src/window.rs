@@ -37,10 +37,13 @@ pub enum View {
     Empty,
     Explore,
     Podcasts,
+    Preview,
     ShowDetails,
 }
 
 mod imp {
+    use crate::explore::preview::Preview;
+
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
@@ -62,6 +65,8 @@ mod imp {
         pub episodes_view: TemplateChild<EpisodesView>,
         #[template_child]
         pub show_details_view: TemplateChild<ShowDetails>,
+        #[template_child]
+        pub preview: TemplateChild<Preview>,
         #[template_child]
         pub podcasts_stack: TemplateChild<adw::ViewStack>,
     }
@@ -139,6 +144,7 @@ impl BoltWindow {
             View::Empty => stack.set_visible_child_name("empty-view"),
             View::Explore => stack.set_visible_child_name("explore-view"),
             View::Podcasts => stack.set_visible_child_name("podcasts-view"),
+            View::Preview => stack.set_visible_child_name("preview"),
             View::ShowDetails => {
                 stack.set_visible_child_name("show-details-view")
             }
@@ -161,6 +167,7 @@ impl BoltWindow {
 
     fn setup_explore(&self) {
         let explore_view = self.imp().explore_view.get();
+        let preview = self.imp().preview.get();
 
         explore_view.back_button().connect_clicked(
             clone!(@weak self as window => move |_button| {
@@ -172,6 +179,20 @@ impl BoltWindow {
             clone!(@weak explore_view => move |entry| {
                 if entry.text().len() > 0 {
                     explore_view.load_search_results(&entry.text().to_string());
+                }
+            }),
+        );
+
+        explore_view.search_results().connect_child_activated(
+            clone!(
+                @weak self as window,
+                @weak explore_view,
+                @weak preview => move |_list, child| {
+                let index: i32 = child.index();
+
+                if let Some(search_result) = explore_view.search_result_at_index(&index) {
+                    window.switch_view(View::Preview);
+                    preview.load_podcast(&search_result)
                 }
             }),
         );

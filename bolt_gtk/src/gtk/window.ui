@@ -49,6 +49,15 @@
         </child>
         <child>
           <object class="GtkStackPage">
+            <property name="name">preview</property>
+            <property name="title" translatable="true">Preview</property>
+            <property name="child">
+              <object class="Preview" id="preview"></object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkStackPage">
             <property name="name">podcasts-view</property>
             <property name="title" translatable="true">Podcasts View</property>
             <property name="child">

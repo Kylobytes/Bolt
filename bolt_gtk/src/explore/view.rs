@@ -146,6 +146,28 @@ impl ExploreView {
         self.imp().search_entry.get()
     }
 
+    pub fn search_results(&self) -> gtk::FlowBox {
+        self.imp().search_results.get()
+    }
+
+    pub fn search_result_at_index(&self, index: &i32) -> Option<CardData> {
+        if let Some(ref model) = *self.imp().model.borrow() {
+            let Some(object) = model
+                .item(index.clone().try_into().expect("Failed to cast index"))
+            else {
+                return None;
+            };
+
+            if let Ok(data) = object.downcast::<CardData>() {
+                Some(data)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
     pub fn load_search_results(&self, query: &str) {
         self.imp().results_empty.get().set_visible(false);
         self.imp().welcome.get().set_visible(false);

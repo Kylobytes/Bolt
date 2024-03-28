@@ -18,15 +18,24 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use adw::subclass::prelude::*;
-use gtk::{gio, glib};
+use adw::{prelude::*, subclass::prelude::*};
+use gtk::{gio, glib, prelude::TextViewExt};
+
+use super::card_data::CardData;
 
 mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
     #[template(resource = "/com/kylobytes/Bolt/gtk/explore/preview.ui")]
-    pub struct Preview {}
+    pub struct Preview {
+        #[template_child]
+        pub picture: TemplateChild<gtk::Picture>,
+        #[template_child]
+        pub title: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub description: TemplateChild<gtk::TextView>,
+    }
 
     #[glib::object_subclass]
     impl ObjectSubclass for Preview {
@@ -52,4 +61,21 @@ glib::wrapper! {
     pub struct Preview(ObjectSubclass<imp::Preview>)
         @extends gtk::Widget, adw::Bin,
     @implements gio::ActionGroup, gio::ActionMap;
+}
+
+impl Default for Preview {
+    fn default() -> Self {
+        glib::Object::new::<Self>()
+    }
+}
+
+impl Preview {
+    pub fn load_podcast(&self, podcast: &CardData) {
+        let imp = self.imp();
+
+        imp.title.get().set_label(&podcast.name());
+
+        let buffer = &imp.description.get().buffer();
+        buffer.set_text(&podcast.description());
+    }
 }
