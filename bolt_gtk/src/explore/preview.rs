@@ -21,6 +21,8 @@
 use adw::{prelude::*, subclass::prelude::*};
 use gtk::{gio, glib, prelude::TextViewExt};
 
+use crate::storage;
+
 use super::card_data::CardData;
 
 mod imp {
@@ -31,6 +33,14 @@ mod imp {
     pub struct Preview {
         #[template_child]
         pub picture: TemplateChild<gtk::Picture>,
+        #[template_child]
+        pub picture_container: TemplateChild<adw::Clamp>,
+        #[template_child]
+        pub picture_spinner: TemplateChild<gtk::Spinner>,
+        #[template_child]
+        pub spinner_container: TemplateChild<adw::Clamp>,
+        #[template_child]
+        pub image_missing_icon: TemplateChild<gtk::Image>,
         #[template_child]
         pub title: TemplateChild<gtk::Label>,
         #[template_child]
@@ -77,5 +87,18 @@ impl Preview {
 
         let buffer = &imp.description.get().buffer();
         buffer.set_text(&podcast.description());
+
+        imp.spinner_container.get().set_visible(false);
+
+        if let Some(image_path) =
+            storage::podcast_image(&podcast.id().to_string())
+        {
+            imp.picture.get().set_filename(Some(&image_path));
+            imp.picture_container.get().set_visible(true);
+            imp.image_missing_icon.get().set_visible(false);
+        } else {
+            imp.image_missing_icon.get().set_visible(true);
+            imp.picture_container.get().set_visible(false);
+        }
     }
 }

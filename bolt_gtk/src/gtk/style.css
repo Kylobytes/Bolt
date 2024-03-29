@@ -31,3 +31,7 @@
 .show-details-description {
   background: none;
 }
+
+.show-details-picture {
+  border-radius: 8px;
+}

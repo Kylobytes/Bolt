@@ -56,6 +56,7 @@
                                   <object class="GtkPicture" id="picture">
                                     <style>
                                       <class name="image-md" />
+                                      <class name="show-details-picture" />
                                     </style>
                                     <property name="hexpand">true</property>
                                     <property name="vexpand">true</property>
