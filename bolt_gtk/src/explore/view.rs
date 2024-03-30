@@ -29,11 +29,10 @@ use gtk::{
 
 use crate::{
     api::{podcasts, search::response::SearchResponse},
-    data::podcast,
+    data::podcast::{self, Podcast},
+    explore::card::ExploreCard,
     runtime,
 };
-
-use super::{card::ExploreCard, card_data::CardData};
 
 mod imp {
     use super::*;
@@ -77,19 +76,22 @@ mod imp {
         fn constructed(&self) {
             self.parent_constructed();
 
-            let model = gio::ListStore::new::<CardData>();
+            let model = gio::ListStore::new::<Podcast>();
             self.model.replace(Some(model));
 
             if let Some(ref model) = *self.model.borrow() {
                 self.search_results.bind_model(Some(model), move |object| {
-                    let data = object.downcast_ref::<CardData>().unwrap();
+                    let data = object.downcast_ref::<Podcast>().unwrap();
 
                     let card = ExploreCard::new();
                     card.set_name(&data.name());
-                    card.set_description(&data.description());
 
-                    if !data.image_url().is_empty() {
-                        card.load_image(&data.id(), &data.image_url());
+                    if let Some(description) = data.description() {
+                        card.set_description(&description);
+                    }
+
+                    if let Some(image_url) = data.image_url() {
+                        card.load_image(&data.id(), &image_url);
                     }
 
                     if data.subscribed() {
@@ -150,7 +152,7 @@ impl ExploreView {
         self.imp().search_results.get()
     }
 
-    pub fn search_result_at_index(&self, index: &i32) -> Option<CardData> {
+    pub fn search_result_at_index(&self, index: &i32) -> Option<Podcast> {
         if let Some(ref model) = *self.imp().model.borrow() {
             let Some(object) = model
                 .item(index.clone().try_into().expect("Failed to cast index"))
@@ -158,7 +160,7 @@ impl ExploreView {
                 return None;
             };
 
-            if let Ok(data) = object.downcast::<CardData>() {
+            if let Ok(data) = object.downcast::<Podcast>() {
                 Some(data)
             } else {
                 None
@@ -199,11 +201,11 @@ impl ExploreView {
                     }
 
                     if let Some(ref model) = *view.imp().model.borrow() {
-                        let card_data: Vec<CardData> = search_results
+                        let card_data: Vec<Podcast> = search_results
                             .into_iter()
                             .map(|result| {
                                 let id = result.id;
-                                let data = CardData::from(result);
+                                let data = Podcast::from(result);
 
                                 if subscribed_ids.contains(&id) {
                                     data.set_subscribed(true);

@@ -19,11 +19,16 @@
  */
 
 use adw::{prelude::*, subclass::prelude::*};
-use gtk::{gio, glib, prelude::TextViewExt};
+use gtk::{
+    gio,
+    glib::{self, clone},
+};
 
-use crate::storage;
-
-use super::card_data::CardData;
+use crate::{
+    api::{episode::response::EpisodeResponse, episodes},
+    data::podcast::Podcast,
+    runtime, storage,
+};
 
 mod imp {
     use super::*;
@@ -80,13 +85,18 @@ impl Default for Preview {
 }
 
 impl Preview {
-    pub fn load_podcast(&self, podcast: &CardData) {
+    pub fn load_podcast(&self, podcast: &Podcast) {
         let imp = self.imp();
 
         imp.title.get().set_label(&podcast.name());
 
-        let buffer = &imp.description.get().buffer();
-        buffer.set_text(&podcast.description());
+        if let Some(description) = podcast.description() {
+            let buffer = &imp.description.get().buffer();
+            buffer.set_text(&description);
+            imp.description.set_visible(true);
+        } else {
+            imp.description.set_visible(false);
+        }
 
         imp.spinner_container.get().set_visible(false);
 
