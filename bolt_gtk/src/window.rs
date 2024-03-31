@@ -198,6 +198,12 @@ impl BoltWindow {
                 }
             }),
         );
+
+        preview.back_button().connect_clicked(clone!(
+            @weak self as window, @weak preview => move |_button| {
+                window.switch_view(View::Explore);
+                preview.clear();
+        }));
     }
 
     fn return_from_explore(&self) {

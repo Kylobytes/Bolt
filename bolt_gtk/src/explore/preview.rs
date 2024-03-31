@@ -18,8 +18,6 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::cell::RefCell;
-
 use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
     gio,
@@ -38,6 +36,8 @@ mod imp {
     #[derive(Debug, Default, gtk::CompositeTemplate)]
     #[template(resource = "/com/kylobytes/Bolt/gtk/explore/preview.ui")]
     pub struct Preview {
+        #[template_child]
+        pub back_button: TemplateChild<gtk::Button>,
         #[template_child]
         pub picture: TemplateChild<gtk::Picture>,
         #[template_child]
@@ -89,6 +89,35 @@ impl Default for Preview {
 }
 
 impl Preview {
+    pub fn clear(&self) {
+        let imp = self.imp();
+
+        imp.description.get().buffer().set_text("");
+        imp.picture.get().set_pixbuf(None);
+        imp.picture_container.get().set_visible(false);
+        imp.spinner_container.get().set_visible(true);
+
+        let episodes = imp.episodes.get();
+
+        if let Some(selection_model) = episodes.model() {
+            let model = selection_model
+                .downcast::<gtk::NoSelection>()
+                .unwrap()
+                .model()
+                .unwrap()
+                .downcast::<gtk::StringList>()
+                .unwrap();
+
+            while let Some(row) = model.item(0) {
+                model.remove(0);
+            }
+        }
+    }
+
+    pub fn back_button(&self) -> gtk::Button {
+        self.imp().back_button.get()
+    }
+
     pub fn load_podcast(&self, podcast: &Podcast) {
         let imp = self.imp();
 
