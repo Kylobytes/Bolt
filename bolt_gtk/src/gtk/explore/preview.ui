@@ -94,7 +94,7 @@
                             <child>
                               <object class="GtkTextView" id="description">
                                 <style>
-                                  <class name="show-details-description" />
+                                  <class name="no-background" />
                                 </style>
                                 <property name="editable">false</property>
                                 <property name="cursor-visible">false</property>
