@@ -26,8 +26,12 @@ use gtk::{
 };
 
 use crate::{
-    data::podcast, empty::view::EmptyView, episodes::view::EpisodesView,
-    explore::view::ExploreView, queue_view::QueueView, runtime,
+    data::podcast,
+    empty::view::EmptyView,
+    episodes::view::EpisodesView,
+    explore::{preview::Preview, view::ExploreView},
+    queue_view::QueueView,
+    runtime,
     show_details::view::ShowDetails,
 };
 
@@ -42,8 +46,6 @@ pub enum View {
 }
 
 mod imp {
-    use crate::explore::preview::Preview;
-
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]

@@ -32,6 +32,10 @@
   background: none;
 }
 
+.rounded {
+    border-radius: 8px;
+}
+
 .show-details-picture {
   border-radius: 8px;
 }

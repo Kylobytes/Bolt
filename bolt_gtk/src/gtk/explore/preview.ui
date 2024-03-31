@@ -119,14 +119,14 @@
                     </child>
                     <child>
                       <object class="AdwClamp">
-                        <property name="orientation">vertical</property>
+                        <property name="orientation">horizontal</property>
                         <property name="maximum-size">800</property>
                         <child>
-                          <object class="GtkListBox" id="episodes">
+                          <object class="GtkListView" id="episodes">
                             <style>
-                              <class name="boxed-list" />
+                              <class name="rich-list" />
+                              <class name="rounded" />
                             </style>
-                            <property name="selection-mode">none</property>
                           </object>
                         </child>
                       </object>

@@ -18,6 +18,8 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use std::cell::RefCell;
+
 use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
     gio,
@@ -50,6 +52,8 @@ mod imp {
         pub title: TemplateChild<gtk::Label>,
         #[template_child]
         pub description: TemplateChild<gtk::TextView>,
+        #[template_child]
+        pub episodes: TemplateChild<gtk::ListView>,
     }
 
     #[glib::object_subclass]
@@ -110,5 +114,43 @@ impl Preview {
             imp.image_missing_icon.get().set_visible(true);
             imp.picture_container.get().set_visible(false);
         }
+
+        let id = podcast.id().clone();
+        let (sender, receiver) = async_channel::bounded(1);
+
+        runtime().spawn(clone!(@strong id, @strong sender => async move {
+            let response: EpisodeResponse = episodes::by_feed_id(&id).await;
+            sender.send(response.items).await.unwrap();
+        }));
+
+        glib::spawn_future_local(
+            clone!(@strong receiver, @weak self as view => async move {
+                while let Ok(episodes) = receiver.recv().await {
+                    let titles: gtk::StringList = episodes
+                        .iter()
+                        .map(|episode| episode.title.clone()).collect();
+                    let factory = gtk::SignalListItemFactory::new();
+
+                    factory.connect_setup(|_, list_item| {
+                        let title = gtk::Label::new(None);
+                        title.set_halign(gtk::Align::Start);
+
+                        let item = list_item
+                            .downcast_ref::<gtk::ListItem>()
+                            .expect("Item needs to be a ListItem");
+
+                        item.set_child(Some(&title));
+                        item.set_activatable(false);
+                        item.property_expression("item")
+                            .chain_property::<gtk::StringObject>("string")
+                            .bind(&title, "label", gtk::Widget::NONE);
+                    });
+
+                    let selection_model = gtk::NoSelection::new(Some(titles));
+                    view.imp().episodes.set_factory(Some(&factory));
+                    view.imp().episodes.set_model(Some(&selection_model));
+                }
+            }),
+        );
     }
 }
