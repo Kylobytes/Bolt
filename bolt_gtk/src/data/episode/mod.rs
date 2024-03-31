@@ -19,18 +19,101 @@
  *
  */
 
-pub mod object;
 pub mod repository;
 
 #[derive(Default, Debug)]
-pub struct Episode {
+struct Data {
     pub id: i64,
-    pub title: Option<String>,
+    pub title: String,
     pub description: Option<String>,
-    pub url: Option<String>,
+    pub url: String,
     pub image_url: Option<String>,
-    pub media_url: String,
-    pub queued: i64,
+    pub enclosure_url: String,
+    pub queued: bool,
     pub date_published: i64,
     pub podcast_id: i64,
+}
+use std::cell::RefCell;
+
+use adw::prelude::*;
+use gtk::glib::{self, subclass::prelude::*, Properties};
+
+use bolt_entity::episode;
+
+use crate::api::episode::Episode as ApiEpisode;
+
+mod imp {
+    use super::*;
+
+    #[derive(Debug, Default, Properties)]
+    #[properties(wrapper_type = super::Episode)]
+    pub struct Episode {
+        #[property(name = "id", get, construct_only, type = i64, member = id)]
+        #[property(name = "title", get, construct_only, type = String, member = title)]
+        #[property(name = "description", get, construct_only, type = Option<String>, member = description)]
+        #[property(name = "url", get, construct_only, type = String, member = url)]
+        #[property(name = "image-url", get, construct_only, type = Option<String>, member = image_url)]
+        #[property(name = "enclosure-url", get, construct_only, type = String, member = enclosure_url)]
+        #[property(name = "queued", get, construct_only, type = bool, member = queued)]
+        #[property(name = "date-published", get, construct_only, type = i64, member = date_published)]
+        #[property(name = "podcast-id", get, construct_only, type = i64, member = podcast_id)]
+        data: RefCell<Data>,
+    }
+
+    #[glib::object_subclass]
+    impl ObjectSubclass for Episode {
+        const NAME: &'static str = "Episode";
+        type Type = super::Episode;
+    }
+
+    #[glib::derived_properties]
+    impl ObjectImpl for Episode {}
+}
+
+glib::wrapper! {
+    pub struct Episode(ObjectSubclass<imp::Episode>);
+}
+
+impl Default for Episode {
+    fn default() -> Self {
+        glib::Object::new::<Self>()
+    }
+}
+
+impl From<ApiEpisode> for Episode {
+    fn from(episode: ApiEpisode) -> Self {
+        glib::Object::builder::<Self>()
+            .property("id", episode.id)
+            .property("title", episode.title)
+            .property(
+                "description",
+                Some(episode.description).filter(|text| !text.is_empty()),
+            )
+            .property("url", episode.link)
+            .property(
+                "image-url",
+                Some(episode.image).filter(|image| !image.is_empty()),
+            )
+            .property("enclosure-url", episode.enclosure_url)
+            .property("queued", false)
+            .property("date-published", episode.date_published)
+            .property("podcast-id", episode.feed_id)
+            .build()
+    }
+}
+
+impl From<episode::Model> for Episode {
+    fn from(episode: episode::Model) -> Self {
+        glib::Object::builder::<Self>()
+            .property("id", episode.id)
+            .property("title", episode.title)
+            .property("description", episode.description)
+            .property("url", episode.url)
+            .property("image-url", episode.image_url)
+            .property("enclosure-url", episode.enclosure_url)
+            .property("queued", episode.queued)
+            .property("date-published", episode.date_published)
+            .property("podcast-id", episode.podcast_id)
+            .build()
+    }
 }

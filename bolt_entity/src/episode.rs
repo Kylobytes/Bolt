@@ -29,7 +29,7 @@ pub struct Model {
     pub description: Option<String>,
     pub url: String,
     pub image_url: Option<String>,
-    pub media_url: String,
+    pub enclosure_url: String,
     pub queued: bool,
     pub date_published: i64,
     pub podcast_id: i64,

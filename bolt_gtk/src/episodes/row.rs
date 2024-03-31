@@ -29,7 +29,7 @@ use gtk::{
 };
 use time::{macros::format_description, OffsetDateTime};
 
-use crate::{data::episode::object::EpisodeObject, storage};
+use crate::{data::episode::Episode, storage};
 
 mod imp {
     use super::*;
@@ -94,8 +94,8 @@ impl Default for EpisodeRow {
     }
 }
 
-impl From<EpisodeObject> for EpisodeRow {
-    fn from(episode: EpisodeObject) -> Self {
+impl From<Episode> for EpisodeRow {
+    fn from(episode: Episode) -> Self {
         let row = EpisodeRow::new();
         row.imp().title.get().set_label(&episode.title());
 

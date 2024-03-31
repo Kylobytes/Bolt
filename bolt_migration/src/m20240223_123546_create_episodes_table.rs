@@ -24,7 +24,11 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Episode::Description).string())
                     .col(ColumnDef::new(Episode::Url).string().not_null())
                     .col(ColumnDef::new(Episode::ImageUrl).string())
-                    .col(ColumnDef::new(Episode::MediaUrl).string().not_null())
+                    .col(
+                        ColumnDef::new(Episode::EnclosureUrl)
+                            .string()
+                            .not_null(),
+                    )
                     .col(
                         ColumnDef::new(Episode::Queued)
                             .boolean()
@@ -65,7 +69,7 @@ enum Episode {
     Description,
     Url,
     ImageUrl,
-    MediaUrl,
+    EnclosureUrl,
     Queued,
     DatePublished,
     PodcastId,
