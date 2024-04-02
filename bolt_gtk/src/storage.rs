@@ -21,7 +21,7 @@
 use std::path::PathBuf;
 
 use gtk::glib;
-use reqwest::header::CONTENT_TYPE;
+use reqwest::header::{HeaderValue, ACCEPT, CONTENT_TYPE};
 
 use crate::{api::CLIENT, config::GETTEXT_PACKAGE};
 
@@ -103,14 +103,21 @@ pub async fn save_image(
     directory: &PathBuf,
     filename: &str,
 ) -> Result<(), reqwest::Error> {
-    let response = CLIENT.get(url).send().await?;
-    let content_type = response.headers()[CONTENT_TYPE].to_str().unwrap();
-    let extension = match content_type {
-        "image/jpg" => "jpg",
-        "image/jpeg" => "jpg",
-        "image/png" => "png",
-        _ => "png",
-    };
+    let response: reqwest::Response = CLIENT
+        .get(url)
+        .header(
+            ACCEPT,
+            HeaderValue::from_static("image/jpg, image/jpeg, image/png"),
+        )
+        .send()
+        .await?;
+
+    let extension: &str =
+        match response.headers()[CONTENT_TYPE].to_str().unwrap() {
+            "image/jpg" | "image/jpeg" => "jpg",
+            "image/png" => "png",
+            _ => "png",
+        };
 
     let image_bytes = response
         .bytes()
