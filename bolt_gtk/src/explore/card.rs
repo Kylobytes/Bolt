@@ -19,6 +19,8 @@
  */
 
 use gtk::{
+    gdk::Texture,
+    gdk_pixbuf::Pixbuf,
     gio,
     glib::{self, clone},
     prelude::*,
@@ -109,10 +111,16 @@ impl ExploreCard {
         self.imp().picture_spinner.get().set_visible(true);
 
         if let Some(image) = storage::podcast_image(&id.to_string()) {
-            self.imp().picture.get().set_filename(Some(&image));
-            self.imp().picture.get().set_visible(true);
-            self.imp().image_missing_icon.get().set_visible(false);
-            self.imp().picture_spinner.get().set_visible(false);
+            if let Ok(pixbuf) =
+                Pixbuf::from_file_at_scale(&image, 300, 300, true)
+            {
+                let texture = Texture::for_pixbuf(&pixbuf);
+
+                self.imp().picture.get().set_paintable(Some(&texture));
+                self.show_cover();
+            } else {
+                self.show_image_missing_icon();
+            }
 
             return;
         }
@@ -159,12 +167,16 @@ impl ExploreCard {
                             return;
                         };
 
-                        picture.set_filename(Some(&image));
-                        picture.set_visible(true);
-                        image_missing_icon.set_visible(false);
+                        if let Ok(pixbuf) = Pixbuf::from_file_at_scale(&image, 300, 300, true) {
+                            let texture = Texture::for_pixbuf(&pixbuf);
+
+                            picture.set_paintable(Some(&texture));
+                            view.show_cover();
+                        } else {
+                            view.show_image_missing_icon();
+                        }
                     } else {
-                        image_missing_icon.set_visible(true);
-                        picture.set_visible(false);
+                        view.show_image_missing_icon();
                     }
                 }
             }),
@@ -240,5 +252,17 @@ impl ExploreCard {
                 }
             }),
         );
+    }
+
+    fn show_image_missing_icon(&self) {
+        self.imp().picture.get().set_visible(false);
+        self.imp().picture_spinner.get().set_visible(false);
+        self.imp().image_missing_icon.get().set_visible(true);
+    }
+
+    fn show_cover(&self) {
+        self.imp().picture.get().set_visible(true);
+        self.imp().picture_spinner.get().set_visible(false);
+        self.imp().image_missing_icon.get().set_visible(false);
     }
 }
