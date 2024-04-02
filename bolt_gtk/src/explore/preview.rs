@@ -108,7 +108,7 @@ impl Preview {
                 .downcast::<gtk::StringList>()
                 .unwrap();
 
-            while let Some(row) = model.item(0) {
+            while let Some(_row) = model.item(0) {
                 model.remove(0);
             }
         }
