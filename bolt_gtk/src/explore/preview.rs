@@ -18,6 +18,8 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use std::cell::Cell;
+
 use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
     gio,
@@ -26,7 +28,7 @@ use gtk::{
 
 use crate::{
     api::{episode::response::EpisodeResponse, episodes},
-    data::podcast::Podcast,
+    data::podcast::{self, Podcast},
     runtime, storage,
 };
 
@@ -58,6 +60,7 @@ mod imp {
         pub unsubscribe_button: TemplateChild<gtk::Button>,
         #[template_child]
         pub episodes: TemplateChild<gtk::ListView>,
+        pub podcast_id: Cell<Option<i64>>,
     }
 
     #[glib::object_subclass]
@@ -100,6 +103,7 @@ impl Preview {
         imp.picture.get().set_pixbuf(None);
         imp.picture_container.get().set_visible(false);
         imp.spinner_container.get().set_visible(true);
+        imp.podcast_id.set(None);
 
         let episodes = imp.episodes.get();
 
@@ -134,6 +138,7 @@ impl Preview {
         let imp = self.imp();
 
         imp.title.get().set_label(&podcast.name());
+        imp.podcast_id.set(Some(podcast.id().clone()));
 
         if let Some(description) = podcast.description() {
             let buffer = &imp.description.get().buffer();
@@ -157,6 +162,10 @@ impl Preview {
         }
 
         let id = podcast.id().clone();
+        self.load_episodes(&id);
+        self.setup_subscribe_action(&id);
+    }
+    fn load_episodes(&self, id: &i64) {
         let (sender, receiver) = async_channel::bounded(1);
 
         runtime().spawn(clone!(@strong id, @strong sender => async move {
@@ -190,6 +199,27 @@ impl Preview {
                     let selection_model = gtk::NoSelection::new(Some(titles));
                     view.imp().episodes.set_factory(Some(&factory));
                     view.imp().episodes.set_model(Some(&selection_model));
+                }
+            }),
+        );
+    }
+
+    fn setup_subscribe_action(&self, id: &i64) {
+        let (sender, receiver) = async_channel::bounded(1);
+
+        runtime().spawn(clone!(@strong id, @strong sender => async move {
+            let subscribed = podcast::repository::subscribed(&id).await;
+
+            sender.send(subscribed).await.unwrap();
+        }));
+
+        glib::spawn_future_local(
+            clone!(@weak self as view, @strong sender => async move {
+                while let Ok(subscribed) = receiver.recv().await {
+                    match subscribed {
+                        true => view.imp().unsubscribe_button.get().set_visible(true),
+                        false => view.imp().subscribe_button.get().set_visible(true)
+                    }
                 }
             }),
         );
