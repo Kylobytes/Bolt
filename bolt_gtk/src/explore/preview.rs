@@ -22,6 +22,7 @@ use std::cell::Cell;
 
 use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
+    gdk::Paintable,
     gio,
     glib::{self, clone},
 };
@@ -100,7 +101,9 @@ impl Preview {
         let imp = self.imp();
 
         imp.description.get().buffer().set_text("");
-        imp.picture.get().set_pixbuf(None);
+        imp.picture
+            .get()
+            .set_paintable(Some(&Paintable::new_empty(0, 0)));
         imp.picture_container.get().set_visible(false);
         imp.spinner_container.get().set_visible(true);
         imp.podcast_id.set(None);
@@ -165,6 +168,81 @@ impl Preview {
         self.load_episodes(&id);
         self.setup_subscribe_action(&id);
     }
+
+    pub fn subscribe(&self) {
+        let imp = self.imp();
+
+        let subscribe_button = imp.subscribe_button.get();
+        let (sender, receiver) = async_channel::bounded(1);
+
+        subscribe_button.set_sensitive(false);
+        subscribe_button.set_label("Subscribing...");
+
+        let Some(id) = self.imp().podcast_id.get() else {
+            return;
+        };
+
+        runtime().spawn(clone!(@strong id, @strong sender => async move {
+            let subscribed = match podcast::repository::subscribe(&id).await {
+                    Ok(_) => true,
+                    _ => false
+                };
+
+            sender.send(subscribed).await.unwrap();
+        }));
+
+        glib::spawn_future_local(
+            clone!(@weak self as view, @strong receiver => async move {
+                let subscribe_button = view.imp().subscribe_button.get();
+                let unsubscribe_button = view.imp().unsubscribe_button.get();
+
+                while let Ok(subscribed) = receiver.recv().await {
+                    subscribe_button.set_label("Subscribe");
+
+                    if subscribed {
+                        subscribe_button.set_sensitive(true);
+                        subscribe_button.set_visible(false);
+                        unsubscribe_button.set_visible(true);
+                    }
+                }
+            }),
+        );
+    }
+
+    pub fn unsubscribe(&self) {
+        let imp = self.imp();
+
+        let unsubscribe_button = imp.unsubscribe_button.get();
+        let (sender, receiver) = async_channel::bounded(1);
+
+        unsubscribe_button.set_sensitive(false);
+        unsubscribe_button.set_label("Subscribing...");
+
+        let Some(id) = self.imp().podcast_id.get() else {
+            return;
+        };
+
+        runtime().spawn(clone!(@strong id, @strong sender => async move {
+            podcast::repository::delete(&id).await;
+
+            sender.send(true).await.unwrap();
+        }));
+
+        glib::spawn_future_local(
+            clone!(@weak self as view, @strong receiver => async move {
+                    let subscribe_button = view.imp().subscribe_button.get();
+                    let unsubscribe_button = view.imp().unsubscribe_button.get();
+
+                    while let Ok(_) = receiver.recv().await {
+                        unsubscribe_button.set_label("Unsubscribe");
+                        unsubscribe_button.set_sensitive(true);
+                        unsubscribe_button.set_visible(false);
+                        subscribe_button.set_visible(true);
+                    }
+            }),
+        );
+    }
+
     fn load_episodes(&self, id: &i64) {
         let (sender, receiver) = async_channel::bounded(1);
 

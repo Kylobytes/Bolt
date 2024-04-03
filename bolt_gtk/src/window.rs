@@ -199,11 +199,24 @@ impl BoltWindow {
             }),
         );
 
-        preview.back_button().connect_clicked(clone!(
-            @weak self as window, @weak preview => move |_button| {
+        preview.back_button().connect_clicked(
+            clone!(@weak self as window, @weak preview => move |_button| {
                 window.switch_view(View::Explore);
                 preview.clear();
-        }));
+            }),
+        );
+
+        preview.subscribe_button().connect_clicked(
+            clone!(@weak preview => move |_button| {
+                preview.subscribe();
+            }),
+        );
+
+        preview.unsubscribe_button().connect_clicked(
+            clone!(@weak preview => move |_button| {
+                preview.unsubscribe();
+            }),
+        );
     }
 
     fn return_from_explore(&self) {
