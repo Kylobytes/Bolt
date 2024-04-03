@@ -207,12 +207,13 @@ impl ExploreCard {
         glib::spawn_future_local(
             clone!(@weak subscribe_button, @weak unsubscribe_button, @strong receiver => async move {
                 while let Ok(saved) = receiver.recv().await {
+                    subscribe_button.set_label("Subscribe");
+
                     if saved {
                         subscribe_button.set_visible(false);
                         unsubscribe_button.set_sensitive(true);
                         unsubscribe_button.set_visible(true);
                     } else {
-                        subscribe_button.set_label("Subscribe");
                         subscribe_button.set_sensitive(true);
                     }
                 }
@@ -236,16 +237,16 @@ impl ExploreCard {
         glib::spawn_future_local(
             clone!(@weak self as view, @strong receiver => async move {
                 while let Ok(success) = receiver.recv().await {
-                    if success {
-                        let subscribe_button = view.subscribe_button();
-                        let unsubscribe_button = view.unsubscribe_button();
+                    let subscribe_button = view.subscribe_button();
+                    let unsubscribe_button = view.unsubscribe_button();
 
+                    unsubscribe_button.set_label("Unsubscribe");
+
+                    if success {
                         subscribe_button.set_visible(true);
                         subscribe_button.set_sensitive(true);
-                        subscribe_button.set_label("Subscribe");
                         unsubscribe_button.set_visible(false);
                     } else {
-                        unsubscribe_button.set_label("Unsubscribe");
                         unsubscribe_button.set_sensitive(true);
                         unsubscribe_button.set_visible(true);
                     }
