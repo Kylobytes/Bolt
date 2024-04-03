@@ -53,6 +53,10 @@ mod imp {
         #[template_child]
         pub description: TemplateChild<gtk::TextView>,
         #[template_child]
+        pub subscribe_button: TemplateChild<gtk::Button>,
+        #[template_child]
+        pub unsubscribe_button: TemplateChild<gtk::Button>,
+        #[template_child]
         pub episodes: TemplateChild<gtk::ListView>,
     }
 
@@ -116,6 +120,14 @@ impl Preview {
 
     pub fn back_button(&self) -> gtk::Button {
         self.imp().back_button.get()
+    }
+
+    pub fn subscribe_button(&self) -> gtk::Button {
+        self.imp().subscribe_button.get()
+    }
+
+    pub fn unsubscribe_button(&self) -> gtk::Button {
+        self.imp().unsubscribe_button.get()
     }
 
     pub fn load_podcast(&self, podcast: &Podcast) {
