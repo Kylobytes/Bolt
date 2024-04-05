@@ -30,6 +30,8 @@ mod imp {
     #[template(resource = "/com/kylobytes/Bolt/gtk/episodes/view.ui")]
     pub struct EpisodesView {
         #[template_child]
+        pub progress_bar: TemplateChild<gtk::ProgressBar>,
+        #[template_child]
         pub scrollbar: TemplateChild<gtk::ScrolledWindow>,
         #[template_child]
         pub episodes: TemplateChild<gtk::ListBox>,
@@ -73,5 +75,9 @@ impl Default for EpisodesView {
 impl EpisodesView {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn set_progress(&self, progress: &f64) {
+        self.imp().progress_bar.get().set_fraction(progress.to_owned());
     }
 }

@@ -26,10 +26,11 @@ use gtk::{
 };
 
 use crate::{
-    data::podcast,
+    data::{episode, podcast},
     empty::view::EmptyView,
     episodes::view::EpisodesView,
     explore::{preview::Preview, view::ExploreView},
+    feed,
     queue_view::QueueView,
     runtime,
     show_details::view::ShowDetails,
@@ -107,9 +108,10 @@ impl BoltWindow {
             .property("application", application)
             .build();
 
+        window.initialize();
         window.connect_signals();
         window.setup_explore();
-        window.initialize();
+        window.setup_episodes();
 
         window
     }
@@ -239,5 +241,31 @@ impl BoltWindow {
                 }
             }),
         );
+    }
+
+    fn setup_episodes(&self) {
+        let episodes_view = self.imp().episodes_view.get();
+
+        let (sender, receiver) = async_channel::bounded::<f64>(1);
+
+        runtime().spawn(clone!(@strong sender => async move {
+            let podcasts = podcast::repository::all().await;
+
+            for podcast in podcasts.iter() {
+                let feed_url = podcast.url.clone();
+                // let progress: f64 = ((index as f64) + 1f64) / podcasts.len() as f64;
+
+                // sender.send(progress).await.unwrap();
+                let channel = feed::download(&feed_url).await;
+                episode::repository::save_from_channel(&channel, &podcast.id).await;
+            }
+        }));
+
+        glib::spawn_future_local(clone!(
+        @weak episodes_view, @strong receiver => async move {
+            while let Ok(progress) = receiver.recv().await {
+                episodes_view.set_progress(&progress);
+            }
+        }));
     }
 }

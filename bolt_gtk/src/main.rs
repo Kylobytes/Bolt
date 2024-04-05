@@ -26,6 +26,7 @@ mod window;
 
 mod api;
 mod data;
+mod feed;
 
 mod empty;
 mod episodes;

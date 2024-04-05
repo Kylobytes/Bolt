@@ -1,22 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <requires lib="gtk" version="4.0"/>
+  <requires lib="gtk" version="4.0" />
   <template class="EpisodesView" parent="GtkBox">
-    <property name="orientation">1</property>
+    <property name="orientation">vertical</property>
     <property name="hexpand">true</property>
     <property name="vexpand">true</property>
+    <child>
+      <object class="GtkProgressBar" id="progress_bar">
+        <style>
+          <class name="osd" />
+        </style>
+      </object>
+    </child>
     <child>
       <object class="GtkScrolledWindow" id="scrollbar">
         <property name="hexpand">true</property>
         <property name="vexpand">true</property>
         <child>
           <object class="AdwClamp">
-            <property name="orientation">0</property>
+            <property name="orientation">horizontal</property>
             <property name="maximum-size">600</property>
             <child>
               <object class="GtkListBox" id="episodes">
                 <style>
-                  <class name="boxed-list"/>
+                  <class name="boxed-list" />
                 </style>
                 <property name="margin-top">12</property>
                 <property name="margin-start">8</property>

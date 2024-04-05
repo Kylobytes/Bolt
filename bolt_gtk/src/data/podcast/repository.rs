@@ -93,3 +93,9 @@ pub async fn delete(id: &i64) {
         .await
         .expect("Failed to delete podcast");
 }
+
+pub async fn all() -> Vec<Model> {
+    let connection = database::connect().await;
+
+    Entity::find().all(connection).await.expect("Failed to load all podcasts")
+}
