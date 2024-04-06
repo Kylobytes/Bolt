@@ -18,6 +18,7 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use bolt_migration::OnConflict;
 use rss::Channel;
 use sea_orm::{EntityTrait, PaginatorTrait, QuerySelect, Set};
 use time::{
@@ -62,7 +63,10 @@ pub async fn save_from_channel(feed: &Channel, podcast_id: &i64) {
         .into_iter()
         .map(|item| {
             let enclosure = item.enclosure.expect("Failed to get enclosure");
-            let date_format = format_description!("[weekday repr:short], [day] [month repr:short] [year] [hour]:[minute]:[second] [offset_hour][offset_minute]");
+            let date_format = format_description!("\
+                [weekday repr:short], [day] [month repr:short] [year] \
+                [hour]:[minute]:[second] [offset_hour][offset_minute]\
+            ");
             let publish_date: i64 = match OffsetDateTime::parse(
                 &item.pub_date.expect("Failed to get publish date"),
                 &date_format
@@ -81,6 +85,7 @@ pub async fn save_from_channel(feed: &Channel, podcast_id: &i64) {
 
             episode::ActiveModel {
                 id: Default::default(),
+                guid: Set(item.guid.expect("Failed to get guid").value),
                 title: Set(item.title.expect("Failed to get title")),
                 description: Set(item.description),
                 url: Set(item.link.expect("Failed to get link")),
@@ -96,6 +101,16 @@ pub async fn save_from_channel(feed: &Channel, podcast_id: &i64) {
     let connection = database::connect().await;
 
     Episode::insert_many(episodes)
+        .on_conflict(
+            OnConflict::column(episode::Column::Guid).update_columns([
+                episode::Column::Title,
+                episode::Column::Description,
+                episode::Column::Url,
+                episode::Column::ImageUrl,
+                episode::Column::EnclosureUrl,
+                episode::Column::DatePublished
+            ]).to_owned()
+        )
         .exec(connection)
         .await
         .expect("Failed to save episodes");
