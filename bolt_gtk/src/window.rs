@@ -251,21 +251,24 @@ impl BoltWindow {
         runtime().spawn(clone!(@strong sender => async move {
             let podcasts = podcast::repository::all().await;
 
-            for podcast in podcasts.iter() {
+            for (index, podcast) in podcasts.iter().enumerate() {
                 let feed_url = podcast.url.clone();
-                // let progress: f64 = ((index as f64) + 1f64) / podcasts.len() as f64;
+                let progress: f64 = ((index as f64) + 1f64) / podcasts.len() as f64;
 
-                // sender.send(progress).await.unwrap();
+                sender.send(progress).await.unwrap();
                 let channel = feed::download(&feed_url).await;
                 episode::repository::save_from_channel(&channel, &podcast.id).await;
             }
+
+            sender.send(0f64).await.unwrap();
         }));
 
         glib::spawn_future_local(clone!(
-        @weak episodes_view, @strong receiver => async move {
-            while let Ok(progress) = receiver.recv().await {
-                episodes_view.set_progress(&progress);
+            @weak episodes_view, @strong receiver => async move {
+                while let Ok(progress) = receiver.recv().await {
+                    episodes_view.set_progress(&progress);
+                }
             }
-        }));
+        ));
     }
 }
