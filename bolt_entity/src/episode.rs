@@ -25,6 +25,7 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i64,
+    pub guid: String,
     pub title: String,
     pub description: Option<String>,
     pub url: String,

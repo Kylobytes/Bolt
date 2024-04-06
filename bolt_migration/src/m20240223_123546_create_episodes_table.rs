@@ -20,6 +20,7 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
+                    .col(ColumnDef::new(Episode::Guid).string().not_null().unique_key())
                     .col(ColumnDef::new(Episode::Title).string().not_null())
                     .col(ColumnDef::new(Episode::Description).string())
                     .col(ColumnDef::new(Episode::Url).string().not_null())
@@ -65,6 +66,7 @@ enum Episode {
     #[sea_orm(iden = "episodes")]
     Table,
     Id,
+    Guid,
     Title,
     Description,
     Url,
