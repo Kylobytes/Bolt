@@ -21,7 +21,20 @@
 
 use std::cell::{Cell, RefCell};
 
-use gtk::{gio, glib, subclass::prelude::*, ListStore};
+use bolt_entity::{episode::Model, podcast};
+use gtk::{
+    gio,
+    glib::{self, clone, Cast},
+    prelude::*,
+    subclass::prelude::*,
+};
+
+use crate::{
+    data::episode::{self, Episode},
+    runtime,
+};
+
+use super::row::EpisodeRow;
 
 mod imp {
     use super::*;
@@ -35,7 +48,7 @@ mod imp {
         pub scrollbar: TemplateChild<gtk::ScrolledWindow>,
         #[template_child]
         pub episodes: TemplateChild<gtk::ListBox>,
-        pub model: RefCell<Option<ListStore>>,
+        pub model: RefCell<Option<gio::ListStore>>,
         pub episode_count: Cell<u64>,
         pub current_offset: Cell<u64>,
     }
@@ -55,7 +68,14 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for EpisodesView {}
+    impl ObjectImpl for EpisodesView {
+        fn constructed(&self) {
+            self.parent_constructed();
+
+            self.obj().setup_model();
+        }
+    }
+
     impl WidgetImpl for EpisodesView {}
     impl BoxImpl for EpisodesView {}
 }
@@ -77,7 +97,54 @@ impl EpisodesView {
         Self::default()
     }
 
+    pub fn reload_episodes(&self, offset: &u64) {
+        self.imp().episodes.get().set_visible(false);
+
+        let (sender, receiver) =
+            async_channel::bounded::<Vec<(Model, Option<podcast::Model>)>>(1);
+
+        runtime().spawn(clone!(@strong sender, @strong offset => async move {
+            let episodes: Vec<(Model, Option<podcast::Model>)> =
+            episode::repository::load_episodes(&offset).await;
+
+            sender.send(episodes).await.unwrap();
+        }));
+
+        glib::spawn_future_local(clone!(
+        @strong receiver, @weak self as view => async move {
+            while let Ok(episodes) = receiver.recv().await {
+                if let Some(ref model) = *view.imp().model.borrow() {
+                    let episodes: Vec<Episode> = episodes
+                    .iter()
+                    .map(|episode| Episode::from(episode.0.to_owned()))
+                    .collect();
+
+                    model.extend_from_slice(&episodes);
+                    view.imp().episodes.get().set_visible(true);
+                }
+            }
+        }));
+    }
+
     pub fn set_progress(&self, progress: &f64) {
-        self.imp().progress_bar.get().set_fraction(progress.to_owned());
+        self.imp()
+            .progress_bar
+            .get()
+            .set_fraction(progress.to_owned());
+    }
+
+    fn setup_model(&self) {
+        let model = gio::ListStore::new::<episode::Episode>();
+
+        self.imp().model.replace(Some(model.clone()));
+        self.imp().episodes.bind_model(Some(&model), |item| {
+            let episode = item
+                .downcast_ref::<episode::Episode>()
+                .expect("Item must be an Episode");
+
+            let row = EpisodeRow::from(episode.to_owned());
+
+            row.into()
+        });
     }
 }

@@ -247,6 +247,8 @@ impl BoltWindow {
         let episodes_view = self.imp().episodes_view.get();
 
         let (sender, receiver) = async_channel::bounded::<f64>(1);
+        let (reload_sender, reload_receiver) =
+            async_channel::bounded::<bool>(1);
 
         runtime().spawn(clone!(@strong sender => async move {
             let podcasts = podcast::repository::all().await;
@@ -261,12 +263,19 @@ impl BoltWindow {
             }
 
             sender.send(0f64).await.unwrap();
+            reload_sender.send(true).await.unwrap();
         }));
 
         glib::spawn_future_local(clone!(
-            @weak episodes_view, @strong receiver => async move {
+            @weak episodes_view,
+            @strong receiver,
+            @strong reload_receiver => async move {
                 while let Ok(progress) = receiver.recv().await {
                     episodes_view.set_progress(&progress);
+                }
+
+                while let Ok(_) = reload_receiver.recv().await {
+                    episodes_view.reload_episodes(&0);
                 }
             }
         ));
