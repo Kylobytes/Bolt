@@ -87,41 +87,53 @@
                   </object>
                 </child>
                 <property name="content">
-                  <object class="AdwViewStack" id="podcasts_stack">
-                    <property name="vexpand">true</property>
-                    <property name="hexpand">true</property>
+                  <object class="GtkBox">
+                    <property name="orientation">vertical</property>
                     <child>
-                      <object class="AdwViewStackPage" id="podcasts_queue">
-                        <property name="name">queue</property>
-                        <property name="title" translatable="true">Queue</property>
-                        <property name="icon-name">view-list-symbolic</property>
-                        <property name="child">
-                          <object class="QueueView" id="queue_view"></object>
-                        </property>
+                      <object class="GtkProgressBar" id="progress_bar">
+                        <style>
+                          <class name="osd" />
+                        </style>
                       </object>
                     </child>
                     <child>
-                      <object class="AdwViewStackPage">
-                        <property name="name">episodes</property>
-                        <property name="title" translatable="true">Episodes</property>
-                        <property name="icon-name">headphones-symbolic</property>
-                        <property name="child">
-                          <object class="EpisodesView" id="episodes_view"></object>
-                        </property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwViewStackPage">
-                        <property name="name">shows</property>
-                        <property name="title" translatable="true">Shows</property>
-                        <property name="icon-name">microphone-symbolic</property>
-                        <property name="child">
-                          <object class="AdwStatusPage">
-                            <property name="title" translatable="true">Shows</property>
+                      <object class="AdwViewStack" id="podcasts_stack">
+                        <property name="vexpand">true</property>
+                        <property name="hexpand">true</property>
+                        <child>
+                          <object class="AdwViewStackPage" id="podcasts_queue">
+                            <property name="name">queue</property>
+                            <property name="title" translatable="true">Queue</property>
+                            <property name="icon-name">view-list-symbolic</property>
+                            <property name="child">
+                              <object class="QueueView" id="queue_view"></object>
+                            </property>
                           </object>
-                        </property>
+                        </child>
+                        <child>
+                          <object class="AdwViewStackPage">
+                            <property name="name">episodes</property>
+                            <property name="title" translatable="true">Episodes</property>
+                            <property name="icon-name">headphones-symbolic</property>
+                            <property name="child">
+                              <object class="EpisodesView" id="episodes_view"></object>
+                            </property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="AdwViewStackPage">
+                            <property name="name">shows</property>
+                            <property name="title" translatable="true">Shows</property>
+                            <property name="icon-name">microphone-symbolic</property>
+                            <property name="child">
+                              <object class="AdwStatusPage">
+                                <property name="title" translatable="true">Shows</property>
+                              </object>
+                            </property>
+                          </object>
+                        </child>
                       </object>
-                    </child>
+                  </child>
                   </object>
                 </property>
                 <child type="bottom">

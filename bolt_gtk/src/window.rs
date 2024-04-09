@@ -59,6 +59,8 @@ mod imp {
         #[template_child]
         pub btn_refresh: TemplateChild<gtk::Button>,
         #[template_child]
+        pub progress_bar: TemplateChild<gtk::ProgressBar>,
+        #[template_child]
         pub explore_view: TemplateChild<ExploreView>,
         #[template_child]
         pub empty_view: TemplateChild<EmptyView>,
@@ -267,11 +269,12 @@ impl BoltWindow {
         }));
 
         glib::spawn_future_local(clone!(
+            @weak self as win,
             @weak episodes_view,
             @strong receiver,
             @strong reload_receiver => async move {
                 while let Ok(progress) = receiver.recv().await {
-                    episodes_view.set_progress(&progress);
+                    win.imp().progress_bar.get().set_fraction(progress);
                 }
 
                 while let Ok(_) = reload_receiver.recv().await {

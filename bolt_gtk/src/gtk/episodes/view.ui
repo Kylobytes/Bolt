@@ -6,13 +6,6 @@
     <property name="hexpand">true</property>
     <property name="vexpand">true</property>
     <child>
-      <object class="GtkProgressBar" id="progress_bar">
-        <style>
-          <class name="osd" />
-        </style>
-      </object>
-    </child>
-    <child>
       <object class="GtkScrolledWindow" id="scrollbar">
         <property name="hexpand">true</property>
         <property name="vexpand">true</property>
