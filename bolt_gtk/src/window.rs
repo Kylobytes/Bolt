@@ -57,7 +57,7 @@ mod imp {
         #[template_child]
         pub btn_explore: TemplateChild<gtk::Button>,
         #[template_child]
-        pub btn_refresh: TemplateChild<gtk::Button>,
+        pub refresh_button: TemplateChild<gtk::Button>,
         #[template_child]
         pub progress_bar: TemplateChild<gtk::ProgressBar>,
         #[template_child]
@@ -169,6 +169,12 @@ impl BoltWindow {
                 window.switch_view(View::Explore);
             }),
         );
+
+        self.imp().refresh_button.get().connect_clicked(
+            clone!(@weak self as window => move |_button| {
+                window.download_latest_episodes();
+            })
+        );
     }
 
     fn setup_explore(&self) {
@@ -245,7 +251,7 @@ impl BoltWindow {
         );
     }
 
-    fn setup_episodes(&self) {
+    fn download_latest_episodes(&self) {
         let episodes_view = self.imp().episodes_view.get();
 
         let (sender, receiver) = async_channel::bounded::<f64>(1);
@@ -282,5 +288,9 @@ impl BoltWindow {
                 }
             }
         ));
+    }
+
+    fn setup_episodes(&self) {
+        self.download_latest_episodes();
     }
 }

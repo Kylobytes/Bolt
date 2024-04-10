@@ -78,10 +78,9 @@
                       </object>
                     </child>
                     <child type="end">
-                      <object class="GtkButton" id="btn_refresh">
+                      <object class="GtkButton" id="refresh_button">
                         <property name="icon-name">view-refresh-symbolic</property>
                         <property name="tooltip-text" translatable="true">Refresh Episodes</property>
-                        <property name="visible">false</property>
                       </object>
                     </child>
                   </object>
