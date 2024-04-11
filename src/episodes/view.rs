@@ -21,7 +21,6 @@
 
 use std::cell::{Cell, RefCell};
 
-use bolt_entity::{episode::Model, podcast};
 use gtk::{
     gio,
     glib::{self, clone, Cast},
@@ -66,14 +65,7 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for EpisodesView {
-        fn constructed(&self) {
-            self.parent_constructed();
-
-            self.obj().setup_model();
-        }
-    }
-
+    impl ObjectImpl for EpisodesView {}
     impl WidgetImpl for EpisodesView {}
     impl BoxImpl for EpisodesView {}
 }

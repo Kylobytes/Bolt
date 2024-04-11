@@ -50,7 +50,7 @@ mod imp {
         #[template_child]
         pub btn_explore: TemplateChild<gtk::Button>,
         #[template_child]
-        pub btn_refresh: TemplateChild<gtk::Button>,
+        pub refresh_button: TemplateChild<gtk::Button>,
         #[template_child]
         pub explore_view: TemplateChild<ExploreView>,
         #[template_child]
