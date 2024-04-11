@@ -19,20 +19,17 @@
  */
 
 use gtk::glib;
-use r2d2_sqlite::SqliteConnectionManager;
-use r2d2::{Error, Pool};
+use sqlx::{Error, Pool, Sqlite, SqlitePool};
 
 use crate::config::GETTEXT_PACKAGE;
 
-pub fn connect() -> Result<Pool<SqliteConnectionManager>, Error> {
-    let path = format!(
+pub async fn connect() -> Result<Pool<Sqlite>, Error> {
+    let path: String = format!(
         "sqlite://{}/{}/{}.db?mode=rwc",
         glib::user_data_dir().display(),
         GETTEXT_PACKAGE,
         GETTEXT_PACKAGE
     );
 
-    let manager = SqliteConnectionManager::file(&path);
-
-    Pool::new(manager)
+    SqlitePool::connect(&path).await
 }

@@ -6,6 +6,7 @@ pub mod search;
 
 use std::sync::OnceLock;
 
+use reqwest::{Client, RequestBuilder};
 use sha1::{
     digest::{
         core_api::CoreWrapper, generic_array::GenericArray, typenum::UInt,
@@ -13,17 +14,16 @@ use sha1::{
     Digest, Sha1, Sha1Core,
 };
 use time::OffsetDateTime;
-use ureq::{Agent, AgentBuilder, Request};
 
 use crate::config::{API_KEY, BASE_URL, USER_AGENT};
 
-pub fn client() -> &'static Agent {
-    static CLIENT: OnceLock<Agent> = OnceLock::new();
+pub fn client() -> &'static Client {
+    static CLIENT: OnceLock<Client> = OnceLock::new();
 
-    CLIENT.get_or_init(|| AgentBuilder::new().build())
+    CLIENT.get_or_init(|| Client::new())
 }
 
-pub fn initiate_request(url: &str) -> Request {
+pub fn initiate_request(url: &str) -> RequestBuilder {
     let date: i64 = OffsetDateTime::now_utc().unix_timestamp();
     let auth_string: String = format!("{}{}{}", &API_KEY, &API_KEY, &date);
 
@@ -35,10 +35,10 @@ pub fn initiate_request(url: &str) -> Request {
 
     client()
         .get(url)
-        .set("User-Agent", &USER_AGENT)
-        .set("X-Auth-Key", &API_KEY)
-        .set("X-Auth-Date", &date.to_string())
-        .set("Authorization", &authorization)
+        .header("User-Agent", USER_AGENT)
+        .header("X-Auth-Key", API_KEY)
+        .header("X-Auth-Date", &date.to_string())
+        .header("Authorization", &authorization)
 }
 
 pub fn build_url(endpoint: &str) -> String {

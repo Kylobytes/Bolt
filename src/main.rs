@@ -35,6 +35,8 @@ mod show_details;
 
 mod queue_view;
 
+use std::sync::OnceLock;
+
 use self::application::BoltApplication;
 use self::window::BoltWindow;
 
@@ -42,6 +44,15 @@ use config::{GETTEXT_PACKAGE, LOCALEDIR, PKGDATADIR};
 use gettextrs::{bind_textdomain_codeset, bindtextdomain, textdomain};
 use gtk::prelude::*;
 use gtk::{gio, glib};
+use tokio::runtime::Runtime;
+
+pub fn runtime() -> &'static Runtime {
+    static RUNTIME: OnceLock<Runtime> = OnceLock::new();
+
+    RUNTIME.get_or_init(|| {
+        Runtime::new().expect("Setting up tokio runtime needs to succeed")
+    })
+}
 
 fn main() -> glib::ExitCode {
     // Set up gettext translations

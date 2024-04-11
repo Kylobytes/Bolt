@@ -18,15 +18,24 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::error::Error;
-
+use anyhow::anyhow;
 use gtk::glib;
+use sqlx::{query, Pool, Sqlite};
 
-use crate::config::GETTEXT_PACKAGE;
+use crate::{
+    config::{GETTEXT_PACKAGE, PKGDATADIR},
+    data::database,
+    runtime,
+};
 
 pub fn run() {
     setup_directories();
-    initialize_database();
+
+    runtime().block_on(async move {
+        if let Err(message) = initialize_database().await {
+            println!("Error initializing database: {message}");
+        }
+    });
 }
 
 fn setup_directories() {
@@ -62,4 +71,39 @@ fn setup_directories() {
     }
 }
 
-fn initialize_database() {}
+async fn initialize_database() -> Result<(), anyhow::Error> {
+    let pool: Pool<Sqlite> = database::connect().await?;
+
+    query!("CREATE TABLE IF NOT EXISTS migrations (\
+             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \
+             name TEXT NOT NULL, \
+             migrated_at INTEGER NOT NULL DEFAULT (UNIXEPOCH(CURRENT_TIMESTAMP)))")
+        .execute(&pool)
+        .await?;
+
+    let migrations: String = format!("{}/migrations", PKGDATADIR);
+
+    let read_dir = std::fs::read_dir(&migrations)?;
+
+    for entry in read_dir.into_iter() {
+        let migration = entry?.path().clone();
+        let migration_name = migration
+            .clone()
+            .file_stem()
+            .ok_or(anyhow!("Unable to acquire the filename"))?
+            .to_str()
+            .ok_or(anyhow!("Unable to parse the filename"))?
+            .to_string();
+
+        if let Ok(contents) = std::fs::read_to_string(&migration) {
+            query(&contents).execute(&pool).await?;
+
+            query("INSERT INTO migrations (name) VALUES (?)")
+                .bind(&migration_name)
+                .execute(&pool)
+                .await?;
+        }
+    }
+
+    Ok(())
+}
