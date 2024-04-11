@@ -3,5 +3,5 @@ CREATE TABLE IF NOT EXISTS podcasts (
        name TEXT NOT NULL,
        description TEXT,
        url TEXT NOT NULL,
-       image_url TEXT,
+       image_url TEXT
 );

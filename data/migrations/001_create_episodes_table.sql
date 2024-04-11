@@ -9,6 +9,6 @@ CREATE TABLE IF NOT EXISTS episodes (
        enclosure_url TEXT NOT NULL,
        queued INTEGER NOT NULL DEFAULT 0,
        date_published INTEGER,
-       podcast_id INTEGER
+       podcast_id INTEGER,
        FOREIGN KEY (podcast_id) REFERENCES podcasts(id)
 );
