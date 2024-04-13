@@ -34,8 +34,9 @@ struct Data {
     pub url: String,
     pub image_url: Option<String>,
     pub enclosure_url: String,
-    pub queued: bool,
     pub date_published: i64,
+    pub queued: bool,
+    pub played: bool,
     pub podcast_id: i64,
 }
 
@@ -52,6 +53,7 @@ mod imp {
         #[property(name = "image-url", get, construct_only, type = Option<String>, member = image_url)]
         #[property(name = "enclosure-url", get, construct_only, type = String, member = enclosure_url)]
         #[property(name = "queued", get, construct_only, type = bool, member = queued)]
+        #[property(name = "played", get, construct_only, type = bool, member = played)]
         #[property(name = "date-published", get, construct_only, type = i64, member = date_published)]
         #[property(name = "podcast-id", get, construct_only, type = i64, member = podcast_id)]
         data: RefCell<Data>,
