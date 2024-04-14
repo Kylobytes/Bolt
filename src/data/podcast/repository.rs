@@ -1,6 +1,6 @@
-/* mod.rs
+/* repository.rs
  *
- * Copyright 2023 Kent Delante
+ * Copyright 2024 Kent Delante
  *
  * This file is part of Bolt.
  *
@@ -18,15 +18,14 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod provider;
-pub mod repository;
+use sqlx::SqlitePool;
 
-#[derive(Clone, Debug, Default)]
-pub struct Podcast {
-    pub id: i64,
-    pub name: String,
-    pub description: Option<String>,
-    pub url: Option<String>,
-    pub image_url: Option<String>,
-    pub subscribed: bool,
+use crate::data::{database, podcast::provider};
+
+pub async fn count() -> i32 {
+    let Ok(pool) = database::connect().await else {
+        return 0;
+    };
+
+    provider::count(&pool).await
 }

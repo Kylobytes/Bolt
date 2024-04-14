@@ -1,6 +1,6 @@
-/* mod.rs
+/* query.rs
  *
- * Copyright 2023 Kent Delante
+ * Copyright 2024 Kent Delante
  *
  * This file is part of Bolt.
  *
@@ -18,15 +18,14 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod provider;
-pub mod repository;
+use sqlx::SqlitePool;
 
-#[derive(Clone, Debug, Default)]
-pub struct Podcast {
-    pub id: i64,
-    pub name: String,
-    pub description: Option<String>,
-    pub url: Option<String>,
-    pub image_url: Option<String>,
-    pub subscribed: bool,
+pub async fn count(pool: &SqlitePool) -> i32 {
+    let Ok(result) = sqlx::query!("SELECT COUNT(id) AS count FROM podcasts")
+        .fetch_one(pool)
+        .await else {
+        return 0;
+    };
+
+    result.count
 }

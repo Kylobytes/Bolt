@@ -18,14 +18,19 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use adw::subclass::prelude::*;
-use gtk::{gio, glib};
+use adw::{prelude::*, subclass::prelude::*};
+use gtk::{
+    gio,
+    glib::{self, clone},
+};
 
 use crate::{
+    data::{database, podcast},
     empty::view::EmptyView,
     episodes::view::EpisodesView,
     explore::{preview::Preview, view::ExploreView},
     queue_view::QueueView,
+    runtime,
     show_details::view::ShowDetails,
 };
 
@@ -111,6 +116,24 @@ impl BoltWindow {
 
     fn initialize(&self) {
         self.switch_view(View::Loading);
+
+        let (sender, receiver) = async_channel::bounded::<i32>(1);
+
+        runtime().spawn(async move {
+            let count = podcast::repository::count().await;
+
+            sender.send(count).await.expect("The channel must be open");
+        });
+
+        glib::spawn_future_local(clone!(@weak self as window => async move {
+            while let Ok(count) = receiver.recv().await {
+                if count > 0 {
+                    window.switch_view(View::Podcasts);
+                } else {
+                    window.switch_view(View::Empty);
+                }
+            }
+        }));
     }
 
     fn switch_view(&self, view: View) {
@@ -128,8 +151,47 @@ impl BoltWindow {
         }
     }
 
-    fn connect_signals(&self) {}
-    fn setup_explore(&self) {}
-    fn return_from_explore(&self) {}
+    fn connect_signals(&self) {
+        self.imp().empty_view.explore_button().connect_clicked(
+            clone!(@weak self as window => move |_| {
+                window.switch_view(View::Explore);
+            }),
+        );
+
+        self.imp().explore_button.connect_clicked(
+            clone!(@weak self as window => move |_| {
+                window.switch_view(View::Explore);
+            }),
+        );
+    }
+
+    fn setup_explore(&self) {
+        self.imp().explore_view.back_button().connect_clicked(
+            clone!(@weak self as window => move |_| {
+                window.return_from_explore();
+            }),
+        );
+    }
+
+    fn return_from_explore(&self) {
+        let (sender, receiver) = async_channel::bounded::<i32>(1);
+
+        runtime().spawn(async move {
+            let count: i32 = podcast::repository::count().await;
+
+            sender.send(count).await.expect("Channel must be open");
+        });
+
+        glib::spawn_future_local(clone!(@weak self as window => async move {
+            while let Ok(count) = receiver.recv().await {
+                if count > 0 {
+                    window.switch_view(View::Podcasts);
+                } else {
+                    window.switch_view(View::Empty);
+                }
+            }
+        }));
+    }
+
     fn setup_episodes(&self) {}
 }
