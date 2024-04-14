@@ -64,15 +64,15 @@
               <object class="AdwToolbarView" id="podcasts_view_stack">
                 <child type="top">
                   <object class="AdwHeaderBar" id="podcasts_header_bar">
-                    <property name="centering-policy">1</property>
+                    <property name="centering-policy">strict</property>
                     <property name="title-widget">
                       <object class="AdwViewSwitcher" id="podcasts_view_switcher">
                         <property name="stack">podcasts_stack</property>
-                        <property name="policy">1</property>
+                        <property name="policy">wide</property>
                       </object>
                     </property>
                     <child>
-                      <object class="GtkButton" id="btn_explore">
+                      <object class="GtkButton" id="explore_button">
                         <property name="icon-name">system-search-symbolic</property>
                         <property name="tooltip-text" translatable="true">Search Podcasts</property>
                       </object>

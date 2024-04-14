@@ -48,7 +48,7 @@ mod imp {
         #[template_child]
         pub main_stack: TemplateChild<gtk::Stack>,
         #[template_child]
-        pub btn_explore: TemplateChild<gtk::Button>,
+        pub explore_button: TemplateChild<gtk::Button>,
         #[template_child]
         pub refresh_button: TemplateChild<gtk::Button>,
         #[template_child]

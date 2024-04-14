@@ -23,7 +23,7 @@
             <property name="vexpand">true</property>
             <property name="hexpand">true</property>
             <child>
-              <object class="GtkButton" id="btn_explore">
+              <object class="GtkButton" id="explore_button">
                 <style>
                   <class name="pill"/>
                 </style>

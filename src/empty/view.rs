@@ -29,7 +29,7 @@ mod imp {
     #[template(resource = "/com/kylobytes/Bolt/gtk/empty/view.ui")]
     pub struct EmptyView {
         #[template_child]
-        pub btn_explore: TemplateChild<gtk::Button>,
+        pub explore_button: TemplateChild<gtk::Button>,
     }
 
     #[glib::object_subclass]
@@ -69,7 +69,7 @@ impl EmptyView {
         Self::default()
     }
 
-    pub fn btn_explore(&self) -> gtk::Button {
-        self.imp().btn_explore.get()
+    pub fn explore_button(&self) -> gtk::Button {
+        self.imp().explore_button.get()
     }
 }
