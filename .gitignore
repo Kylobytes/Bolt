@@ -1,4 +1,6 @@
 **/_build/
 **/.env
 **/target/
-bolt_gtk/src/config.rs
+**/config.rs
+**/*.db
+**/*.sqlite
