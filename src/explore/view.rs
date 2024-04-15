@@ -22,12 +22,17 @@ use std::cell::RefCell;
 
 use adw::subclass::prelude::*;
 use gtk::{
-    gio::{self, ListStore},
-    glib,
+    gio,
+    glib::{self, clone},
     prelude::*,
 };
 
-use crate::data::podcast::Podcast;
+use crate::{
+    api::search::result::SearchResult,
+    data::podcast::{self, Podcast},
+    explore::card::ExploreCard,
+    runtime,
+};
 
 mod imp {
     use super::*;
@@ -49,7 +54,7 @@ mod imp {
         pub results_empty: TemplateChild<adw::StatusPage>,
         #[template_child]
         pub explore_spinner: TemplateChild<gtk::Spinner>,
-        pub model: RefCell<Option<ListStore>>,
+        pub model: RefCell<Option<gio::ListStore>>,
     }
 
     #[glib::object_subclass]
@@ -67,7 +72,22 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for ExploreView {}
+    impl ObjectImpl for ExploreView {
+        fn constructed(&self) {
+            self.parent_constructed();
+
+            let model = gio::ListStore::new::<ExploreCard>();
+            self.model.replace(Some(model.clone()));
+
+            self.search_results.bind_model(Some(&model), move |item| {
+                item.downcast_ref::<ExploreCard>()
+                    .expect("Item needs to be an explore card")
+                    .to_owned()
+                    .into()
+            });
+        }
+    }
+
     impl WidgetImpl for ExploreView {}
     impl BinImpl for ExploreView {}
 }
@@ -102,22 +122,65 @@ impl ExploreView {
     }
 
     pub fn search_result_at_index(&self, index: &i32) -> Option<Podcast> {
-        if let Some(ref model) = *self.imp().model.borrow() {
-            let Some(object) = model
-                .item(index.clone().try_into().expect("Failed to cast index"))
-            else {
-                return None;
-            };
+        let Ok(index) = u32::try_from(index.clone()) else {
+            return None;
+        };
 
-            if let Ok(data) = object.downcast::<Podcast>() {
-                Some(data)
-            } else {
-                None
-            }
-        } else {
-            None
-        }
+        let Some(ref model) = *self.imp().model.borrow() else {
+            return None;
+        };
+
+        let Some(object) = model.item(index) else {
+            return None;
+        };
+
+        // if let Ok(data) = object.downcast::<Podcast>() {
+        //     Some(data)
+        // } else {
+        //     None
+        // }
+
+        None
     }
 
-    pub fn load_search_results(&self, query: &str) {}
+    pub fn load_search_results(&self, query: &str) {
+        let imp = self.imp();
+
+        imp.welcome.get().set_visible(false);
+        imp.explore_spinner.get().set_visible(true);
+        imp.results_empty.get().set_visible(false);
+        imp.search_results.get().set_visible(false);
+
+        let (sender, receiver) =
+            async_channel::bounded::<Vec<SearchResult>>(1);
+
+        let query = query.to_string();
+
+        runtime().spawn(clone!(@strong query, @strong sender => async move {
+            let podcasts: Vec<SearchResult> =
+            podcast::repository::search(&query).await;
+
+            sender
+                .send(podcasts)
+                .await
+                .expect("The search channel must be open");
+        }));
+
+        glib::spawn_future_local(
+            clone!(@strong receiver, @weak imp => async move {
+                while let Ok(podcasts) = receiver.recv().await {
+                    if let Some(ref model) = *imp.model.borrow() {
+                        let cards: Vec<ExploreCard> = podcasts.iter()
+                        .map(|podcast| ExploreCard::from(podcast.clone()))
+                        .collect();
+
+                        model.remove_all();
+                        model.extend_from_slice(&cards);
+                        imp.explore_spinner.get().set_visible(false);
+                        imp.search_results.set_visible(true);
+                    }
+                }
+            }),
+        );
+    }
 }

@@ -25,6 +25,7 @@ use gtk::{
 };
 
 use crate::{
+    api::search::result::SearchResult,
     data::{database, podcast},
     empty::view::EmptyView,
     episodes::view::EpisodesView,
@@ -120,7 +121,7 @@ impl BoltWindow {
         let (sender, receiver) = async_channel::bounded::<i32>(1);
 
         runtime().spawn(async move {
-            let count = podcast::repository::count().await;
+            let count: i32 = podcast::repository::count().await;
 
             sender.send(count).await.expect("The channel must be open");
         });
@@ -166,11 +167,27 @@ impl BoltWindow {
     }
 
     fn setup_explore(&self) {
-        self.imp().explore_view.back_button().connect_clicked(
+        let imp = self.imp();
+
+        imp.explore_view.back_button().connect_clicked(
             clone!(@weak self as window => move |_| {
                 window.return_from_explore();
             }),
         );
+
+        let (sender, receiver) =
+            async_channel::bounded::<Vec<SearchResult>>(1);
+
+        imp.explore_view
+            .search_entry()
+            .connect_search_changed(clone!(
+                @weak imp, @strong sender => move |entry: &gtk::SearchEntry| {
+                if entry.text().len() > 3 {
+                    let query: String = entry.text().to_string();
+
+                    imp.explore_view.load_search_results(&query);
+                }
+            }));
     }
 
     fn return_from_explore(&self) {

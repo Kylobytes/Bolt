@@ -18,9 +18,17 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
+use reqwest::{header::HeaderMap, Error, Method, RequestBuilder, Response};
 use sqlx::SqlitePool;
 
-use crate::data::{database, podcast::provider};
+use crate::{
+    api::{
+        self, client,
+        search::{response::SearchResponse, result::SearchResult},
+    },
+    config::USER_AGENT,
+    data::{database, podcast::provider},
+};
 
 pub async fn count() -> i32 {
     let Ok(pool) = database::connect().await else {
@@ -28,4 +36,19 @@ pub async fn count() -> i32 {
     };
 
     provider::count(&pool).await
+}
+
+pub async fn search(query: &str) -> Vec<SearchResult> {
+    let endpoint: String = format!("/search/byterm?q={query}");
+    let url: String = api::build_url(&endpoint);
+
+    let Ok(response) = client().get(&url).send().await else {
+        return vec![];
+    };
+
+    let Ok(results) = response.json::<SearchResponse>().await else {
+        return vec![];
+    };
+
+    results.feeds
 }

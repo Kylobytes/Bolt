@@ -18,11 +18,9 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use gtk::{
-    gio,
-    glib,
-    subclass::prelude::*,
-};
+use gtk::{gio, glib, subclass::prelude::*};
+
+use crate::api::search::result::SearchResult;
 
 mod imp {
     use super::*;
@@ -104,4 +102,16 @@ impl ExploreCard {
     pub fn unsubscribe(&self, id: &i64) {}
     fn show_image_missing_icon(&self) {}
     fn show_cover(&self) {}
+}
+
+impl From<SearchResult> for ExploreCard {
+    fn from(search_result: SearchResult) -> Self {
+        let card = Self::default();
+        let imp = card.imp();
+
+        imp.name.set_text(&search_result.title);
+        imp.description.set_text(&search_result.description);
+
+        card
+    }
 }
