@@ -6,7 +6,10 @@ pub mod search;
 
 use std::sync::OnceLock;
 
-use reqwest::{Client, RequestBuilder};
+use reqwest::{
+    header::{HeaderMap, HeaderValue},
+    Client, RequestBuilder,
+};
 use sha1::{
     digest::{
         core_api::CoreWrapper, generic_array::GenericArray, typenum::UInt,
@@ -15,30 +18,39 @@ use sha1::{
 };
 use time::OffsetDateTime;
 
-use crate::config::{API_KEY, BASE_URL, USER_AGENT};
+use crate::config::{API_KEY, API_SECRET, BASE_URL, USER_AGENT};
 
 pub fn client() -> &'static Client {
     static CLIENT: OnceLock<Client> = OnceLock::new();
 
-    CLIENT.get_or_init(|| Client::new())
-}
+    CLIENT.get_or_init(|| {
+        let time: i64 = OffsetDateTime::now_utc().unix_timestamp();
+        let auth_string: String =
+            format!("{}{}{}", &API_KEY, &API_SECRET, &time);
 
-pub fn initiate_request(url: &str) -> RequestBuilder {
-    let date: i64 = OffsetDateTime::now_utc().unix_timestamp();
-    let auth_string: String = format!("{}{}{}", &API_KEY, &API_KEY, &date);
+        let mut hasher: CoreWrapper<Sha1Core> = Sha1::new();
+        hasher.update(&auth_string);
 
-    let mut hasher: CoreWrapper<Sha1Core> = Sha1::new();
-    hasher.update(&auth_string);
+        let hash: GenericArray<u8, UInt<UInt<_, _>, _>> = hasher.finalize();
+        let authorization: String = format!("{:X}", hash).to_lowercase();
 
-    let result: GenericArray<u8, UInt<UInt<_, _>, _>> = hasher.finalize();
-    let authorization: String = format!("{:X}", result).to_lowercase();
+        let mut headers = HeaderMap::new();
+        headers.insert("User-Agent", HeaderValue::from_static(USER_AGENT));
+        headers.insert("X-Auth-Key", HeaderValue::from_static(API_KEY));
 
-    client()
-        .get(url)
-        .header("User-Agent", USER_AGENT)
-        .header("X-Auth-Key", API_KEY)
-        .header("X-Auth-Date", &date.to_string())
-        .header("Authorization", &authorization)
+        if let Ok(date) = HeaderValue::from_str(&time.to_string()) {
+            headers.insert("X-Auth-Date", date);
+        }
+
+        if let Ok(authorization) = HeaderValue::from_str(&authorization) {
+            headers.insert("Authorization", authorization);
+        }
+
+        Client::builder()
+            .default_headers(headers)
+            .build()
+            .expect("Client must be created to perform requests")
+    })
 }
 
 pub fn build_url(endpoint: &str) -> String {
