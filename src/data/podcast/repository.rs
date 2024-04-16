@@ -18,15 +18,11 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use reqwest::{header::HeaderMap, Error, Method, RequestBuilder, Response};
-use sqlx::SqlitePool;
-
 use crate::{
     api::{
         self, client,
         search::{response::SearchResponse, result::SearchResult},
     },
-    config::USER_AGENT,
     data::{database, podcast::provider},
 };
 

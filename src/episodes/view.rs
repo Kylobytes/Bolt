@@ -21,19 +21,7 @@
 
 use std::cell::{Cell, RefCell};
 
-use gtk::{
-    gio,
-    glib::{self, clone, Cast},
-    prelude::*,
-    subclass::prelude::*,
-};
-
-use crate::{
-    data::episode::{self, Episode},
-    runtime,
-};
-
-use super::row::EpisodeRow;
+use gtk::{gio, glib, subclass::prelude::*};
 
 mod imp {
     use super::*;

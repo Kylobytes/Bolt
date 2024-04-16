@@ -8,7 +8,7 @@ use std::sync::OnceLock;
 
 use reqwest::{
     header::{HeaderMap, HeaderValue},
-    Client, RequestBuilder,
+    Client,
 };
 use sha1::{
     digest::{
