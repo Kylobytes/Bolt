@@ -18,14 +18,25 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use gtk::{gio, glib, subclass::prelude::*};
+use std::{
+    cell::{Cell, RefCell},
+    path::PathBuf,
+    sync::OnceLock,
+};
 
-use crate::api::search::result::SearchResult;
+use gtk::{
+    gio,
+    glib::{self, closure_local, subclass::Signal},
+    prelude::*,
+    subclass::prelude::*,
+};
+
+use crate::{api::search::result::SearchResult, storage};
 
 mod imp {
     use super::*;
 
-    #[derive(Debug, Default, gtk::CompositeTemplate)]
+    #[derive(gtk::CompositeTemplate, Debug, Default)]
     #[template(resource = "/com/kylobytes/Bolt/gtk/explore/card.ui")]
     pub struct ExploreCard {
         #[template_child]
@@ -42,6 +53,8 @@ mod imp {
         pub unsubscribe_button: TemplateChild<gtk::Button>,
         #[template_child]
         pub subscribe_button: TemplateChild<gtk::Button>,
+        pub podcast_id: Cell<i64>,
+        pub image_url: RefCell<Option<String>>,
     }
 
     #[glib::object_subclass]
@@ -59,7 +72,25 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for ExploreCard {}
+    impl ObjectImpl for ExploreCard {
+        fn constructed(&self) {
+            self.parent_constructed();
+
+            self.obj().load_image();
+            self.obj().connect_signals();
+        }
+
+        fn signals() -> &'static [Signal] {
+            static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();
+
+            SIGNALS.get_or_init(|| {
+                vec![Signal::builder("image-found")
+                    .param_types([bool::static_type()])
+                    .build()]
+            })
+        }
+    }
+
     impl WidgetImpl for ExploreCard {}
     impl BoxImpl for ExploreCard {}
 }
@@ -97,11 +128,37 @@ impl ExploreCard {
         self.imp().description.set_text(content);
     }
 
-    pub fn load_image(&self, id: &i64, image_url: &str) {}
+    pub fn load_image(&self) {
+        let imp = self.imp();
+        let id: i64 = imp.podcast_id.get();
+        let image: Option<PathBuf> = storage::podcast_image(&id.to_string());
+        let ref image_url: Option<String> = *imp.image_url.borrow();
+
+        if image.is_none() && image_url.is_none() {
+            self.emit_by_name::<()>("image-found", &[&false]);
+
+            return;
+        }
+    }
+
     pub fn subscribe(&self, id: &i64) {}
     pub fn unsubscribe(&self, id: &i64) {}
-    fn show_image_missing_icon(&self) {}
-    fn show_cover(&self) {}
+
+    fn connect_signals(&self) {
+        let imp = self.imp();
+
+        self.connect_closure(
+            "image-found",
+            false,
+            closure_local!(move |view: ExploreCard, image_available: bool| {
+                if !image_available {
+                    view.imp().picture_spinner.get().set_visible(false);
+                    view.imp().picture.get().set_visible(false);
+                    view.imp().picture.get().set_visible(true);
+                }
+            }),
+        );
+    }
 }
 
 impl From<SearchResult> for ExploreCard {
@@ -111,6 +168,11 @@ impl From<SearchResult> for ExploreCard {
 
         imp.name.set_text(&search_result.title);
         imp.description.set_text(&search_result.description);
+        imp.podcast_id.set(search_result.id);
+
+        if !search_result.image.is_empty() {
+            imp.image_url.replace(Some(search_result.image));
+        }
 
         card
     }
