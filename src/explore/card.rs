@@ -25,6 +25,8 @@ use std::{
 };
 
 use gtk::{
+    gdk,
+    gdk_pixbuf::Pixbuf,
     gio,
     glib::{self, closure_local, subclass::Signal},
     prelude::*,
@@ -131,13 +133,19 @@ impl ExploreCard {
     pub fn load_image(&self) {
         let imp = self.imp();
         let id: i64 = imp.podcast_id.get();
-        let image: Option<PathBuf> = storage::podcast_image(&id.to_string());
+
+        let image_path: Option<PathBuf> =
+            storage::podcast_image(&id.to_string());
         let ref image_url: Option<String> = *imp.image_url.borrow();
 
-        if image.is_none() && image_url.is_none() {
-            self.emit_by_name::<()>("image-found", &[&false]);
+        if image_path.is_some() {
+            self.emit_by_name::<()>("image-found", &[&true]);
 
             return;
+        }
+
+        if image_path.is_none() && image_url.is_none() {
+            self.emit_by_name::<()>("image-found", &[&false]);
         }
     }
 
@@ -150,11 +158,28 @@ impl ExploreCard {
         self.connect_closure(
             "image-found",
             false,
-            closure_local!(move |view: ExploreCard, image_available: bool| {
-                if !image_available {
+            closure_local!(move |view: ExploreCard, found: bool| {
+                if found {
+                    let id: i64 = view.imp().podcast_id.get();
+                    let image_path = storage::podcast_image(&id.to_string())
+                        .expect("Image path must exist");
+                    let pixbuf = Pixbuf::from_file_at_scale(
+                        &image_path,
+                        300,
+                        300,
+                        true,
+                    )
+                    .expect("Image must be loaded");
+
+                    let texture = gdk::Texture::for_pixbuf(&pixbuf);
+                    view.imp().picture.get().set_paintable(Some(&texture));
+                    view.imp().picture.get().set_visible(true);
+                    view.imp().picture_spinner.get().set_visible(false);
+                    view.imp().image_missing_icon.get().set_visible(false);
+                } else {
                     view.imp().picture_spinner.get().set_visible(false);
                     view.imp().picture.get().set_visible(false);
-                    view.imp().picture.get().set_visible(true);
+                    view.imp().image_missing_icon.get().set_visible(true);
                 }
             }),
         );
