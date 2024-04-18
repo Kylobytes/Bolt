@@ -28,12 +28,12 @@ use gtk::{
     gdk,
     gdk_pixbuf::Pixbuf,
     gio,
-    glib::{self, closure_local, subclass::Signal},
+    glib::{self, clone, closure_local, subclass::Signal},
     prelude::*,
     subclass::prelude::*,
 };
 
-use crate::{api::search::result::SearchResult, storage};
+use crate::{api::search::result::SearchResult, runtime, storage};
 
 mod imp {
     use super::*;
@@ -78,7 +78,6 @@ mod imp {
         fn constructed(&self) {
             self.parent_constructed();
 
-            self.obj().load_image();
             self.obj().connect_signals();
         }
 
@@ -134,9 +133,18 @@ impl ExploreCard {
         let imp = self.imp();
         let id: i64 = imp.podcast_id.get();
 
+        imp.picture.get().set_visible(false);
+        imp.image_missing_icon.get().set_visible(false);
+        imp.picture_spinner.get().set_visible(true);
+
         let image_path: Option<PathBuf> =
             storage::podcast_image(&id.to_string());
-        let ref image_url: Option<String> = *imp.image_url.borrow();
+
+        if image_path.is_none() && imp.image_url.borrow().is_none() {
+            self.emit_by_name::<()>("image-found", &[&false]);
+
+            return;
+        }
 
         if image_path.is_some() {
             self.emit_by_name::<()>("image-found", &[&true]);
@@ -144,8 +152,38 @@ impl ExploreCard {
             return;
         }
 
-        if image_path.is_none() && image_url.is_none() {
-            self.emit_by_name::<()>("image-found", &[&false]);
+        if let Some(ref image_url) = *imp.image_url.borrow() {
+            let directory: PathBuf =
+                storage::podcast_image_path(&id.to_string());
+            let (sender, receiver) = async_channel::bounded::<bool>(1);
+
+            runtime().spawn(
+                clone!(@strong sender, @strong image_url => async move {
+                    let result: Result<(), anyhow::Error> =
+                    storage::save_image(&image_url, &directory).await;
+                    let downloaded: bool = match result {
+                        Ok(_) => true,
+                        _ => false,
+                    };
+
+                    sender
+                    .send(downloaded)
+                    .await
+                    .expect("The channel should be open");
+                }),
+            );
+
+            glib::spawn_future_local(
+                clone!(@strong receiver, @weak self as view => async move {
+                    while let Ok(downloaded) = receiver.recv().await {
+                        if downloaded {
+                            view.emit_by_name::<()>("image-found", &[&true]);
+                        } else {
+                            view.emit_by_name::<()>("image-found", &[&false]);
+                        }
+                    }
+                }),
+            );
         }
     }
 
@@ -168,14 +206,19 @@ impl ExploreCard {
                         300,
                         300,
                         true,
-                    )
-                    .expect("Image must be loaded");
+                    );
 
-                    let texture = gdk::Texture::for_pixbuf(&pixbuf);
-                    view.imp().picture.get().set_paintable(Some(&texture));
-                    view.imp().picture.get().set_visible(true);
-                    view.imp().picture_spinner.get().set_visible(false);
-                    view.imp().image_missing_icon.get().set_visible(false);
+                    if let Ok(pixbuf) = pixbuf {
+                        let texture = gdk::Texture::for_pixbuf(&pixbuf);
+                        view.imp().picture.get().set_paintable(Some(&texture));
+                        view.imp().picture_spinner.get().set_visible(false);
+                        view.imp().image_missing_icon.get().set_visible(false);
+                        view.imp().picture.get().set_visible(true);
+                    } else {
+                        view.imp().picture_spinner.get().set_visible(false);
+                        view.imp().picture.get().set_visible(false);
+                        view.imp().image_missing_icon.get().set_visible(true);
+                    }
                 } else {
                     view.imp().picture_spinner.get().set_visible(false);
                     view.imp().picture.get().set_visible(false);
@@ -198,6 +241,8 @@ impl From<SearchResult> for ExploreCard {
         if !search_result.image.is_empty() {
             imp.image_url.replace(Some(search_result.image));
         }
+
+        card.load_image();
 
         card
     }

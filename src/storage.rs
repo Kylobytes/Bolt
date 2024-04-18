@@ -18,9 +18,14 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::{error::Error, path::PathBuf};
+use std::{borrow::BorrowMut, path::PathBuf};
 
 use gtk::glib;
+use reqwest::{
+    header::{HeaderValue, CONTENT_TYPE},
+    Response,
+};
+use tokio::{fs::File, io::AsyncWriteExt};
 
 use crate::config::GETTEXT_PACKAGE;
 
@@ -98,10 +103,46 @@ pub fn episode_image(id: &str, podcast_id: &str) -> Option<PathBuf> {
 }
 
 pub async fn save_image(
-    _url: &str,
-    _directory: &PathBuf,
-    _filename: &str,
-) -> Result<(), Box<dyn Error>> {
+    url: &str,
+    directory: &PathBuf,
+) -> Result<(), anyhow::Error> {
+    let mut response: Response = reqwest::get(url).await?;
+
+    if !response.status().is_success() {
+        anyhow::bail!("Url returned a non 200 status code");
+    }
+
+    let header_value: Option<&HeaderValue> =
+        response.headers().get(CONTENT_TYPE);
+
+    if header_value.is_none() {
+        anyhow::bail!("Could not determine the url's content type");
+    }
+
+    let content_type: &HeaderValue = header_value.unwrap();
+    let extension: String = match content_type.to_str()? {
+        "image/png" => "png".to_string(),
+        "image/jpg" => "jpg".to_string(),
+        "image/jpeg" => "jpg".to_string(),
+        _ => anyhow::bail!("Could not save unsupported format"),
+    };
+
+    if !directory.exists() {
+        std::fs::create_dir_all(directory)?;
+    }
+
+    let mut path: PathBuf = directory.to_path_buf();
+    path.push("cover");
+    path.set_extension(&extension);
+
+    let mut file: File = File::create(&path).await?;
+
+    while let Some(mut content) = response.chunk().await? {
+        file.write_all_buf(content.borrow_mut()).await?;
+    }
+    // let content: Bytes = response.bytes().await?;
+    // std::io::copy(&mut content.as_ref(), &mut file)?;
+
     Ok(())
 }
 
