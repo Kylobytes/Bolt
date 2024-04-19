@@ -23,7 +23,8 @@ use sqlx::SqlitePool;
 pub async fn count(pool: &SqlitePool) -> i32 {
     let Ok(result) = sqlx::query!("SELECT COUNT(id) AS count FROM podcasts")
         .fetch_one(pool)
-        .await else {
+        .await
+    else {
         return 0;
     };
 

@@ -33,7 +33,9 @@ use gtk::{
     subclass::prelude::*,
 };
 
-use crate::{api::search::result::SearchResult, runtime, storage};
+use crate::{
+    api::search::result::SearchResult, data::podcast, runtime, storage,
+};
 
 mod imp {
     use super::*;
@@ -187,7 +189,35 @@ impl ExploreCard {
         }
     }
 
-    pub fn subscribe(&self, id: &i64) {}
+    pub fn subscribe(&self) {
+        let imp = self.imp();
+        let subscribe_button: gtk::Button = imp.subscribe_button.get();
+
+        subscribe_button.set_sensitive(false);
+        subscribe_button.set_label("Subscribing...");
+
+        let (sender, receiver) = async_channel::bounded::<bool>(1);
+        let id: i64 = self.imp().podcast_id.get();
+
+        runtime().spawn(clone!(@strong sender, @strong id => async move {
+            let subscribed = podcast::repository::subscribe(&id).await;
+
+            sender.send(subscribed).await.expect("Channel must be open");
+        }));
+
+        glib::spawn_future_local(
+            clone!(@strong receiver, @weak imp => async move {
+                while let Ok(subscribed) = receiver.recv().await {
+                    if subscribed {
+                        imp.subscribe_button.get().set_label("Subscribe");
+                        imp.subscribe_button.get().set_sensitive(true);
+                        imp.subscribe_button.get().set_visible(false);
+                        imp.unsubscribe_button.get().set_visible(true);
+                    }
+                }
+            }),
+        );
+    }
     pub fn unsubscribe(&self, id: &i64) {}
 
     fn connect_signals(&self) {
@@ -224,6 +254,12 @@ impl ExploreCard {
                     view.imp().picture.get().set_visible(false);
                     view.imp().image_missing_icon.get().set_visible(true);
                 }
+            }),
+        );
+
+        imp.subscribe_button.get().connect_clicked(
+            clone!(@weak self as view => move |_| {
+                view.subscribe();
             }),
         );
     }

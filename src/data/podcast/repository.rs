@@ -21,6 +21,7 @@
 use crate::{
     api::{
         self, client,
+        podcast::{response::PodcastResponse, Feed},
         search::{response::SearchResponse, result::SearchResult},
     },
     data::{database, podcast::provider},
@@ -47,4 +48,58 @@ pub async fn search(query: &str) -> Vec<SearchResult> {
     };
 
     results.feeds
+}
+
+pub async fn subscribe(id: &i64) -> bool {
+    let endpoint: String = format!("/podcasts/byfeedid?id={id}");
+    let url: String = api::build_url(&endpoint);
+
+    let Ok(connection) = database::connect().await else {
+        return false;
+    };
+
+    let Ok(response) = client().get(&url).send().await else {
+        return false;
+    };
+
+    let Ok(results) = response.json::<PodcastResponse>().await else {
+        return false;
+    };
+
+    let feed: &Feed = &results.feed;
+    let id: i64 = feed.id.clone();
+    let name: String = feed.title.clone();
+    let url: String = feed.url.clone();
+    let description: Option<String> = if feed.description.is_empty() {
+        None
+    } else {
+        Some(feed.description.clone())
+    };
+    let image: Option<String> = if feed.image.is_empty() {
+        None
+    } else {
+        Some(feed.image.clone())
+    };
+
+    let Ok(_) = sqlx::query!(
+        "INSERT INTO podcasts (\
+             id,
+             name,
+             description,
+             url,
+             image_url\
+         ) VALUES (?, ?, ?, ?, ?)",
+        id,
+        name,
+        description,
+        url,
+        image
+    )
+    .execute(&connection)
+    .await
+    else {
+        return false;
+    };
+
+    return true;
 }
