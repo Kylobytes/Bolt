@@ -140,8 +140,6 @@ pub async fn save_image(
     while let Some(mut content) = response.chunk().await? {
         file.write_all_buf(content.borrow_mut()).await?;
     }
-    // let content: Bytes = response.bytes().await?;
-    // std::io::copy(&mut content.as_ref(), &mut file)?;
 
     Ok(())
 }
