@@ -75,6 +75,7 @@ pub async fn subscribe(id: &i64) -> bool {
     } else {
         Some(feed.description.clone())
     };
+
     let image: Option<String> = if feed.image.is_empty() {
         None
     } else {
@@ -102,4 +103,27 @@ pub async fn subscribe(id: &i64) -> bool {
     };
 
     return true;
+}
+
+pub async fn unsubscribe(id: &i64) -> bool {
+    let Ok(connection) = database::connect().await else {
+        return false;
+    };
+
+    if let Err(_) =
+        sqlx::query!("DELETE FROM episodes WHERE podcast_id = ?", id)
+            .execute(&connection)
+            .await
+    {
+        return false;
+    };
+
+    if let Err(_) = sqlx::query!("DELETE FROM podcasts WHERE id = ?", id)
+        .execute(&connection)
+        .await
+    {
+        return false;
+    };
+
+    true
 }

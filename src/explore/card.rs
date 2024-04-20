@@ -208,9 +208,10 @@ impl ExploreCard {
         glib::spawn_future_local(
             clone!(@strong receiver, @weak imp => async move {
                 while let Ok(subscribed) = receiver.recv().await {
+                    imp.subscribe_button.get().set_label("Subscribe");
+                    imp.subscribe_button.get().set_sensitive(true);
+
                     if subscribed {
-                        imp.subscribe_button.get().set_label("Subscribe");
-                        imp.subscribe_button.get().set_sensitive(true);
                         imp.subscribe_button.get().set_visible(false);
                         imp.unsubscribe_button.get().set_visible(true);
                     }
@@ -218,7 +219,42 @@ impl ExploreCard {
             }),
         );
     }
-    pub fn unsubscribe(&self, id: &i64) {}
+
+    pub fn unsubscribe(&self) {
+        self.imp()
+            .unsubscribe_button
+            .get()
+            .set_label("Unsubscribing...");
+        self.imp().unsubscribe_button.get().set_sensitive(false);
+
+        let id: i64 = self.imp().podcast_id.get();
+
+        let (sender, receiver) = async_channel::bounded::<bool>(1);
+
+        runtime().spawn(clone!(@strong id, @strong sender => async move {
+            let unsubscribed = podcast::repository::unsubscribe(&id).await;
+
+            sender.send(unsubscribed).await.expect("The channel must be open");
+        }));
+
+        glib::spawn_future_local(
+            clone!(@strong receiver, @weak self as view => async move {
+                let subscribe_button = view.imp().subscribe_button.get();
+                let unsubscribe_button = view.imp().unsubscribe_button.get();
+
+                while let Ok(unsubscribed) = receiver.recv().await {
+
+                    unsubscribe_button.set_label("Unsubscribe");
+                    unsubscribe_button.set_sensitive(true);
+
+                    if unsubscribed {
+                        unsubscribe_button.set_visible(false);
+                        subscribe_button.set_visible(true);
+                    }
+                }
+            }),
+        );
+    }
 
     fn connect_signals(&self) {
         let imp = self.imp();
@@ -260,6 +296,12 @@ impl ExploreCard {
         imp.subscribe_button.get().connect_clicked(
             clone!(@weak self as view => move |_| {
                 view.subscribe();
+            }),
+        );
+
+        imp.unsubscribe_button.get().connect_clicked(
+            clone!(@weak self as view => move |_| {
+                view.unsubscribe();
             }),
         );
     }
