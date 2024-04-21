@@ -158,7 +158,7 @@ impl ExploreView {
 
         runtime().spawn(clone!(@strong query, @strong sender => async move {
             let podcasts: Vec<SearchResult> =
-            podcast::repository::search(&query).await;
+                podcast::repository::search(&query).await;
 
             sender
                 .send(podcasts)
