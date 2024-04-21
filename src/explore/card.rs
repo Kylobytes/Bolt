@@ -220,7 +220,7 @@ impl ExploreCard {
         );
     }
 
-    pub fn unsubscribe(&self) {
+    fn unsubscribe(&self) {
         self.imp()
             .unsubscribe_button
             .get()
@@ -305,6 +305,32 @@ impl ExploreCard {
             }),
         );
     }
+
+    fn show_subscribe_action(&self) {
+        let (sender, receiver) = async_channel::bounded::<bool>(1);
+
+        let id: i64 = self.imp().podcast_id.get();
+
+        runtime().spawn(clone!(@strong sender, @strong id => async move {
+            let subscribed = podcast::repository::subscribed(&id).await;
+
+            sender.send(subscribed).await.expect("The channel should be open");
+        }));
+
+        glib::spawn_future_local(
+            clone!(@weak self as view, @strong receiver => async move {
+                while let Ok(subscribed) = receiver.recv().await {
+                    if subscribed {
+                        view.imp().subscribe_button.get().set_visible(false);
+                        view.imp().unsubscribe_button.get().set_visible(true);
+                    } else {
+                        view.imp().unsubscribe_button.get().set_visible(false);
+                        view.imp().subscribe_button.get().set_visible(true);
+                    }
+                }
+            }),
+        );
+    }
 }
 
 impl From<SearchResult> for ExploreCard {
@@ -321,6 +347,7 @@ impl From<SearchResult> for ExploreCard {
         }
 
         card.load_image();
+        card.show_subscribe_action();
 
         card
     }

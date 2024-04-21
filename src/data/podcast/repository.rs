@@ -24,7 +24,10 @@ use crate::{
         podcast::{response::PodcastResponse, Feed},
         search::{response::SearchResponse, result::SearchResult},
     },
-    data::{database, podcast::provider},
+    data::{
+        database,
+        podcast::{provider, Podcast},
+    },
 };
 
 pub async fn count() -> i32 {
@@ -126,4 +129,22 @@ pub async fn unsubscribe(id: &i64) -> bool {
     };
 
     true
+}
+
+pub async fn subscribed(id: &i64) -> bool {
+    let Ok(connection) = database::connect().await else {
+        return false;
+    };
+
+    let Ok(result) = sqlx::query!(
+        "SELECT COUNT(id) AS count FROM podcasts WHERE id = ?",
+        id
+    )
+    .fetch_one(&connection)
+    .await
+    else {
+        return false;
+    };
+
+    result.count > 0
 }
