@@ -24,10 +24,7 @@ use crate::{
         podcast::{response::PodcastResponse, Feed},
         search::{response::SearchResponse, result::SearchResult},
     },
-    data::{
-        database,
-        podcast::{provider, Podcast},
-    },
+    data::{database, podcast::provider},
 };
 
 pub async fn count() -> i32 {

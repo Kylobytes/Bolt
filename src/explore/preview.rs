@@ -20,7 +20,7 @@
 
 use std::cell::Cell;
 
-use adw::subclass::prelude::*;
+use adw::{prelude::*, subclass::prelude::*};
 use gtk::{gio, glib};
 
 use crate::data::podcast::Podcast;
@@ -89,6 +89,14 @@ impl Default for Preview {
 }
 
 impl Preview {
+    pub fn set_name(&self, name: &str) {
+        self.imp().title.get().set_label(name);
+    }
+
+    pub fn set_description(&self, content: &str) {
+        self.imp().description.get().buffer().set_text(content);
+    }
+
     pub fn back_button(&self) -> gtk::Button {
         self.imp().back_button.get()
     }

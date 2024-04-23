@@ -127,8 +127,16 @@ impl ExploreCard {
         self.imp().name.set_text(name);
     }
 
-    pub fn set_description(&self, content: &str) {
-        self.imp().description.set_text(content);
+    pub fn podcast_id(&self) -> i64 {
+        self.imp().podcast_id.get()
+    }
+
+    pub fn name(&self) -> String {
+        self.imp().name.label().to_string()
+    }
+
+    pub fn description(&self) -> String {
+        self.imp().description.text().to_string()
     }
 
     pub fn load_image(&self) {

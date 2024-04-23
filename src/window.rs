@@ -28,7 +28,7 @@ use crate::{
     data::podcast,
     empty::view::EmptyView,
     episodes::view::EpisodesView,
-    explore::{preview::Preview, view::ExploreView},
+    explore::{card::ExploreCard, preview::Preview, view::ExploreView},
     queue_view::QueueView,
     runtime,
     show_details::view::ShowDetails,
@@ -163,6 +163,30 @@ impl BoltWindow {
                 window.switch_view(View::Explore);
             }),
         );
+
+        self.imp()
+            .explore_view
+            .get()
+            .search_results()
+            .connect_child_activated(
+                clone!(@weak self as window => move |_parent, container| {
+                    let Some(card) = container.child() else {
+                        return;
+                    };
+
+                    let Some(card) = card.downcast_ref::<ExploreCard>() else {
+                        return;
+                    };
+
+                    let id: i64 = card.podcast_id();
+                    let name: String = card.name();
+                    let description: String = card.description();
+
+                    window.imp().preview.get().set_name(&name);
+                    window.imp().preview.get().set_description(&description);
+                    window.switch_view(View::Preview);
+                }),
+            );
     }
 
     fn setup_explore(&self) {

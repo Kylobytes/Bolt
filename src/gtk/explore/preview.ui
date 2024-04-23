@@ -71,6 +71,7 @@
                                 <property name="orientation">vertical</property>
                                 <property name="maximum-size">328</property>
                                 <property name="margin-bottom">16</property>
+				<property name="visible">false</property>
                                 <child>
                                   <object class="GtkSpinner" id="picture_spinner">
                                     <property name="spinning">true</property>
@@ -85,7 +86,6 @@
                             <child>
                               <object class="GtkImage" id="image_missing_icon">
                                 <property name="icon-name">image-missing-symbolic</property>
-                                <property name="visible">false</property>
                                 <property name="halign">center</property>
                                 <property name="pixel-size">256</property>
                                 <property name="margin-bottom">16</property>
@@ -122,7 +122,6 @@
                                 <property name="label" translatable="true">Subscribe</property>
                                 <property name="vexpand">true</property>
                                 <property name="margin-bottom">16</property>
-                                <property name="visible">false</property>
                               </object>
                             </child>
                           </object>
@@ -139,6 +138,7 @@
                               <class name="rich-list" />
                               <class name="rounded" />
                             </style>
+			    <property name="visible">false</property>
                           </object>
                         </child>
                       </object>
