@@ -44,6 +44,8 @@
               freetype
               freetype.dev
               libGL
+              wayland
+              wayland.dev
               xorg.libX11
               xorg.libXcursor
               xorg.libXi
