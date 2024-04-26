@@ -6,36 +6,56 @@
     utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, utils, ... }:
-    utils.lib.eachDefaultSystem (system:
-      let pkgs = import nixpkgs { inherit system; };
-      in {
+  outputs =
+    {
+      self,
+      nixpkgs,
+      utils,
+      ...
+    }:
+    utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = import nixpkgs { inherit system; };
+      in
+      {
         packages = rec {
           bolt = pkgs.stdenv.mkDerivation {
             pname = "bolt";
             version = "0.1.0";
             src = ./.;
 
-            cargoDeps =
-              pkgs.rustPlatform.importCargoLock { lockFile = ./Cargo.lock; };
+            cargoDeps = pkgs.rustPlatform.importCargoLock { lockFile = ./Cargo.lock; };
 
-            buildInputs = with pkgs; [ gtk4 libadwaita sqlite ];
+            buildInputs = with pkgs; [
+              openssl
+              sqlite
+            ];
 
             nativeBuildInputs = with pkgs; [
+              # rust deps
               cargo
-              rustPlatform.cargoSetupHook
+              clippy
+              rust-analyzer
               rustc
+              rustfmt
 
-              appstream-glib
-              desktop-file-utils
-              gtk4
-              libadwaita
-              meson
-              ninja
+              expat
+              freetype
+              freetype.dev
+              libGL
+              wayland
+              wayland.dev
+              xorg.libX11
+              xorg.libXcursor
+              xorg.libXi
+              xorg.libXrandr
+
+              fish
+              gcc
               openssl
               pkg-config
               sqlite
-              wrapGAppsHook4
             ];
 
             meta = with pkgs.lib; {
@@ -50,36 +70,7 @@
           default = bolt;
         };
 
-        devShells.default = pkgs.mkShell {
-          packages = with pkgs; [
-            # rust deps
-            cargo
-            clippy
-            rust-analyzer
-            rustc
-            rustfmt
-
-            # glib/gtk deps
-            cairo
-            gtk4
-            libadwaita
-
-            # other deps
-            appstream-glib
-            desktop-file-utils
-            fish
-            gcc
-            glib
-            libxml2
-            meson
-            ninja
-            openssl
-            pkg-config
-            sqlite
-            wrapGAppsHook4
-          ];
-
-          shellHook = "exec fish";
-        };
-      });
+        devShells.default = import ./shell.nix { inherit pkgs; };
+      }
+    );
 }
