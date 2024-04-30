@@ -104,6 +104,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.82"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f538837af36e6f6a9be0faa67f9a314f8119e4e4b5867c6ab40ed60360142519"
+
+[[package]]
 name = "apply"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -548,7 +554,9 @@ dependencies = [
 name = "bolt"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "libcosmic",
+ "log",
  "reqwest",
  "serde",
  "serde_json",
@@ -2769,7 +2777,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c2a198fb6b0eada2a8df47933734e6d35d350665a33a3593d7164fa52c75c19"
 dependencies = [
  "cfg-if",
- "windows-targets 0.48.5",
+ "windows-targets 0.52.5",
 ]
 
 [[package]]
