@@ -18,19 +18,22 @@
  * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use cosmic::app::Settings;
-use log::error;
+use std::path::Path;
 
-use crate::application::Application;
+use anyhow::Result;
+use directories::ProjectDirs;
 
-mod application;
-mod setup;
+pub fn init_project_dirs() -> Result<()> {
+    let project_dirs: Option<ProjectDirs> =
+        ProjectDirs::from("com", "Kylobytes", "Bolt");
 
-#[tokio::main]
-async fn main() -> cosmic::iced::Result {
-    if let Err(msg) = setup::init_project_dirs() {
-        error!("Failed to initialize project directories. {}", msg);
+    if let Some(project_dirs) = project_dirs {
+        let data_dir: &Path = project_dirs.data_dir();
+
+        if !data_dir.exists() {
+            std::fs::create_dir_all(data_dir)?;
+        }
     }
 
-    cosmic::app::run::<Application>(Settings::default(), ())
+    Ok(())
 }
