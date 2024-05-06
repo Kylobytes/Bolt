@@ -556,6 +556,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "directories",
+ "dotenvy",
  "libcosmic",
  "log",
  "mime 0.3.17",
