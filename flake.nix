@@ -22,7 +22,7 @@
         packages = rec {
           bolt = pkgs.stdenv.mkDerivation {
             pname = "bolt";
-            version = "0.1.0";
+            version = "1.0.0-dev00";
             src = ./.;
 
             cargoDeps = pkgs.rustPlatform.importCargoLock { lockFile = ./Cargo.lock; };
@@ -34,27 +34,30 @@
 
             nativeBuildInputs = with pkgs; [
               # rust deps
-              cargo
+              cairo
               clippy
               rust-analyzer
               rustc
               rustfmt
 
-              expat
-              freetype
-              freetype.dev
-              libGL
-              wayland
-              wayland.dev
-              xorg.libX11
-              xorg.libXcursor
-              xorg.libXi
-              xorg.libXrandr
+              # glib deps
+              gtk4
+              libadwaita
+              wrapGAppsHook4
 
-              fish
-              gcc
-              openssl
+              # compiler deps
+              appstream
+              appstream-glib
+              desktop-file-utils
+              glib
+              libxml2
+              meson
+              ninja
               pkg-config
+
+              # library deps
+              fish
+              openssl
               sqlite
             ];
 
@@ -70,7 +73,37 @@
           default = bolt;
         };
 
-        devShells.default = import ./shell.nix { inherit pkgs; };
+        devShell = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            # rust deps
+            cairo
+            clippy
+            rust-analyzer
+            rustc
+            rustfmt
+
+            # glib deps
+            gtk4
+            libadwaita
+
+            # compilation deps
+            appstream
+            appstream-glib
+            desktop-file-utils
+            glib
+            libxml2
+            meson
+            ninja
+            pkg-config
+
+            # library deps
+            fish
+            openssl
+            sqlite
+          ];
+
+          shellHook = "exec fish";
+        };
       }
     );
 }

@@ -1,0 +1,6 @@
+data/com.kylobytes.Bolt.desktop.in.in
+data/com.kylobytes.Bolt.gschema.xml.in
+data/com.kylobytes.Bolt.metainfo.xml.in.in
+data/resources/ui/shortcuts.ui
+data/resources/ui/window.ui
+src/application.rs
