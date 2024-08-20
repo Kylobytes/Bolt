@@ -1,3 +1,23 @@
+/* about.rs
+ *
+ * Copyright 2024 Kent Delante
+ *
+ * This file is part of Bolt.
+ *
+ * Bolt is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Bolt is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 use gtk::prelude::GtkWindowExt;
 use relm4::{adw, gtk, ComponentParts, ComponentSender, SimpleComponent};
 
@@ -15,14 +35,10 @@ impl SimpleComponent for AboutDialog {
     fn init_root() -> Self::Root {
         adw::AboutWindow::builder()
             .application_icon(APP_ID)
-            // Insert your license of choice here
-            // .license_type(gtk::License::MitX11)
-            // Insert your website here
-            // .website("https://gitlab.gnome.org/bilelmoussaoui/bolt/")
-            // Insert your Issues page
-            // .issue_url("https://gitlab.gnome.org/World/Rust/bolt/-/issues")
-            // Insert your application name here
-            .application_name("Relm4-template")
+            .license_type(gtk::License::Gpl30)
+            .website("https://github.com/Kylobytes/Bolt/")
+            .issue_url("https://github.com/Kylobytes/Bolt/issues")
+            .application_name("Bolt")
             .version(VERSION)
             .translator_credits("translator-credits")
             .copyright("© 2023 Kent Delante")
@@ -44,7 +60,11 @@ impl SimpleComponent for AboutDialog {
         ComponentParts { model, widgets }
     }
 
-    fn update_view(&self, dialog: &mut Self::Widgets, _sender: ComponentSender<Self>) {
+    fn update_view(
+        &self,
+        dialog: &mut Self::Widgets,
+        _sender: ComponentSender<Self>,
+    ) {
         dialog.present();
     }
 }

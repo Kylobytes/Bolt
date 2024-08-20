@@ -1,11 +1,32 @@
+/* app.rs
+ *
+ * Copyright 2024 Kent Delante
+ *
+ * This file is part of Bolt.
+ *
+ * Bolt is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Bolt is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Bolt. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 use relm4::{
     actions::{RelmAction, RelmActionGroup},
-    adw, gtk, main_application, Component, ComponentController, ComponentParts, ComponentSender,
-    Controller, SimpleComponent,
+    adw, gtk, main_application, Component, ComponentController,
+    ComponentParts, ComponentSender, Controller, SimpleComponent,
 };
 
 use gtk::prelude::{
-    ApplicationExt, ApplicationWindowExt, GtkWindowExt, OrientableExt, SettingsExt, WidgetExt,
+    ApplicationExt, ApplicationWindowExt, GtkWindowExt, OrientableExt,
+    SettingsExt, WidgetExt,
 };
 use gtk::{gio, glib};
 
@@ -22,7 +43,11 @@ pub(super) enum AppMsg {
 }
 
 relm4::new_action_group!(pub(super) WindowActionGroup, "win");
-relm4::new_stateless_action!(PreferencesAction, WindowActionGroup, "preferences");
+relm4::new_stateless_action!(
+    PreferencesAction,
+    WindowActionGroup,
+    "preferences"
+);
 relm4::new_stateless_action!(pub(super) ShortcutsAction, WindowActionGroup, "show-help-overlay");
 relm4::new_stateless_action!(AboutAction, WindowActionGroup, "about");
 
@@ -127,13 +152,21 @@ impl SimpleComponent for App {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
+    fn update(
+        &mut self,
+        message: Self::Input,
+        _sender: ComponentSender<Self>,
+    ) {
         match message {
             AppMsg::Quit => main_application().quit(),
         }
     }
 
-    fn shutdown(&mut self, widgets: &mut Self::Widgets, _output: relm4::Sender<Self::Output>) {
+    fn shutdown(
+        &mut self,
+        widgets: &mut Self::Widgets,
+        _output: relm4::Sender<Self::Output>,
+    ) {
         widgets.save_window_size().unwrap();
     }
 }
@@ -146,7 +179,8 @@ impl AppWidgets {
         settings.set_int("window-width", width)?;
         settings.set_int("window-height", height)?;
 
-        settings.set_boolean("is-maximized", self.main_window.is_maximized())?;
+        settings
+            .set_boolean("is-maximized", self.main_window.is_maximized())?;
 
         Ok(())
     }

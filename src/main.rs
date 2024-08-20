@@ -1,4 +1,4 @@
-/* setup.rs
+/* main.rs
  *
  * Copyright 2024 Kent Delante
  *
